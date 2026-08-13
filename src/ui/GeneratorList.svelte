@@ -80,6 +80,17 @@
     if (out.kind === 'fell') {
       return rate ? formatRate(rate, 'Bäume') + ' gefällt' : `${format(def.baseRate)} Bäume/s pro Stück`
     }
+    if (out.kind === 'housing') {
+      // Kapazität, keine Rate — deshalb bewusst ohne „/s".
+      const total = generatorCount(def.id) * def.baseRate
+      return count > 0
+        ? `Wohnraum für ${formatInt(total)}`
+        : `Wohnraum für ${formatInt(def.baseRate)} pro Stück`
+    }
+    if (out.kind === 'supply') {
+      const name = out.supply === 'food' ? 'Nahrung' : 'Wasser'
+      return rate ? formatRate(rate, name) : `${format(def.baseRate)} ${name}/s pro Stück`
+    }
     const name = findMaterial(out.material)?.name ?? out.material
     return rate ? formatRate(rate, name) : `${format(def.baseRate)} ${name}/s pro Stück`
   }

@@ -2,6 +2,7 @@ import Decimal from 'break_infinity.js'
 import { AURORA, findPlanet, type PlanetDef } from '../data/planets'
 import { EVENTS } from '../data/events'
 import { GENERATORS } from '../data/generators'
+import { JOBS } from '../data/jobs'
 import { UPGRADES } from '../data/upgrades'
 import { readDecimal, readNumber, readString, writeDecimal } from '../engine/serialize'
 
@@ -74,6 +75,22 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
     /** Zuwanderungsregler 0…1 (§5). */
     immigration: 1,
 
+    /**
+     * Vorräte. Planetenlokal wie die Luft, nicht im globalen Lager — jede
+     * Kolonie muss sich selbst ernähren (DESIGN.md §16).
+     */
+    food: new Decimal(0),
+    water: new Decimal(0),
+
+    /**
+     * Menschen, die Gebäude beim Bau verschluckt haben. Sie leben und atmen
+     * weiter, stehen aber nie wieder für Berufe zur Verfügung.
+     */
+    bound: new Decimal(0),
+
+    /** Beruf-id -> zugewiesene Arbeiter. */
+    jobs: {} as Record<string, number>,
+
     /** Laufende Ereignisse und die Zeit bis zum nächsten. */
     events: [] as ActiveEvent[],
     nextEventIn: FIRST_EVENT_DELAY,
@@ -134,6 +151,10 @@ export function serializePlanet() {
     upgrades: [...planet.upgrades],
     settlers: writeDecimal(planet.settlers),
     immigration: planet.immigration,
+    food: writeDecimal(planet.food),
+    water: writeDecimal(planet.water),
+    bound: writeDecimal(planet.bound),
+    jobs: { ...planet.jobs },
     events: planet.events.map((e) => ({ ...e })),
     nextEventIn: planet.nextEventIn,
     clicks: planet.clicks,
@@ -157,6 +178,18 @@ export function deserializePlanet(raw: unknown): void {
   planet.biomass = readDecimal(s.biomass, 0)
   planet.settlers = readDecimal(s.settlers, 0)
   planet.immigration = Math.min(1, Math.max(0, readNumber(s.immigration, 1)))
+  planet.food = readDecimal(s.food, 0)
+  planet.water = readDecimal(s.water, 0)
+  planet.bound = readDecimal(s.bound, 0)
+
+  // Nur bekannte Berufe übernehmen, wie bei Generatoren und Forschung.
+  const savedJobs = (s.jobs ?? {}) as Record<string, unknown>
+  const jobs: Record<string, number> = {}
+  for (const def of JOBS) {
+    const count = Math.floor(readNumber(savedJobs[def.id], 0))
+    if (count > 0) jobs[def.id] = count
+  }
+  planet.jobs = jobs
   planet.nextEventIn = Math.max(0, readNumber(s.nextEventIn, FIRST_EVENT_DELAY))
   planet.clicks = readNumber(s.clicks, 0)
   planet.elapsed = readNumber(s.elapsed, 0)

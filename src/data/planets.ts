@@ -163,8 +163,15 @@ export const VESTA: PlanetDef = {
   forestCapacity: 12000,
 
   allowsPopulation: true,
-  /** Früh genug, dass die Siedler den Aufbau noch mitprägen. */
-  settleAt: 1.5,
+  /**
+   * Früh genug, dass die Siedler den Aufbau noch mitprägen.
+   *
+   * Seit M5 begrenzt Wohnraum das Wachstum ohnehin, also darf die Luft
+   * früher freigeben: mit 1,5 landeten die ersten erst nach 21 Minuten und
+   * Vesta lief auf 46 min hinaus, mit 0,5 sind es 18 Minuten und 37,8 min
+   * gesamt.
+   */
+  settleAt: 0.5,
   popCapacity: 24000,
 }
 

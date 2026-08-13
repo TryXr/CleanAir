@@ -761,7 +761,7 @@ und dauerhaften Kolonien.
 | | Inhalt | Warum diese Reihenfolge |
 |---|---|---|
 | **M4** ✅ | Materialien + globales Inventar, erste Bauketten (Wald) | Löst das eigentliche Problem sofort und passt noch in die heutige Architektur |
-| **M5** | Bevölkerung: Hütten, Nahrung, Wasser, Berufe | Braucht Materialien, um überhaupt bezahlbar zu sein |
+| **M5** ✅ | Bevölkerung: Hütten, Nahrung, Wasser, Berufe | Braucht Materialien, um überhaupt bezahlbar zu sein |
 | **M6** | Mehrere Planeten gleichzeitig, Rakete, Reisen — und der Reset auf Durchlauf-Ebene | Der Architektur-Umbau. Reset muss *mit*, weil „Planet abschließen = zurücksetzen" dann nicht mehr gilt |
 | **M7** | Planeten-Identität: Lava, Eis, Gas mit eigenen Ketten | Inhalt auf dem Gerüst von M6 |
 | **M8** | Die Anoxen (bisher M4) | |
@@ -797,6 +797,43 @@ der Kaufschaltfläche —, aber es ist die härteste Abhängigkeit im Spiel.
 Sollte sich das beim Spielen als zu streng anfühlen, ist der richtige Hebel,
 Sublimatoren allein bis ins Fenster reichen zu lassen (langsamer, aber
 möglich), nicht die Materialkosten zu senken.
+
+### Stand nach M5
+
+Menschen tauchen nicht mehr allein wegen guter Luft auf. Sie brauchen
+**Betten** (Wohnkuppel), **Nahrung** (Hydroponik-Halle) und **Wasser**
+(Eisschmelze). Fehlt eines, wächst nichts mehr und die Siedlung schrumpft
+langsam — langsam, weil Rückschläge temporär bleiben sollen (§1.2).
+
+Menschen werden auf **zwei** Arten gebunden, und das ist Absicht:
+
+| | Wirkung |
+|---|---|
+| **Gebäude** | verschlucken beim Bau einmalig Leute. Endgültig, nicht umkehrbar. |
+| **Berufe** | belegen freie Leute dauerhaft, lassen sich aber umverteilen. Einstellen kostet Material, Freistellen erstattet nichts. |
+
+Die Wohnkuppel kostet bewusst **Stein statt Holz**: Holz käme aus dem
+Sägewerk, das Menschen kostet, die es ohne Wohnkuppel nicht gibt. Der
+Steinbruch kommt ohne Bevölkerung aus und bricht die Verklemmung.
+
+Gemessen (simuliert, nicht geschätzt):
+
+| Spielweise | Dauer |
+|---|---|
+| Aurora (unverändert seit M3) | 21,8 min |
+| Vesta | 37,8 min |
+| Vesta, gar kein Holz | schließt nicht ab |
+
+Zwei Zahlen mussten dafür nachgezogen werden: Betten je Kuppel von 40 auf
+**300** (bei 40 wurde Wohnraum zur alles bestimmenden Grenze, die Bevölkerung
+fiel von 79k auf 6k und Vesta auf 54,7 min), und `settleAt` von 1,5 auf
+**0,5 %** — da Wohnraum das Wachstum ohnehin begrenzt, darf die Luft früher
+freigeben.
+
+**Die Holz-Abhängigkeit ist mit M5 noch härter geworden:** ohne Sägewerk gibt
+es kein Holz, ohne Holz keine Hydroponik-Halle — und damit nicht nur keinen
+N₂-Puffer, sondern auch nichts zu essen. Das ist die Stelle, die beim
+Spielen am ehesten unfair wirken wird.
 
 ### Offene Fragen dieses Kurswechsels
 

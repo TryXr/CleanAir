@@ -5,12 +5,13 @@ stehen in [DESIGN.md](DESIGN.md) — **bei Fragen zu Spielinhalt immer dort
 nachsehen, nicht raten.** Aktueller Stand: M3 abgeschlossen (Atmosphären-
 Mischung, Stabilitäts-Timer, Forschung, Ereignisse, Statistik).
 
-M4 ist ebenfalls fertig: Materialien mit globalem Lager und die Wald-Kette.
+M4 und M5 sind ebenfalls fertig: Materialien mit globalem Lager und die
+Wald-Kette, dann Wohnraum, Nahrung, Wasser und Berufe.
 
 **Achtung: DESIGN.md §16 ist ein Kurswechsel und hat Vorrang vor §6 und §11.**
 Planeten werden dauerhaft begehbar, der Reset wandert auf die Durchlauf-Ebene.
-Als Nächstes M5: Bevölkerung mit Hütten, Nahrung, Wasser und Berufen. Die
-Anoxen rücken auf M8.
+Als Nächstes M6: mehrere Planeten gleichzeitig, Rakete, Reisen — und der
+Reset auf Durchlauf-Ebene. Die Anoxen rücken auf M8.
 
 ## Befehle
 

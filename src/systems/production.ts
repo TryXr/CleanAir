@@ -1,5 +1,11 @@
 import Decimal from 'break_infinity.js'
-import { GENERATORS, findGenerator, type GasKind, type GeneratorDef } from '../data/generators'
+import {
+  GENERATORS,
+  findGenerator,
+  type GasKind,
+  type GeneratorDef,
+  type SupplyKind,
+} from '../data/generators'
 import { UPGRADES, findUpgrade } from '../data/upgrades'
 import { currentPlanetDef, generatorCount, hasUpgrade, planet } from '../state/planet.svelte'
 import { meta } from '../state/meta.svelte'
@@ -7,6 +13,7 @@ import { addMaterial, affordableCount, canAffordMaterials, spendMaterials } from
 import { fireThrottle } from './atmosphere'
 import { eventEffects } from './eventEffects'
 import { WOOD_PER_TREE, forestO2Rate, forestRoom } from './forest'
+import { freePopulation, jobEffects } from './jobs'
 import { metaEffects } from './metaEffects'
 import { researchEffects } from './research'
 
@@ -42,8 +49,10 @@ interface Multipliers {
   click: Decimal
   /** Gilt für jede Anlage, unabhängig davon, woran sie arbeitet. */
   global: Decimal
-  /** Zusätzlich je nach Gasart — hier wirkt die Forschung getrennt. */
+  /** Zusätzlich je nach Gasart — hier wirken Forschung und Techniker. */
   byGas: Record<GasKind, Decimal>
+  /** Zusätzlich je nach Ausgabeart — hier wirken die übrigen Berufe. */
+  byKind: Record<'plant' | 'fell' | 'material' | 'supply' | 'housing', Decimal>
   perGenerator: Record<string, Decimal>
 }
 
@@ -52,6 +61,7 @@ function collectMultipliers(): Multipliers {
   const rEffects = researchEffects()
   const events = eventEffects()
 
+  const jEffects = jobEffects()
   const m: Multipliers = {
     click: mEffects.clickPower.mul(rEffects.clickPower).mul(BASE_CLICK),
     global: mEffects.globalProduction
@@ -60,9 +70,17 @@ function collectMultipliers(): Multipliers {
       .mul(events.production)
       .mul(fireThrottle()),
     byGas: {
-      o2: rEffects.o2Yield,
-      n2: rEffects.n2Yield,
-      scrub: rEffects.scrubYield,
+      o2: rEffects.o2Yield.mul(jEffects.gas),
+      n2: rEffects.n2Yield.mul(jEffects.gas),
+      scrub: rEffects.scrubYield.mul(jEffects.gas),
+    },
+    byKind: {
+      plant: new Decimal(jEffects.planting),
+      fell: new Decimal(1),
+      material: new Decimal(jEffects.mining),
+      supply: new Decimal(jEffects.supply),
+      // Wohnraum ist eine Kapazität und wird bewusst nirgends multipliziert.
+      housing: new Decimal(1),
     },
     perGenerator: {},
   }
@@ -102,11 +120,12 @@ export function generatorRate(def: GeneratorDef): Decimal {
   const m = collectMultipliers()
   // Forschungsboni gelten je Gasart; Abbau und Wald hängen bislang nur an
   // den globalen Faktoren.
-  const byGas = def.output.kind === 'gas' ? m.byGas[def.output.gas] : new Decimal(1)
+  const specific =
+    def.output.kind === 'gas' ? m.byGas[def.output.gas] : m.byKind[def.output.kind]
   return new Decimal(def.baseRate)
     .mul(count)
     .mul(m.perGenerator[def.id] ?? 1)
-    .mul(byGas)
+    .mul(specific)
     .mul(m.global)
 }
 
@@ -137,6 +156,17 @@ export function plantingRate(): Decimal {
 /** Bäume pro Sekunde, die gefällt werden — begrenzt durch den Bestand. */
 export function fellingRate(): Decimal {
   return rateForKind('fell')
+}
+
+/** Nahrung bzw. Wasser pro Sekunde. */
+export function supplyRate(supply: SupplyKind): Decimal {
+  let total = new Decimal(0)
+  for (const def of GENERATORS) {
+    if (def.output.kind === 'supply' && def.output.supply === supply) {
+      total = total.add(generatorRate(def))
+    }
+  }
+  return total
 }
 
 /**
@@ -250,6 +280,10 @@ export function isAvailable(def: GeneratorDef): boolean {
     case 'plant':
     case 'fell':
       return planetDef.forestCapacity > 0
+    case 'supply':
+    case 'housing':
+      // Versorgung und Wohnraum gibt es nur, wo überhaupt jemand wohnt.
+      return planetDef.allowsPopulation
   }
 }
 
@@ -260,12 +294,16 @@ export function buyGenerator(id: string, amount: number): boolean {
 
   const cost = generatorCost(def, amount)
   if (planet.oxygen.lt(cost)) return false
-  // Beide Preise müssen stimmen, bevor irgendetwas abgebucht wird — sonst
+  // Alle drei Preise müssen stimmen, bevor irgendetwas abgebucht wird — sonst
   // wäre O₂ weg und die Anlage stünde trotzdem nicht.
   if (!canAffordMaterials(def.materialCost, amount)) return false
+  const people = (def.populationCost ?? 0) * amount
+  if (people > 0 && freePopulation().lt(people)) return false
 
   planet.oxygen = planet.oxygen.sub(cost)
   spendMaterials(def.materialCost, amount)
+  // Die Leute ziehen ein und stehen nie wieder zur Verfügung.
+  if (people > 0) planet.bound = planet.bound.add(people)
   planet.generators[id] = generatorCount(id) + amount
   return true
 }
@@ -334,6 +372,14 @@ export function productionSystem(dt: number): void {
     if (gen.output.kind !== 'material') continue
     const gained = generatorRate(gen).mul(dt)
     if (gained.gt(0)) addMaterial(gen.output.material, gained)
+  }
+
+  // Versorgung bleibt auf dem Planeten — verbraucht wird sie in population.ts.
+  if (def.allowsPopulation) {
+    const food = supplyRate('food').mul(dt)
+    if (food.gt(0)) planet.food = planet.food.add(food)
+    const water = supplyRate('water').mul(dt)
+    if (water.gt(0)) planet.water = planet.water.add(water)
   }
 
   // N₂ landet nur in der Luft: es ist Puffer, keine Kaufkraft.

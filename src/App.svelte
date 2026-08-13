@@ -15,6 +15,8 @@
   import ForestPanel from './ui/ForestPanel.svelte'
   import GeneratorList from './ui/GeneratorList.svelte'
   import InventoryPanel from './ui/InventoryPanel.svelte'
+  import JobPanel from './ui/JobPanel.svelte'
+  import SupplyPanel from './ui/SupplyPanel.svelte'
   import LogPanel from './ui/LogPanel.svelte'
   import MetaTree from './ui/MetaTree.svelte'
   import Panel from './ui/Panel.svelte'
@@ -89,6 +91,14 @@
     {#if showPopulation}
       <Panel title="Bevölkerung" hint="atmet mit">
         <PopulationPanel />
+      </Panel>
+
+      <Panel title="Versorgung" hint="bleibt auf dem Planeten">
+        <SupplyPanel />
+      </Panel>
+
+      <Panel title="Berufe" hint="verteilte Arbeitskraft">
+        <JobPanel />
       </Panel>
     {/if}
 

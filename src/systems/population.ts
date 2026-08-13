@@ -1,9 +1,11 @@
 import Decimal from 'break_infinity.js'
-import { currentPlanetDef, planet } from '../state/planet.svelte'
+import { GENERATORS } from '../data/generators'
+import { currentPlanetDef, generatorCount, planet } from '../state/planet.svelte'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { effectiveO2Window, o2Percent } from './atmosphere'
 import { eventEffects } from './eventEffects'
+import { enforceJobLimit } from './jobs'
 import { metaEffects } from './metaEffects'
 import { currentO2Rate } from './production'
 import { researchEffects } from './research'
@@ -67,11 +69,59 @@ export function habitability(): number {
   return Math.min(1, Math.max(0, raw))
 }
 
-/** Wie viele Menschen der Planet im aktuellen Zustand trägt. */
+/** Nahrung und Wasser, die eine Person pro Sekunde braucht. */
+const FOOD_PER_CAPITA = 0.0012
+const WATER_PER_CAPITA = 0.0016
+
+/** Anteil der Bevölkerung, der pro Sekunde geht, wenn nichts mehr da ist. */
+const STARVE_RATE = 0.004
+
+/**
+ * Wohnraum aus Kuppeln.
+ *
+ * Bewusst *ohne* die Produktions-Multiplikatoren: eine Kuppel fasst so viele
+ * Menschen, wie sie fasst. Arbeitskraft, Ereignisse oder gar die
+ * Brand-Drosselung dürften daran nichts ändern — sonst würden bei einem Brand
+ * schlagartig Betten verschwinden.
+ */
+export function housingCapacity(): Decimal {
+  let beds = 0
+  for (const def of GENERATORS) {
+    if (def.output.kind === 'housing') beds += generatorCount(def.id) * def.baseRate
+  }
+  return new Decimal(beds).mul(researchEffects().popCapacity).mul(metaEffects().popCapacity)
+}
+
+/**
+ * Wie viele Menschen der Planet im aktuellen Zustand trägt.
+ *
+ * Zwei Grenzen, die kleinere gewinnt: was die Atmosphäre hergibt und wofür
+ * Betten dastehen. Ohne Wohnkuppeln landet niemand — Menschen tauchen seit
+ * M5 nicht mehr allein wegen guter Luft auf (§16).
+ */
 export function populationCapacity(): Decimal {
   const def = currentPlanetDef()
   const factor = metaEffects().popCapacity * researchEffects().popCapacity
-  return new Decimal(def.popCapacity).mul(habitability()).mul(factor)
+  const byPlanet = new Decimal(def.popCapacity).mul(habitability()).mul(factor)
+  return Decimal.min(byPlanet, housingCapacity())
+}
+
+/** Nahrung pro Sekunde, die verbraucht wird. */
+export function foodConsumption(): Decimal {
+  return planet.settlers.mul(FOOD_PER_CAPITA)
+}
+
+export function waterConsumption(): Decimal {
+  return planet.settlers.mul(WATER_PER_CAPITA)
+}
+
+/** Fehlt gerade etwas zum Leben? */
+export function isStarving(): boolean {
+  if (planet.settlers.lte(0)) return false
+  return (
+    (planet.food.lte(0) && foodConsumption().gt(0)) ||
+    (planet.water.lte(0) && waterConsumption().gt(0))
+  )
 }
 
 /** O₂ pro Sekunde, das die Siedler wegatmen. */
@@ -102,11 +152,13 @@ export function isSuffocating(): boolean {
 /** Log-Zustände, damit Meldungen nicht 20-mal pro Sekunde erscheinen. */
 let hasLandedLogged = false
 let wasNegative = false
+let wasStarving = false
 
 /** Beim Planetenwechsel und beim Laden zurücksetzen. */
 export function resetPopulationNotices(): void {
   hasLandedLogged = planet.settlers.gt(0)
   wasNegative = false
+  wasStarving = isStarving()
 }
 
 export function populationSystem(dt: number): void {
@@ -123,6 +175,37 @@ export function populationSystem(dt: number): void {
   }
 
   if (!def.allowsPopulation) return
+
+  /* --- Versorgung ---------------------------------------------------------
+     Erst essen und trinken, dann wachsen. Wer nichts hat, wächst nicht und
+     verliert langsam Leute — langsam, weil Rückschläge temporär sein sollen
+     und kein Zusammenbruch (§1.2).
+  ---------------------------------------------------------------------- */
+  if (planet.settlers.gt(0)) {
+    planet.food = planet.food.sub(foodConsumption().mul(dt))
+    planet.water = planet.water.sub(waterConsumption().mul(dt))
+    if (planet.food.lt(0)) planet.food = new Decimal(0)
+    if (planet.water.lt(0)) planet.water = new Decimal(0)
+  }
+
+  const starving = isStarving()
+  if (starving) {
+    planet.settlers = planet.settlers.mul(Math.max(0, 1 - STARVE_RATE * dt))
+    if (planet.settlers.lt(1)) planet.settlers = new Decimal(0)
+    // Gebundene können nicht mehr sein als lebende Menschen.
+    if (planet.bound.gt(planet.settlers)) planet.bound = planet.settlers
+    enforceJobLimit()
+
+    if (!wasStarving) {
+      addLog('Die Vorräte sind leer. Die Siedlung schrumpft.', 'bad')
+    }
+    wasStarving = true
+    return
+  }
+  if (wasStarving) {
+    addLog('Die Versorgung steht wieder.', 'good')
+    wasStarving = false
+  }
 
   const capacity = populationCapacity()
 

@@ -82,6 +82,20 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.run = { materials: {} }
     return s
   },
+
+  /** M5: Bevölkerung braucht Wohnraum, Nahrung und Wasser; dazu Berufe. */
+  6: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    // Leere Vorräte wären hart: ein alter Stand hat Siedler, aber noch keine
+    // Hydroponik. Ein Startvorrat gibt Zeit, die ersten Hallen zu bauen,
+    // statt die Kolonie beim Laden verhungern zu lassen.
+    planet.food = '500'
+    planet.water = '500'
+    planet.bound = '0'
+    planet.jobs = {}
+    s.planet = planet
+    return s
+  },
 }
 
 export interface MigrationResult {

@@ -8,6 +8,7 @@ import { loadGame, saveNow } from './engine/save'
 import * as atmosphere from './systems/atmosphere'
 import * as events from './systems/events'
 import * as forest from './systems/forest'
+import * as jobs from './systems/jobs'
 import * as population from './systems/population'
 import * as prestige from './systems/prestige'
 import * as production from './systems/production'
@@ -19,6 +20,7 @@ import { productionSystem } from './systems/production'
 import { AURORA, PLANETS } from './data/planets'
 import { EVENTS } from './data/events'
 import { GENERATORS } from './data/generators'
+import { JOBS } from './data/jobs'
 import { MATERIALS } from './data/materials'
 import { run } from './state/run.svelte'
 import { META_UPGRADES } from './data/metaUpgrades'
@@ -160,8 +162,19 @@ if (import.meta.env.DEV) {
       research,
       events,
       forest,
+      jobs,
       run,
-      data: { GENERATORS, UPGRADES, META_UPGRADES, RESEARCH, EVENTS, MATERIALS, AURORA, PLANETS },
+      data: {
+        GENERATORS,
+        UPGRADES,
+        META_UPGRADES,
+        RESEARCH,
+        EVENTS,
+        MATERIALS,
+        JOBS,
+        AURORA,
+        PLANETS,
+      },
     },
   })
 }

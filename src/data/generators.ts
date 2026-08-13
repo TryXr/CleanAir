@@ -35,6 +35,16 @@ export type Output =
   | { kind: 'plant' }
   /** Fällt Bäume zu Holz. Verbraucht also den Bestand, den `plant` aufbaut. */
   | { kind: 'fell' }
+  /**
+   * Nahrung oder Wasser. Bleibt planetenlokal und geht bewusst *nicht* ins
+   * globale Lager: sonst ernährt ein einziger Farmplanet alle anderen mit,
+   * und jede Kolonie verliert ihr eigenes Überlebensproblem.
+   */
+  | { kind: 'supply'; supply: SupplyKind }
+  /** Wohnraum. Eine Kapazität, keine Rate — siehe housingCapacity(). */
+  | { kind: 'housing' }
+
+export type SupplyKind = 'food' | 'water'
 
 export interface GeneratorDef {
   id: string
@@ -54,6 +64,17 @@ export interface GeneratorDef {
    * anfangen kann, und bleibt danach ein stetiger Abfluss.
    */
   materialCost?: MaterialCost
+  /**
+   * Menschen, die der Bau **einmalig** verschluckt (DESIGN.md §16).
+   *
+   * Sie ziehen ein und gehören ab dann zum Gebäude: sie atmen weiter und
+   * zählen zur Bevölkerung, stehen aber nie wieder für Berufe zur Verfügung.
+   * Bewusst keine laufende Bindung — das wäre Mikromanagement.
+   *
+   * Nur auf Anlagen, die es ausschließlich auf bewohnten Planeten gibt.
+   * Sonst wäre Aurora unspielbar, wo niemand wohnt.
+   */
+  populationCost?: number
   /**
    * Pro Sekunde pro Stück, vor allen Multiplikatoren. Bei `scrub` ist das
    * der Anteil der Schadstoffe, den ein Stück pro Sekunde entfernt, bei
@@ -121,6 +142,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     /** Der Cracker ist die erste Anlage, die ohne Material nicht anläuft. */
     materialCost: { titan: 8 },
     baseRate: 260,
+    populationCost: 12,
     revealAt: 3000,
   },
 
@@ -164,7 +186,61 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.14,
     materialCost: { stein: 5 },
     baseRate: 0.35,
+    populationCost: 3,
     revealAt: 1800,
+  },
+
+  /* --- Leben ------------------------------------------------------------
+     Menschen tauchen nicht mehr ab einem O₂-Wert auf. Sie brauchen ein Dach,
+     etwas zu essen und etwas zu trinken — und beides bleibt planetenlokal.
+     Die Wohnkuppel kostet bewusst *keine* Bevölkerung: sonst käme man aus
+     dem Henne-Ei-Problem nie heraus.
+  ---------------------------------------------------------------------- */
+  {
+    id: 'dome',
+    name: 'Wohnkuppel',
+    description: 'Druckdicht, eng und warm. Der erste Ort auf Vesta, an dem jemand schlafen kann.',
+    output: { kind: 'housing' },
+    baseCost: 500,
+    costGrowth: 1.13,
+    /**
+     * Bewusst Stein und nicht Holz: Holz käme aus dem Sägewerk, das Menschen
+     * kostet, die es ohne Wohnkuppel nicht gibt. Stein bricht die Kette, weil
+     * der Steinbruch ohne Bevölkerung auskommt.
+     */
+    materialCost: { stein: 12 },
+    /**
+     * Betten je Kuppel. Simuliert: bei 40 wurde Wohnraum zur alles
+     * bestimmenden Grenze, die Bevölkerung fiel von 79k auf 6k und Vesta auf
+     * 54,7 min — weit über das Fenster aus §13. Bei 300 bleibt Wohnraum eine
+     * echte Investition, ohne die Arbeitskraft zu erwürgen.
+     */
+    baseRate: 300,
+    revealAt: 400,
+  },
+  {
+    id: 'hydroponics',
+    name: 'Hydroponik-Halle',
+    description: 'Nährlösung statt Boden. Riecht nach nassem Metall und Tomaten.',
+    output: { kind: 'supply', supply: 'food' },
+    baseCost: 1600,
+    costGrowth: 1.13,
+    materialCost: { holz: 8, stein: 6 },
+    populationCost: 4,
+    baseRate: 3.5,
+    revealAt: 1200,
+  },
+  {
+    id: 'icemelt',
+    name: 'Eisschmelze',
+    description: 'Taut den Permafrost und filtert ihn. Vesta hat mehr Wasser als Luft.',
+    output: { kind: 'supply', supply: 'water' },
+    baseCost: 1300,
+    costGrowth: 1.12,
+    materialCost: { stein: 12 },
+    populationCost: 3,
+    baseRate: 4.5,
+    revealAt: 1000,
   },
 
   /* --- Abbau ------------------------------------------------------------ */
@@ -176,7 +252,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 1200,
     costGrowth: 1.13,
     baseRate: 0.4,
-    revealAt: 900,
+    revealAt: 350,
   },
   {
     id: 'titanmine',
@@ -187,6 +263,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.15,
     materialCost: { stein: 40, holz: 25 },
     baseRate: 0.12,
+    populationCost: 8,
     revealAt: 6000,
   },
 ]
