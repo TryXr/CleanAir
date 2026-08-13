@@ -762,7 +762,7 @@ und dauerhaften Kolonien.
 |---|---|---|
 | **M4** ✅ | Materialien + globales Inventar, erste Bauketten (Wald) | Löst das eigentliche Problem sofort und passt noch in die heutige Architektur |
 | **M5** ✅ | Bevölkerung: Hütten, Nahrung, Wasser, Berufe | Braucht Materialien, um überhaupt bezahlbar zu sein |
-| **M6** | Mehrere Planeten gleichzeitig, Rakete, Reisen — und der Reset auf Durchlauf-Ebene | Der Architektur-Umbau. Reset muss *mit*, weil „Planet abschließen = zurücksetzen" dann nicht mehr gilt |
+| **M6** ✓ | Mehrere Planeten gleichzeitig, Rakete, Reisen — und der Reset auf Durchlauf-Ebene | Der Architektur-Umbau. Reset muss *mit*, weil „Planet abschließen = zurücksetzen" dann nicht mehr gilt |
 | **M7** | Planeten-Identität: Lava, Eis, Gas mit eigenen Ketten | Inhalt auf dem Gerüst von M6 |
 | **M8** | Die Anoxen (bisher M4) | |
 | **M9** | Politur (bisher M7) | |
@@ -845,3 +845,16 @@ Spielen am ehesten unfair wirken wird.
 - **Was passiert mit `meta.population` beim Reset?** Bevölkerung ist bisher
   „überlebt für immer". Unter dem neuen Modell gehört sie vermutlich zum
   Durchlauf und wird mit zurückgesetzt.
+
+### Entschieden in M6
+
+- **Das Material-Inventar überlebt den Reset nicht.** Sonst startet Durchlauf 2
+  mit dem vollen Lager aus Durchlauf 1 und macht den ersten bedeutungslos.
+  Startmaterial soll später aus Genesis-Upgrades kommen.
+- **Nahrung und Wasser bleiben planetenlokal** und gehören nicht ins globale
+  Lager. Sonst ernährt ein einziger Farmplanet alle anderen mit, und jede
+  Kolonie verliert ihr eigenes Überlebensproblem. Handel damit ist ein
+  eigenes Thema.
+- **Der Reset ist nicht an einen abgeschlossenen Planeten gebunden.** Er wird
+  frei, sobald er mindestens einen Kern abwirft — wann es zäh genug ist,
+  entscheidet der Spieler.

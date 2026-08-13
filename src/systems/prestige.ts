@@ -1,20 +1,27 @@
 import Decimal from 'break_infinity.js'
 import { findMetaUpgrade } from '../data/metaUpgrades'
-import { hasNextPlanet, planetForIndex } from '../data/planets'
+import { AURORA } from '../data/planets'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
-import { currentPlanetDef, planet, resetPlanet } from '../state/planet.svelte'
+import { planet, resetPlanet } from '../state/planet.svelte'
+import { resetRun } from '../state/run.svelte'
 import { resetAtmosphereNotices } from './atmosphere'
 import { metaEffects, metaRequirementsMet } from './metaEffects'
 import { resetPopulationNotices } from './population'
+import { completedCount, totalBiomass } from './travel'
 
 /**
- * Prestige — der Planetenwechsel (DESIGN.md §6).
+ * Prestige — der Durchlauf-Reset (DESIGN.md §16).
  *
- * Der entscheidende Punkt aus dem Konzept: Du verlässt einen Planeten nicht,
- * du besitzt ihn ab jetzt. Deshalb wandern die Siedler beim Sprung nach
- * `meta.population` statt verloren zu gehen — sie bleiben als Kolonie
- * bestehen, auch wenn deren passives Einkommen erst in M5 dazukommt.
+ * Seit M6 setzt Prestige **nicht mehr einen Planeten** zurück, sondern den
+ * ganzen Durchlauf. Man spielt, bis sich der Fortschritt zäh anfühlt, drückt
+ * dann bewusst auf Reset und beginnt wieder auf Aurora — mit Genesis-Kernen
+ * aus der Biomasse *aller* Planeten des Laufs.
+ *
+ * Damit ist der Reset wieder das, was er im Genre sein soll: eine
+ * freiwillige Entscheidung gegen abnehmenden Ertrag statt ein Knopf, der am
+ * Ende jedes Planeten aufleuchtet. Den Planetenwechsel übernimmt
+ * systems/travel.ts.
  */
 
 /**
@@ -30,50 +37,52 @@ export function coresFor(biomass: Decimal): Decimal {
   return biomass.div(BIOMASS_NORM).sqrt().floor()
 }
 
-/** Was der aktuelle Planet beim sofortigen Sprung einbrächte. */
+/** Was ein sofortiger Reset einbrächte — aus der Biomasse des ganzen Laufs. */
 export function pendingCores(): Decimal {
-  return coresFor(planet.biomass)
+  return coresFor(totalBiomass())
 }
 
 /** Wie viel Biomasse bis zum nächsten Kern fehlt. */
 export function biomassToNextCore(): Decimal {
   const next = pendingCores().add(1)
-  return next.pow(2).mul(BIOMASS_NORM).sub(planet.biomass)
+  return next.pow(2).mul(BIOMASS_NORM).sub(totalBiomass())
 }
 
+/**
+ * Ein Reset lohnt sich erst, wenn er etwas abwirft. Er ist bewusst nicht an
+ * einen abgeschlossenen Planeten gebunden — der Spieler entscheidet selbst,
+ * wann es zäh genug ist (§16).
+ */
 export function canPrestige(): boolean {
-  return planet.completed
+  return pendingCores().gte(1)
 }
 
 export function doPrestige(): boolean {
   if (!canPrestige()) return false
 
-  const finished = currentPlanetDef()
   const gained = pendingCores()
+  const planets = completedCount()
+  // Menschen bleiben als Kolonie-Erfahrung erhalten, auch wenn der Lauf endet.
   const settlers = planet.settlers
 
   meta.genesisCores = meta.genesisCores.add(gained)
   meta.population = meta.population.add(settlers)
-  meta.planetsCompleted += 1
+  meta.planetsCompleted += planets
+  meta.stats.runs += 1
 
-  const next = planetForIndex(meta.planetsCompleted)
-  resetPlanet(next, metaEffects().startingOxygen)
+  // Der ganze Durchlauf fällt: alle Planeten, alles Material, alle
+  // Freischaltungen. Nur meta überlebt.
+  resetRun()
+  resetPlanet(AURORA, metaEffects().startingOxygen)
   resetPopulationNotices()
   resetAtmosphereNotices()
 
   addLog(
-    `${finished.name} ist abgeschlossen. +${gained.toString()} Genesis-Kerne.` +
-      (settlers.gt(0) ? ` ${settlers.floor().toString()} Menschen bleiben als Kolonie zurück.` : ''),
+    `Durchlauf beendet: ${planets} ${planets === 1 ? 'Planet' : 'Planeten'} stabil, ` +
+      `+${gained.toString()} Genesis-Kerne. Alles andere bleibt zurück.`,
     'good',
   )
-
-  if (!hasNextPlanet(meta.planetsCompleted - 1)) {
-    addLog(
-      `Der Scanner findet vorerst nichts Neues — ${next.name} wird erneut angeflogen. Prozedurale Planeten kommen in M6.`,
-      'warn',
-    )
-  }
-  addLog(next.intro)
+  addLog(AURORA.intro)
 
   return true
 }

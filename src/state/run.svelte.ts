@@ -1,5 +1,6 @@
 import Decimal from 'break_infinity.js'
 import { MATERIALS, type MaterialCost } from '../data/materials'
+import { PLANETS } from '../data/planets'
 import { readDecimal, writeDecimal } from '../engine/serialize'
 
 /**
@@ -20,6 +21,23 @@ import { readDecimal, writeDecimal } from '../engine/serialize'
 export const run = $state({
   /** Material-id -> Menge. Global über alle Planeten des Durchlaufs. */
   materials: {} as Record<string, Decimal>,
+
+  /**
+   * Planeten, die in diesem Durchlauf angeflogen werden dürfen. Wächst, wenn
+   * auf dem aktuellen Planeten eine Rakete fertig wird.
+   */
+  unlocked: ['aurora'] as string[],
+
+  /**
+   * Zustand aller *nicht* aktiven Planeten, serialisiert.
+   *
+   * Der aktive Planet lebt weiterhin in planet.svelte.ts — nur so bleibt
+   * jeder `planet.foo`-Zugriff im übrigen Code unverändert gültig. Beim
+   * Reisen wird der aktive Planet hier eingelagert und der Zielplanet
+   * ausgepackt (systems/travel.ts). Planeten sterben damit nicht mehr beim
+   * Wechsel, sondern erst beim Durchlauf-Reset (§16).
+   */
+  planets: {} as Record<string, unknown>,
 })
 
 export type RunState = typeof run
@@ -74,9 +92,24 @@ export function hasAnyMaterial(): boolean {
   return MATERIALS.some((m) => materialAmount(m.id).gt(0))
 }
 
-/** Beim Durchlauf-Reset (ab M6) — heute nur von Tests und Debug benutzt. */
+/** Ist dieser Planet in diesem Durchlauf anfliegbar? */
+export function isUnlocked(id: string): boolean {
+  return run.unlocked.includes(id)
+}
+
+export function unlockPlanet(id: string): void {
+  if (!isUnlocked(id)) run.unlocked = [...run.unlocked, id]
+}
+
+/**
+ * Der Durchlauf-Reset (DESIGN.md §16). Alle Planeten, alles Material, alle
+ * Freischaltungen fallen weg — was bleibt, sind die Genesis-Kerne und der
+ * Meta-Baum in meta.svelte.ts.
+ */
 export function resetRun(): void {
   run.materials = {}
+  run.unlocked = ['aurora']
+  run.planets = {}
 }
 
 export function serializeRun() {
@@ -85,7 +118,7 @@ export function serializeRun() {
     const amount = materialAmount(def.id)
     if (amount.gt(0)) materials[def.id] = writeDecimal(amount)
   }
-  return { materials }
+  return { materials, unlocked: [...run.unlocked], planets: { ...run.planets } }
 }
 
 export function deserializeRun(raw: unknown): void {
@@ -100,4 +133,17 @@ export function deserializeRun(raw: unknown): void {
     if (amount.gt(0)) materials[def.id] = amount
   }
   run.materials = materials
+
+  // Nur bekannte Planeten übernehmen. Aurora ist immer erreichbar, sonst
+  // stünde man nach einem kaputten Save ohne Ziel da.
+  const savedUnlocked = Array.isArray(s.unlocked) ? s.unlocked : []
+  const unlocked = PLANETS.filter((p) => savedUnlocked.includes(p.id)).map((p) => p.id)
+  run.unlocked = unlocked.includes('aurora') ? unlocked : ['aurora', ...unlocked]
+
+  const savedPlanets = (s.planets ?? {}) as Record<string, unknown>
+  const planets: Record<string, unknown> = {}
+  for (const def of PLANETS) {
+    if (savedPlanets[def.id]) planets[def.id] = savedPlanets[def.id]
+  }
+  run.planets = planets
 }

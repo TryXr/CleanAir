@@ -95,6 +95,13 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
     events: [] as ActiveEvent[],
     nextEventIn: FIRST_EVENT_DELAY,
 
+    /**
+     * Steht die Rakete dieses Planeten? Sie ist der Weg zum *nächsten*
+     * Planeten und völlig unabhängig von `completed` — man darf weiterziehen,
+     * bevor die Atmosphäre steht, und später zurückkommen (§16).
+     */
+    rocketBuilt: false,
+
     clicks: 0,
     /** Sekunden auf diesem Planeten. */
     elapsed: 0,
@@ -157,6 +164,7 @@ export function serializePlanet() {
     jobs: { ...planet.jobs },
     events: planet.events.map((e) => ({ ...e })),
     nextEventIn: planet.nextEventIn,
+    rocketBuilt: planet.rocketBuilt,
     clicks: planet.clicks,
     elapsed: planet.elapsed,
     completed: planet.completed,
@@ -191,6 +199,7 @@ export function deserializePlanet(raw: unknown): void {
   }
   planet.jobs = jobs
   planet.nextEventIn = Math.max(0, readNumber(s.nextEventIn, FIRST_EVENT_DELAY))
+  planet.rocketBuilt = s.rocketBuilt === true
   planet.clicks = readNumber(s.clicks, 0)
   planet.elapsed = readNumber(s.elapsed, 0)
   planet.completed = s.completed === true

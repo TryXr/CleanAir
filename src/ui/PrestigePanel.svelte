@@ -1,52 +1,53 @@
 <script lang="ts">
-  import { format, formatInt, formatTime } from '../engine/format'
-  import { hasNextPlanet, planetForIndex } from '../data/planets'
+  import { format, formatInt } from '../engine/format'
   import { biomassToNextCore, canPrestige, doPrestige, pendingCores } from '../systems/prestige'
-  import { meta } from '../state/meta.svelte'
-  import { currentPlanetDef, planet } from '../state/planet.svelte'
+  import { completedCount, totalBiomass } from '../systems/travel'
 
-  const def = $derived(currentPlanetDef())
   const cores = $derived(pendingCores())
   const toNext = $derived(biomassToNextCore())
   const ready = $derived(canPrestige())
-  const next = $derived(planetForIndex(meta.planetsCompleted + 1))
-  const isLast = $derived(!hasNextPlanet(meta.planetsCompleted))
+  const stable = $derived(completedCount())
+
+  /**
+   * Der Reset wirft alles weg. Ein versehentlicher Klick wäre der teuerste
+   * Fehler im Spiel — deshalb als einziger Knopf mit Rückfrage.
+   */
+  function onReset(): void {
+    const frage =
+      `Durchlauf wirklich beenden?\n\n` +
+      `+${formatInt(cores)} Genesis-Kerne.\n` +
+      `Alle Planeten, das gesamte Lager und alle Freischaltungen fallen weg.`
+    if (confirm(frage)) doPrestige()
+  }
 </script>
 
 <div class="head">
   <div>
     <span class="cores num">{formatInt(cores)}</span>
-    <span class="unit">Genesis-Kerne beim Sprung</span>
+    <span class="unit">Genesis-Kerne beim Reset</span>
   </div>
 </div>
 
 <dl class="stats">
-  <div><dt>Biomasse</dt><dd class="num">{format(planet.biomass)}</dd></div>
+  <div><dt>Biomasse des Durchlaufs</dt><dd class="num">{format(totalBiomass())}</dd></div>
   <div><dt>bis zum nächsten Kern</dt><dd class="num">{format(toNext)}</dd></div>
+  <div><dt>stabile Planeten</dt><dd class="num">{stable}</dd></div>
 </dl>
 
 {#if ready}
   <p class="note">
-    {def.name} ist abgeschlossen. Generatoren, Upgrades und Atmosphäre bleiben zurück — Kerne,
-    Bevölkerung und der Meta-Baum kommen mit.
-    {#if planet.settlers.gt(0)}
-      {formatInt(planet.settlers)} Menschen bleiben als Kolonie auf {def.name}.
-    {/if}
+    Der Reset beendet den ganzen Durchlauf: alle Planeten, das Lager und alle Freischaltungen
+    fallen weg. Kerne, Meta-Baum und Forschung bleiben. Du landest wieder auf Aurora — mit mehr
+    in der Hand als beim letzten Mal.
   </p>
 {:else}
   <p class="note muted">
-    Der Sprung wird frei, sobald {def.name} alle Werte {formatTime(def.stabilitySeconds)} am Stück
-    im Zielfenster hält.
+    Noch nicht genug Biomasse für einen Kern. Der Reset lohnt sich erst, wenn er etwas abwirft —
+    wann das ist, entscheidest du selbst.
   </p>
 {/if}
 
-<button class="primary jump" disabled={!ready} onclick={() => doPrestige()}>
-  {#if isLast && ready}
-    Erneut nach {next.name}
-  {:else}
-    Sprung nach {next.name}
-  {/if}
-</button>
+<button class="primary jump" disabled={!ready} onclick={onReset}>Durchlauf zurücksetzen</button>
 
 <style>
   .head {

@@ -4,7 +4,7 @@ import App from './App.svelte'
 
 import { format, formatTime } from './engine/format'
 import { applyOffline, registerSystem, runTicks, startLoop, stopLoop } from './engine/loop'
-import { loadGame, saveNow } from './engine/save'
+import { SAVE_VERSION, buildSave, exportSave, importSave, loadGame, saveNow } from './engine/save'
 import * as atmosphere from './systems/atmosphere'
 import * as events from './systems/events'
 import * as forest from './systems/forest'
@@ -13,6 +13,7 @@ import * as population from './systems/population'
 import * as prestige from './systems/prestige'
 import * as production from './systems/production'
 import * as research from './systems/research'
+import * as travel from './systems/travel'
 import { atmosphereSystem, resetAtmosphereNotices } from './systems/atmosphere'
 import { eventsSystem } from './systems/events'
 import { populationSystem, resetPopulationNotices } from './systems/population'
@@ -163,7 +164,11 @@ if (import.meta.env.DEV) {
       events,
       forest,
       jobs,
+      travel,
       run,
+      // Für Save-Rundläufe im Test: exportieren, Zustand zerstören,
+      // importieren und prüfen, ob wirklich alles zurückkommt.
+      save: { exportSave, importSave, saveNow, buildSave, SAVE_VERSION },
       data: {
         GENERATORS,
         UPGRADES,

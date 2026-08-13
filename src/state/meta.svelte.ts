@@ -41,6 +41,8 @@ export const meta = $state({
     fires: 0,
     /** Schnellster Planetenabschluss in Sekunden. 0 = noch keiner. */
     bestPlanetSeconds: 0,
+    /** Abgeschlossene Durchläufe (§16). */
+    runs: 0,
   },
 })
 
@@ -68,6 +70,7 @@ export function serializeMeta() {
       eventsHandled: meta.stats.eventsHandled,
       fires: meta.stats.fires,
       bestPlanetSeconds: meta.stats.bestPlanetSeconds,
+      runs: meta.stats.runs,
     },
   }
 }
@@ -105,4 +108,5 @@ export function deserializeMeta(raw: unknown): void {
   meta.stats.eventsHandled = readInt(stats.eventsHandled, 0)
   meta.stats.fires = readInt(stats.fires, 0)
   meta.stats.bestPlanetSeconds = readNumber(stats.bestPlanetSeconds, 0)
+  meta.stats.runs = readInt(stats.runs, 0)
 }

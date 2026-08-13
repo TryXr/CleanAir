@@ -5,13 +5,35 @@ stehen in [DESIGN.md](DESIGN.md) — **bei Fragen zu Spielinhalt immer dort
 nachsehen, nicht raten.** Aktueller Stand: M3 abgeschlossen (Atmosphären-
 Mischung, Stabilitäts-Timer, Forschung, Ereignisse, Statistik).
 
-M4 und M5 sind ebenfalls fertig: Materialien mit globalem Lager und die
-Wald-Kette, dann Wohnraum, Nahrung, Wasser und Berufe.
+M4 bis M6 sind ebenfalls fertig: Materialien mit globalem Lager und die
+Wald-Kette, dann Wohnraum, Nahrung, Wasser und Berufe — und zuletzt der
+Umbau auf dauerhafte Planeten.
 
 **Achtung: DESIGN.md §16 ist ein Kurswechsel und hat Vorrang vor §6 und §11.**
-Planeten werden dauerhaft begehbar, der Reset wandert auf die Durchlauf-Ebene.
-Als Nächstes M6: mehrere Planeten gleichzeitig, Rakete, Reisen — und der
-Reset auf Durchlauf-Ebene. Die Anoxen rücken auf M8.
+Als Nächstes M7: Planeten-Identität (Lava, Eis, Gas mit eigenen Ketten).
+Die Anoxen rücken auf M8.
+
+## Drei Lebensdauern, nicht zwei
+
+Seit M6 hat der Zustand drei Ebenen (§16). Wer das verwechselt, baut
+Fortschritt an der falschen Stelle ein:
+
+| Ebene | Datei | Stirbt bei |
+|---|---|---|
+| `planet` | `state/planet.svelte.ts` | nichts mehr — nur der **aktive** Planet |
+| `run` | `state/run.svelte.ts` | Durchlauf-Reset (Material, Freischaltungen, alle anderen Planeten) |
+| `meta` | `state/meta.svelte.ts` | nie (Kerne, Meta-Baum, Forschung) |
+
+Der Trick beim Reisen: `planet` bleibt das **eine** reaktive Objekt für den
+aktiven Planeten, alle anderen liegen serialisiert in `run.planets`.
+`systems/travel.ts` lagert beim Wechsel ein und packt aus. Deshalb musste
+kein einziger `planet.foo`-Zugriff im übrigen Code angefasst werden — ein
+Umbau auf `planets[aktiv].oxygen` hätte jede Zeile in Systemen und UI
+berührt.
+
+**Rakete ≠ Abschluss.** Die Rakete bringt einen zum nächsten Planeten,
+`completed` heißt „Atmosphäre steht stabil". Beides ist bewusst entkoppelt,
+damit sich die Rückkehr lohnt.
 
 ## Befehle
 

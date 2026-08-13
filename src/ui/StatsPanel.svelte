@@ -49,6 +49,7 @@
 <dl>
   <div><dt>Spielzeit</dt><dd class="num">{formatTime(meta.totalPlaytime)}</dd></div>
   <div><dt>Erster Start</dt><dd class="num">{since}</dd></div>
+  <div><dt>Durchläufe</dt><dd class="num">{meta.stats.runs}</dd></div>
   <div><dt>Planeten abgeschlossen</dt><dd class="num">{meta.planetsCompleted}</dd></div>
   {#if stats.bestPlanetSeconds > 0}
     <div>

@@ -18,7 +18,9 @@
     <span class="mark">◍</span>
     <div>
       <h1>CleanAir</h1>
-      <span class="sub">{planet.name} · Planet {meta.planetsCompleted + 1}</span>
+      <!-- Seit §16 zählt nicht mehr der wievielte Planet, sondern der Durchlauf:
+           Planeten stehen nebeneinander, nicht hintereinander. -->
+      <span class="sub">{planet.name} · Durchlauf {meta.stats.runs + 1}</span>
     </div>
   </div>
 

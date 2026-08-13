@@ -8,7 +8,7 @@ import { session } from '../state/session.svelte'
 export const SAVE_KEY = 'cleanair.save'
 
 /** Bei jeder Struktur­änderung erhöhen und in migrations.ts eintragen. */
-export const SAVE_VERSION = 6
+export const SAVE_VERSION = 7
 
 export interface SaveData extends SaveShape {
   version: number
@@ -158,8 +158,12 @@ export function importSave(encoded: string): boolean {
     if (version > SAVE_VERSION) return false
 
     const { save } = runMigrations(parsed, SAVE_VERSION)
+    // Reihenfolge und Vollständigkeit müssen zu loadGame() passen: fehlt hier
+    // ein Teilzustand, verliert ein Import genau ihn — der Durchlauf-Zustand
+    // ist so seit M4 stillschweigend verschwunden.
     deserializeSettings(save.settings)
     deserializeMeta(save.meta)
+    deserializeRun(save.run)
     deserializePlanet(save.planet)
     // Wer importiert, will wieder gespeichert haben.
     discarded = false

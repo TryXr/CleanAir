@@ -96,6 +96,34 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.planet = planet
     return s
   },
+
+  /**
+   * M6: dauerhafte Planeten, Rakete, Reset auf Durchlauf-Ebene.
+   *
+   * Der bisherige Stand wird zum aktiven Planeten des laufenden Durchlaufs.
+   * Raketen gab es vorher nicht, also steht keine. Und weil bisher
+   * `planetsCompleted` den Fortschritt *ersetzte*, wird daraus die
+   * Freischaltliste abgeleitet: wer schon auf Vesta stand, darf weiterhin
+   * dorthin — sonst säße er nach dem Laden auf einem gesperrten Planeten.
+   */
+  7: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    planet.rocketBuilt = false
+    s.planet = planet
+
+    const meta = (s.meta ?? {}) as SaveShape
+    const stats = (meta.stats ?? {}) as SaveShape
+    stats.runs = 0
+    meta.stats = stats
+    s.meta = meta
+
+    const run = (s.run ?? {}) as SaveShape
+    const activeId = typeof planet.id === 'string' ? planet.id : 'aurora'
+    run.unlocked = activeId === 'aurora' ? ['aurora'] : ['aurora', activeId]
+    run.planets = {}
+    s.run = run
+    return s
+  },
 }
 
 export interface MigrationResult {

@@ -1,12 +1,11 @@
 <script lang="ts">
   import Decimal from 'break_infinity.js'
-  import { planetForIndex } from '../data/planets'
   import { wipeSave } from '../engine/save'
-  import { resetAtmosphereNotices } from '../systems/atmosphere'
-  import { resetPopulationNotices } from '../systems/population'
+  import { nextPlanetAfter, travelTo } from '../systems/travel'
   import { addLog } from '../state/log.svelte'
-  import { planet, resetPlanet } from '../state/planet.svelte'
+  import { planet } from '../state/planet.svelte'
   import { meta } from '../state/meta.svelte'
+  import { unlockPlanet } from '../state/run.svelte'
 
   /**
    * Werkzeuge fürs Spieltesten. Wird in App.svelte nur eingehängt, wenn
@@ -26,22 +25,28 @@
   }
 
   /**
-   * Direkt auf den nächsten Planeten. Ohne das kostet jeder Test der
-   * Vesta-Systeme — Mischung, Wald, Materialien — erst zwanzig Minuten
-   * Aurora.
+   * Schaltet den nächsten Planeten frei und fliegt hin. Ohne das kostet
+   * jeder Test der Vesta-Systeme — Mischung, Wald, Materialien, Berufe —
+   * erst zwanzig Minuten Aurora.
+   *
+   * Geht bewusst über travelTo(), damit hier derselbe Weg getestet wird,
+   * den der Spieler nimmt: Planet einlagern, Ziel auspacken.
    */
   function skipPlanet(): void {
-    const next = planetForIndex(meta.planetsCompleted + 1)
-    meta.planetsCompleted += 1
-    resetPlanet(next, new Decimal(25000))
-    resetPopulationNotices()
-    resetAtmosphereNotices()
-    addLog(`Debug: übersprungen nach ${next.name}.`, 'warn')
+    const next = nextPlanetAfter(planet.id)
+    if (!next) {
+      addLog('Debug: kein weiterer Planet vorhanden.', 'warn')
+      return
+    }
+    unlockPlanet(next.id)
+    planet.oxygen = planet.oxygen.add(new Decimal(25000))
+    travelTo(next.id)
+    addLog(`Debug: gesprungen nach ${next.name}.`, 'warn')
   }
 </script>
 
 <p class="state">
-  <span class="num">{planet.name}</span> · Planet {meta.planetsCompleted + 1} ·
+  <span class="num">{planet.name}</span> · Durchlauf {meta.stats.runs + 1} ·
   <span class="num">{Math.floor(planet.elapsed)}s</span>
 </p>
 

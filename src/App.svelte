@@ -20,6 +20,7 @@
   import LogPanel from './ui/LogPanel.svelte'
   import MetaTree from './ui/MetaTree.svelte'
   import Panel from './ui/Panel.svelte'
+  import PlanetMap from './ui/PlanetMap.svelte'
   import PopulationPanel from './ui/PopulationPanel.svelte'
   import PrestigePanel from './ui/PrestigePanel.svelte'
   import ResearchTree from './ui/ResearchTree.svelte'
@@ -34,7 +35,7 @@
   // Schrittweise Enthüllung: kein Panel zeigen, bevor es etwas zu entscheiden gibt.
   const showPopulation = $derived(currentPlanetDef().allowsPopulation)
   const showPrestige = $derived(
-    planet.completed || meta.planetsCompleted > 0 || pendingCores().gte(1),
+    planet.completed || meta.stats.runs > 0 || pendingCores().gte(1),
   )
   const showMetaTree = $derived(meta.genesisCores.gt(0) || meta.metaUpgrades.length > 0)
   const showResearch = $derived(
@@ -148,8 +149,12 @@
       </Panel>
     {/if}
 
+    <Panel title="Sternenkarte" hint="Planeten bleiben bestehen">
+      <PlanetMap />
+    </Panel>
+
     {#if showPrestige}
-      <Panel title="Planetensprung">
+      <Panel title="Durchlauf" hint="Reset gegen Kerne">
         <PrestigePanel />
       </Panel>
     {/if}
