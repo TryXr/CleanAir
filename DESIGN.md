@@ -760,12 +760,43 @@ und dauerhaften Kolonien.
 
 | | Inhalt | Warum diese Reihenfolge |
 |---|---|---|
-| **M4** | Materialien + globales Inventar, erste Bauketten (Wald) | Löst das eigentliche Problem sofort und passt noch in die heutige Architektur |
+| **M4** ✅ | Materialien + globales Inventar, erste Bauketten (Wald) | Löst das eigentliche Problem sofort und passt noch in die heutige Architektur |
 | **M5** | Bevölkerung: Hütten, Nahrung, Wasser, Berufe | Braucht Materialien, um überhaupt bezahlbar zu sein |
 | **M6** | Mehrere Planeten gleichzeitig, Rakete, Reisen — und der Reset auf Durchlauf-Ebene | Der Architektur-Umbau. Reset muss *mit*, weil „Planet abschließen = zurücksetzen" dann nicht mehr gilt |
 | **M7** | Planeten-Identität: Lava, Eis, Gas mit eigenen Ketten | Inhalt auf dem Gerüst von M6 |
 | **M8** | Die Anoxen (bisher M4) | |
 | **M9** | Politur (bisher M7) | |
+
+### Stand nach M4
+
+Gebaut: drei Materialien (Holz, Stein, Titan), globales Lager auf der neuen
+Durchlauf-Ebene, die Wald-Kette und der Abbau. Materialien starten auf
+**Vesta**, nicht auf Aurora — Aurora bliebe sonst nicht das reine
+O₂-Tutorial, das §11 verlangt. Wie sich Materialien endgültig über die
+Planeten verteilen, entscheidet M7 mit der Planeten-Identität.
+
+Gemessen (simuliert, nicht geschätzt):
+
+| Spielweise | Dauer |
+|---|---|
+| Aurora (unverändert zu M3) | 21,8 min |
+| Vesta, Wald zur Hälfte geerntet | 32,1 min |
+| Vesta, Kahlschlag | 34,0 min |
+| Vesta, gar kein Holz | schließt nicht ab |
+
+Der Baum ist damit knapp zwei Minuten wert — die Abwägung „Bauholz kostet
+Atmosphäre" ist messbar, ohne den Planeten zu entscheiden. Bei 0,9 O₂/Baum
+drückte der Wald Vesta unter das Zielfenster, bei 0,3 war Fällen umsonst zu
+haben; 0,5 trifft beides.
+
+**Die Kette ist bewusst kritisch:** Holz → Titan-Mine → Titan → Nitrat-Cracker
+→ N₂. Wer nie ein Sägewerk baut, bekommt den Cracker nicht und damit den
+N₂-Puffer nicht ins Fenster. Das ist kein Sackgassen-Verlust — ein Sägewerk
+lässt sich jederzeit nachbauen, und die fehlenden Materialien stehen rot an
+der Kaufschaltfläche —, aber es ist die härteste Abhängigkeit im Spiel.
+Sollte sich das beim Spielen als zu streng anfühlen, ist der richtige Hebel,
+Sublimatoren allein bis ins Fenster reichen zu lassen (langsamer, aber
+möglich), nicht die Materialkosten zu senken.
 
 ### Offene Fragen dieses Kurswechsels
 

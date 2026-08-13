@@ -3,8 +3,10 @@ import { GENERATORS, findGenerator, type GasKind, type GeneratorDef } from '../d
 import { UPGRADES, findUpgrade } from '../data/upgrades'
 import { currentPlanetDef, generatorCount, hasUpgrade, planet } from '../state/planet.svelte'
 import { meta } from '../state/meta.svelte'
+import { addMaterial, affordableCount, canAffordMaterials, spendMaterials } from '../state/run.svelte'
 import { fireThrottle } from './atmosphere'
 import { eventEffects } from './eventEffects'
+import { WOOD_PER_TREE, forestO2Rate, forestRoom } from './forest'
 import { metaEffects } from './metaEffects'
 import { researchEffects } from './research'
 
@@ -98,24 +100,75 @@ export function generatorRate(def: GeneratorDef): Decimal {
   if (count === 0) return new Decimal(0)
 
   const m = collectMultipliers()
+  // Forschungsboni gelten je Gasart; Abbau und Wald hängen bislang nur an
+  // den globalen Faktoren.
+  const byGas = def.output.kind === 'gas' ? m.byGas[def.output.gas] : new Decimal(1)
   return new Decimal(def.baseRate)
     .mul(count)
     .mul(m.perGenerator[def.id] ?? 1)
-    .mul(m.byGas[def.gas])
+    .mul(byGas)
     .mul(m.global)
 }
 
 function rateForGas(gas: GasKind): Decimal {
   let total = new Decimal(0)
   for (const def of GENERATORS) {
-    if (def.gas === gas) total = total.add(generatorRate(def))
+    if (def.output.kind === 'gas' && def.output.gas === gas) {
+      total = total.add(generatorRate(def))
+    }
   }
   return total
 }
 
-/** O₂ pro Sekunde, vor Verbrauch und Bränden. */
+/** Summe aller Anlagen mit dieser Ausgabeart. */
+function rateForKind(kind: 'plant' | 'fell'): Decimal {
+  let total = new Decimal(0)
+  for (const def of GENERATORS) {
+    if (def.output.kind === kind) total = total.add(generatorRate(def))
+  }
+  return total
+}
+
+/** Bäume pro Sekunde, die gepflanzt werden. */
+export function plantingRate(): Decimal {
+  return rateForKind('plant')
+}
+
+/** Bäume pro Sekunde, die gefällt werden — begrenzt durch den Bestand. */
+export function fellingRate(): Decimal {
+  return rateForKind('fell')
+}
+
+/**
+ * Material pro Sekunde, das ins Lager fließt.
+ *
+ * Holz zählt hier mit, obwohl es nicht abgebaut, sondern gefällt wird —
+ * fürs Lager ist der Unterschied egal, und eine Zeile ohne Rate, während
+ * sichtbar Holz hereinkommt, wäre schlicht falsch. Gefällt wird nur, solange
+ * Bäume stehen.
+ */
+export function materialRate(material: string): Decimal {
+  let total = new Decimal(0)
+  for (const def of GENERATORS) {
+    if (def.output.kind === 'material' && def.output.material === material) {
+      total = total.add(generatorRate(def))
+    }
+  }
+  if (material === 'holz' && planet.trees.gt(0)) {
+    total = total.add(Decimal.min(fellingRate(), planet.trees).mul(WOOD_PER_TREE))
+  }
+  return total
+}
+
+/**
+ * O₂ pro Sekunde, vor Verbrauch und Bränden.
+ *
+ * Der Wald zählt mit: er ist eine echte O₂-Quelle, und sonst würde die
+ * Netto-Anzeige der Bevölkerung sowie der Sofortbonus aus Ereignissen ihn
+ * schlicht übersehen.
+ */
 export function currentO2Rate(): Decimal {
-  return rateForGas('o2')
+  return rateForGas('o2').add(forestO2Rate())
 }
 
 /** N₂ pro Sekunde. Geht ausschließlich in die Luft, nie in den Vorrat. */
@@ -154,7 +207,7 @@ export function generatorCost(def: GeneratorDef, amount = 1): Decimal {
   return first.mul(Decimal.pow(g, amount).sub(1)).div(g - 1)
 }
 
-/** Wie viele Stück das aktuelle Guthaben hergibt. */
+/** Wie viele Stück das aktuelle Guthaben hergibt — O₂ *und* Material. */
 export function maxAffordable(def: GeneratorDef): number {
   const g = def.costGrowth
   const first = firstUnitCost(def)
@@ -162,7 +215,10 @@ export function maxAffordable(def: GeneratorDef): number {
 
   // k = log_g( 1 + guthaben × (g−1) / erstesStück )
   const ratio = planet.oxygen.mul(g - 1).div(first).add(1)
-  return Math.floor(ratio.log10() / Math.log10(g))
+  const byOxygen = Math.floor(ratio.log10() / Math.log10(g))
+
+  // Material bremst flach, deckelt „Max" aber genauso hart.
+  return Math.min(byOxygen, affordableCount(def.materialCost))
 }
 
 /** Upgrade-Preis, ebenfalls nach Forschungsrabatt. */
@@ -174,14 +230,42 @@ export function upgradeCost(id: string): Decimal {
 
 // --- Käufe ----------------------------------------------------------------
 
+/**
+ * Führt der aktuelle Planet die Mechanik, an der diese Anlage arbeitet?
+ *
+ * Gehört hierher und nicht nur in die UI: sonst könnte ein Konsolenaufruf —
+ * oder später ein Auto-Käufer — einen Steinbruch auf einem Planeten bauen,
+ * der gar keinen Stein hat, und der würde dann fröhlich fördern.
+ */
+export function isAvailable(def: GeneratorDef): boolean {
+  const planetDef = currentPlanetDef()
+  const out = def.output
+  switch (out.kind) {
+    case 'gas':
+      if (out.gas === 'n2') return planetDef.n2Window !== undefined
+      if (out.gas === 'scrub') return planetDef.maxPollution !== undefined
+      return true
+    case 'material':
+      return planetDef.materials.includes(out.material)
+    case 'plant':
+    case 'fell':
+      return planetDef.forestCapacity > 0
+  }
+}
+
 export function buyGenerator(id: string, amount: number): boolean {
   const def = findGenerator(id)
   if (!def || amount < 1) return false
+  if (!isAvailable(def)) return false
 
   const cost = generatorCost(def, amount)
   if (planet.oxygen.lt(cost)) return false
+  // Beide Preise müssen stimmen, bevor irgendetwas abgebucht wird — sonst
+  // wäre O₂ weg und die Anlage stünde trotzdem nicht.
+  if (!canAffordMaterials(def.materialCost, amount)) return false
 
   planet.oxygen = planet.oxygen.sub(cost)
+  spendMaterials(def.materialCost, amount)
   planet.generators[id] = generatorCount(id) + amount
   return true
 }
@@ -226,6 +310,31 @@ export function productionSystem(dt: number): void {
 
   const o2 = o2Rate.mul(dt)
   if (o2.gt(0)) addOxygen(o2)
+
+  /* --- Wald ---------------------------------------------------------------
+     Erst pflanzen, dann fällen. Andersherum könnte ein Sägewerk Bäume
+     abräumen, die im selben Tick noch gar nicht standen.
+  ---------------------------------------------------------------------- */
+  if (def.forestCapacity > 0) {
+    const planted = Decimal.min(plantingRate().mul(dt), forestRoom())
+    if (planted.gt(0)) planet.trees = planet.trees.add(planted)
+  }
+
+  if (planet.trees.gt(0)) {
+    // Nie mehr fällen als steht — sonst entstünde Holz aus dem Nichts.
+    const felled = Decimal.min(fellingRate().mul(dt), planet.trees)
+    if (felled.gt(0)) {
+      planet.trees = planet.trees.sub(felled)
+      addMaterial('holz', felled.mul(WOOD_PER_TREE))
+    }
+  }
+
+  // Abbau: alles, was direkt ins globale Lager geht.
+  for (const gen of GENERATORS) {
+    if (gen.output.kind !== 'material') continue
+    const gained = generatorRate(gen).mul(dt)
+    if (gained.gt(0)) addMaterial(gen.output.material, gained)
+  }
 
   // N₂ landet nur in der Luft: es ist Puffer, keine Kaufkraft.
   const n2 = currentN2Rate().mul(dt)

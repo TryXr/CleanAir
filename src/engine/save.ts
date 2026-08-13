@@ -1,13 +1,14 @@
 import { runMigrations, type SaveShape } from './migrations'
 import { deserializeMeta, serializeMeta } from '../state/meta.svelte'
 import { deserializePlanet, serializePlanet } from '../state/planet.svelte'
+import { deserializeRun, serializeRun } from '../state/run.svelte'
 import { deserializeSettings, serializeSettings } from '../state/settings.svelte'
 import { session } from '../state/session.svelte'
 
 export const SAVE_KEY = 'cleanair.save'
 
 /** Bei jeder Struktur­änderung erhöhen und in migrations.ts eintragen. */
-export const SAVE_VERSION = 4
+export const SAVE_VERSION = 5
 
 export interface SaveData extends SaveShape {
   version: number
@@ -20,6 +21,7 @@ export function buildSave(): SaveData {
     savedAt: Date.now(),
     meta: serializeMeta(),
     planet: serializePlanet(),
+    run: serializeRun(),
     settings: serializeSettings(),
   }
 }
@@ -105,6 +107,7 @@ export function loadGame(): LoadResult {
 
   deserializeSettings(save.settings)
   deserializeMeta(save.meta)
+  deserializeRun(save.run)
   deserializePlanet(save.planet)
 
   const savedAt = typeof save.savedAt === 'number' ? save.savedAt : Date.now()

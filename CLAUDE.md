@@ -5,10 +5,12 @@ stehen in [DESIGN.md](DESIGN.md) — **bei Fragen zu Spielinhalt immer dort
 nachsehen, nicht raten.** Aktueller Stand: M3 abgeschlossen (Atmosphären-
 Mischung, Stabilitäts-Timer, Forschung, Ereignisse, Statistik).
 
+M4 ist ebenfalls fertig: Materialien mit globalem Lager und die Wald-Kette.
+
 **Achtung: DESIGN.md §16 ist ein Kurswechsel und hat Vorrang vor §6 und §11.**
-Planeten werden dauerhaft begehbar, der Reset wandert auf die Durchlauf-Ebene,
-und es kommen Materialien mit globalem Inventar dazu. Als Nächstes M4:
-Materialien und erste Bauketten. Die Anoxen rücken auf M8.
+Planeten werden dauerhaft begehbar, der Reset wandert auf die Durchlauf-Ebene.
+Als Nächstes M5: Bevölkerung mit Hütten, Nahrung, Wasser und Berufen. Die
+Anoxen rücken auf M8.
 
 ## Befehle
 
@@ -32,7 +34,7 @@ Deutsch in UI-Texten, Kommentaren und Commits. Englisch in Bezeichnern
 |---|---|---|
 | `engine/` | Loop, Save, Migrations, Format, RNG | Kennt das Spiel nicht. Keine Generatoren, keine Anoxen. |
 | `data/` | Generatoren, Upgrades, Feinde als Objekte | Reine Daten, null Logik. Balancing = hier Zahlen ändern. |
-| `state/` | Reaktiver Zustand (`.svelte.ts`, Runes) | `planet` wird beim Wechsel zurückgesetzt, `meta` nie. |
+| `state/` | Reaktiver Zustand (`.svelte.ts`, Runes) | Drei Lebensdauern: `planet` stirbt beim Wechsel, `run` beim Durchlauf-Reset (ab M6), `meta` nie. |
 | `systems/` | Logik, die pro Tick läuft | Bekommt `dt`, schreibt in `state/`. |
 | `ui/` | Svelte-Komponenten | Nur Darstellung, keine Spielregeln. |
 

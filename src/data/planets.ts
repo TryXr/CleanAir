@@ -65,6 +65,18 @@ export interface PlanetDef {
   /** Laufen hier Zufalls-Ereignisse? Aurora bleibt ungestört. */
   hasEvents: boolean
 
+  /**
+   * Welche Materialien es hier gibt (DESIGN.md §16). Leer = dieser Planet
+   * kennt keine — der Hauptgrund, später zu einem alten Planeten
+   * zurückzukehren, ist genau diese Liste.
+   */
+  materials: readonly string[]
+  /**
+   * Wie viele Bäume der Planet trägt. 0 = kein Wald möglich.
+   * Ein Lavabrocken wird hier später eine sehr kleine Zahl stehen haben.
+   */
+  forestCapacity: number
+
   /** Führt dieser Planet Bevölkerung ein? Aurora bewusst nicht. */
   allowsPopulation: boolean
   /** Ab diesem O₂-Anteil landen die ersten Siedler. */
@@ -96,6 +108,15 @@ export const AURORA: PlanetDef = {
   /** Kurz — hier lernt der Spieler nur, dass der Balken halten muss. */
   stabilitySeconds: 30,
   hasEvents: false,
+
+  /**
+   * Aurora bleibt das reine O₂-Tutorial. Materialien wären hier das zweite
+   * System auf demselben Planeten, und genau davor schützt §11. Sie beginnen
+   * auf Vesta; wie sie sich später über die Planeten verteilen, entscheidet
+   * M7 mit der Planeten-Identität.
+   */
+  materials: [],
+  forestCapacity: 0,
 
   allowsPopulation: false,
   settleAt: 0,
@@ -132,6 +153,14 @@ export const VESTA: PlanetDef = {
 
   stabilitySeconds: 180,
   hasEvents: true,
+
+  /**
+   * Vesta führt die Materialien ein. Titan gibt es vorerst nur hier — der
+   * erste Grund, später zurückzufliegen, statt den Planeten abzuhaken.
+   */
+  materials: ['holz', 'stein', 'titan'],
+  /** Kalt, aber mit Wasser im Permafrost. Wald geht, üppig wird er nicht. */
+  forestCapacity: 12000,
 
   allowsPopulation: true,
   /** Früh genug, dass die Siedler den Aufbau noch mitprägen. */

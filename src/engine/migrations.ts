@@ -70,6 +70,18 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.meta = meta
     return s
   },
+
+  /** M4: Materialien mit globalem Lager, Wald als erste Kette. */
+  5: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    planet.trees = '0'
+    s.planet = planet
+
+    // Die dritte Lebensdauer aus DESIGN.md §16. Ein alter Stand hat noch
+    // kein Lager — angefangen wird bei leer, nicht bei geschenkt.
+    s.run = { materials: {} }
+    return s
+  },
 }
 
 export interface MigrationResult {

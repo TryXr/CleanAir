@@ -1,30 +1,47 @@
 <script lang="ts">
-  import { GENERATORS, type GasKind, type GeneratorDef } from '../data/generators'
+  import { GENERATORS, type GeneratorDef } from '../data/generators'
+  import { findMaterial } from '../data/materials'
   import { format, formatInt, formatRate } from '../engine/format'
-  import { buyGenerator, generatorCost, generatorRate, maxAffordable } from '../systems/production'
-  import { generatorCount, planet, usesNitrogen, usesPollution } from '../state/planet.svelte'
+  import {
+    buyGenerator,
+    generatorCost,
+    generatorRate,
+    isAvailable,
+    maxAffordable,
+  } from '../systems/production'
+  import { generatorCount, planet } from '../state/planet.svelte'
+  import { canAffordMaterials } from '../state/run.svelte'
   import { session, type BuyAmount } from '../state/session.svelte'
 
   const AMOUNTS: BuyAmount[] = [1, 10, 'max']
 
-  const GROUPS: { gas: GasKind; title: string; hint: string }[] = [
-    { gas: 'o2', title: 'Sauerstoff', hint: 'füllt Vorrat und Luft' },
-    { gas: 'n2', title: 'Puffer', hint: 'verdünnt die Mischung' },
-    { gas: 'scrub', title: 'Reinigung', hint: 'baut Schadstoffe ab' },
+  /** Gruppenschlüssel eines Generators — Gasart oder Ausgabeart. */
+  function groupOf(def: GeneratorDef): string {
+    return def.output.kind === 'gas' ? def.output.gas : def.output.kind
+  }
+
+  const GROUPS: { key: string; title: string; hint: string }[] = [
+    { key: 'o2', title: 'Sauerstoff', hint: 'füllt Vorrat und Luft' },
+    { key: 'n2', title: 'Puffer', hint: 'verdünnt die Mischung' },
+    { key: 'scrub', title: 'Reinigung', hint: 'baut Schadstoffe ab' },
+    { key: 'plant', title: 'Wald', hint: 'Bäume atmen für dich' },
+    { key: 'fell', title: 'Holzernte', hint: 'kostet Atmosphäre' },
+    { key: 'material', title: 'Abbau', hint: 'füllt das globale Lager' },
   ]
 
-  /** Kennt der Planet die Mechanik, an der dieser Generator arbeitet? */
-  function available(def: GeneratorDef): boolean {
-    if (def.gas === 'n2') return usesNitrogen()
-    if (def.gas === 'scrub') return usesPollution()
-    return true
+  /** „40 Stein, 25 Holz" — für die Kaufschaltfläche. */
+  function materialLabel(def: GeneratorDef, amount: number): string {
+    if (!def.materialCost) return ''
+    return Object.entries(def.materialCost)
+      .map(([id, per]) => `${formatInt(per * Math.max(1, amount))} ${findMaterial(id)?.name ?? id}`)
+      .join(', ')
   }
 
   const visible = $derived(
-    GENERATORS.filter((g) => available(g) && planet.oxygenTotal.gte(g.revealAt)),
+    GENERATORS.filter((g) => isAvailable(g) && planet.oxygenTotal.gte(g.revealAt)),
   )
   const groups = $derived(
-    GROUPS.map((g) => ({ ...g, items: visible.filter((def) => def.gas === g.gas) })).filter(
+    GROUPS.map((g) => ({ ...g, items: visible.filter((def) => groupOf(def) === g.key) })).filter(
       (g) => g.items.length > 0,
     ),
   )
@@ -45,14 +62,26 @@
    */
   function rateLabel(def: GeneratorDef): string {
     const count = generatorCount(def.id)
-    if (def.gas === 'scrub') {
-      const value = count > 0 ? generatorRate(def).mul(100) : def.baseRate * 100
-      return `${format(value, 3)} % der Schadstoffe/s${count > 0 ? '' : ' pro Stück'}`
+    const out = def.output
+    const suffix = count > 0 ? '' : ' pro Stück'
+    const rate = count > 0 ? generatorRate(def) : null
+
+    if (out.kind === 'gas' && out.gas === 'scrub') {
+      const value = rate ? rate.mul(100) : def.baseRate * 100
+      return `${format(value, 3)} % der Schadstoffe/s${suffix}`
     }
-    const unit = def.gas === 'n2' ? 'N₂' : 'O₂'
-    return count > 0
-      ? formatRate(generatorRate(def), unit)
-      : `${format(def.baseRate)} ${unit}/s pro Stück`
+    if (out.kind === 'gas') {
+      const unit = out.gas === 'n2' ? 'N₂' : 'O₂'
+      return rate ? formatRate(rate, unit) : `${format(def.baseRate)} ${unit}/s pro Stück`
+    }
+    if (out.kind === 'plant') {
+      return rate ? formatRate(rate, 'Bäume') : `${format(def.baseRate)} Bäume/s pro Stück`
+    }
+    if (out.kind === 'fell') {
+      return rate ? formatRate(rate, 'Bäume') + ' gefällt' : `${format(def.baseRate)} Bäume/s pro Stück`
+    }
+    const name = findMaterial(out.material)?.name ?? out.material
+    return rate ? formatRate(rate, name) : `${format(def.baseRate)} ${name}/s pro Stück`
   }
 </script>
 
@@ -69,7 +98,7 @@
   {/each}
 </div>
 
-{#each groups as group (group.gas)}
+{#each groups as group (group.key)}
   <!-- Überschriften erst, wenn es mehr als eine Gruppe gibt: auf Aurora
        wäre „Sauerstoff" über der einzigen Liste nur Lärm. -->
   {#if groups.length > 1}
@@ -83,7 +112,8 @@
       {@const count = generatorCount(def.id)}
       {@const amount = amountFor(def)}
       {@const cost = generatorCost(def, Math.max(1, amount))}
-      {@const affordable = amount > 0 && planet.oxygen.gte(cost)}
+      {@const hasMaterials = canAffordMaterials(def.materialCost, Math.max(1, amount))}
+      {@const affordable = amount > 0 && planet.oxygen.gte(cost) && hasMaterials}
       <li>
         <div class="info">
           <div class="line">
@@ -99,6 +129,11 @@
             Kaufen{amount > 1 ? ` ×${formatInt(amount)}` : ''}
           </span>
           <span class="cost num">{amount > 0 ? format(cost) : '—'} O₂</span>
+          {#if def.materialCost}
+            <span class="cost material num" class:missing={!hasMaterials}>
+              {materialLabel(def, amount)}
+            </span>
+          {/if}
         </button>
       </li>
     {/each}
@@ -226,5 +261,14 @@
 
   .buy:not(:disabled) .cost {
     color: var(--o2);
+  }
+
+  .cost.material {
+    color: var(--warn);
+    font-size: 10px;
+  }
+
+  .cost.material.missing {
+    color: var(--bad);
   }
 </style>

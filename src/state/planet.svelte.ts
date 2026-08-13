@@ -55,6 +55,12 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
      */
     stability: 0,
 
+    /**
+     * Stehende Bäume. Planetenlokal — das Holz daraus landet dagegen im
+     * globalen Lager (state/run.svelte.ts, DESIGN.md §16).
+     */
+    trees: new Decimal(0),
+
     /** Grundlage der Genesis-Kerne beim Abschluss (§6). */
     biomass: new Decimal(0),
 
@@ -121,6 +127,7 @@ export function serializePlanet() {
     airO2: writeDecimal(planet.airO2),
     airN2: writeDecimal(planet.airN2),
     pollution: writeDecimal(planet.pollution),
+    trees: writeDecimal(planet.trees),
     stability: planet.stability,
     biomass: writeDecimal(planet.biomass),
     generators: { ...planet.generators },
@@ -145,6 +152,7 @@ export function deserializePlanet(raw: unknown): void {
   planet.airO2 = readDecimal(s.airO2, 0)
   planet.airN2 = readDecimal(s.airN2, 0)
   planet.pollution = readDecimal(s.pollution, 0)
+  planet.trees = readDecimal(s.trees, 0)
   planet.stability = Math.max(0, readNumber(s.stability, 0))
   planet.biomass = readDecimal(s.biomass, 0)
   planet.settlers = readDecimal(s.settlers, 0)

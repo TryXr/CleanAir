@@ -1,6 +1,11 @@
 <script lang="ts">
+  import Decimal from 'break_infinity.js'
+  import { planetForIndex } from '../data/planets'
   import { wipeSave } from '../engine/save'
-  import { planet } from '../state/planet.svelte'
+  import { resetAtmosphereNotices } from '../systems/atmosphere'
+  import { resetPopulationNotices } from '../systems/population'
+  import { addLog } from '../state/log.svelte'
+  import { planet, resetPlanet } from '../state/planet.svelte'
   import { meta } from '../state/meta.svelte'
 
   /**
@@ -19,6 +24,20 @@
     wipeSave()
     location.reload()
   }
+
+  /**
+   * Direkt auf den nächsten Planeten. Ohne das kostet jeder Test der
+   * Vesta-Systeme — Mischung, Wald, Materialien — erst zwanzig Minuten
+   * Aurora.
+   */
+  function skipPlanet(): void {
+    const next = planetForIndex(meta.planetsCompleted + 1)
+    meta.planetsCompleted += 1
+    resetPlanet(next, new Decimal(25000))
+    resetPopulationNotices()
+    resetAtmosphereNotices()
+    addLog(`Debug: übersprungen nach ${next.name}.`, 'warn')
+  }
 </script>
 
 <p class="state">
@@ -26,6 +45,7 @@
   <span class="num">{Math.floor(planet.elapsed)}s</span>
 </p>
 
+<button onclick={skipPlanet}>Nächster Planet</button>
 <button class="danger" onclick={resetAll}>Alles zurücksetzen</button>
 
 <p class="hint">
@@ -43,6 +63,10 @@
     width: 100%;
     padding: 9px;
     font-size: 13px;
+  }
+
+  button + button {
+    margin-top: 7px;
   }
 
   .hint {

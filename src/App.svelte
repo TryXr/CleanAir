@@ -7,10 +7,14 @@
   import { settings } from './state/settings.svelte'
   import { currentPlanetDef } from './state/planet.svelte'
   import { pendingCores } from './systems/prestige'
+  import { hasForest } from './systems/forest'
+  import { hasAnyMaterial } from './state/run.svelte'
   import AtmospherePanel from './ui/AtmospherePanel.svelte'
   import DebugPanel from './ui/DebugPanel.svelte'
   import EventPanel from './ui/EventPanel.svelte'
+  import ForestPanel from './ui/ForestPanel.svelte'
   import GeneratorList from './ui/GeneratorList.svelte'
+  import InventoryPanel from './ui/InventoryPanel.svelte'
   import LogPanel from './ui/LogPanel.svelte'
   import MetaTree from './ui/MetaTree.svelte'
   import Panel from './ui/Panel.svelte'
@@ -35,6 +39,10 @@
     meta.research.gt(0) || Object.keys(meta.researchNodes).length > 0 || planet.settlers.gt(0),
   )
   const showEvents = $derived(currentPlanetDef().hasEvents)
+
+  const showForest = $derived(hasForest())
+  // Lager zeigen, sobald es hier etwas zu holen gibt oder schon etwas drin ist.
+  const showInventory = $derived(currentPlanetDef().materials.length > 0 || hasAnyMaterial())
 
   /** Debug-Werkzeuge gibt es nur im Dev-Build, nie im ausgelieferten Spiel. */
   const isDev = import.meta.env.DEV
@@ -84,6 +92,12 @@
       </Panel>
     {/if}
 
+    {#if showForest}
+      <Panel title="Wald" hint="Holz kostet Atmosphäre">
+        <ForestPanel />
+      </Panel>
+    {/if}
+
     <Panel title="Anlagen">
       <GeneratorList />
     </Panel>
@@ -109,6 +123,12 @@
     {#if isDev}
       <Panel title="Debug" hint="nur im Dev-Build">
         <DebugPanel />
+      </Panel>
+    {/if}
+
+    {#if showInventory}
+      <Panel title="Lager" hint="gilt für alle Planeten">
+        <InventoryPanel />
       </Panel>
     {/if}
 
