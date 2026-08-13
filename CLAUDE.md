@@ -3,8 +3,12 @@
 Incremental Game über Terraforming. Konzept, Balancing-Ziele und Meilensteine
 stehen in [DESIGN.md](DESIGN.md) — **bei Fragen zu Spielinhalt immer dort
 nachsehen, nicht raten.** Aktueller Stand: M3 abgeschlossen (Atmosphären-
-Mischung, Stabilitäts-Timer, Forschung, Ereignisse, Statistik). Als Nächstes
-M4: die Anoxen — Wellen, Verteidigung, Druck & Temperatur, Planet 3 „Kharon".
+Mischung, Stabilitäts-Timer, Forschung, Ereignisse, Statistik).
+
+**Achtung: DESIGN.md §16 ist ein Kurswechsel und hat Vorrang vor §6 und §11.**
+Planeten werden dauerhaft begehbar, der Reset wandert auf die Durchlauf-Ebene,
+und es kommen Materialien mit globalem Inventar dazu. Als Nächstes M4:
+Materialien und erste Bauketten. Die Anoxen rücken auf M8.
 
 ## Befehle
 

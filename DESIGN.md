@@ -27,6 +27,7 @@
 13. [Balancing-Grundlagen](#13-balancing-grundlagen)
 14. [Meilensteine](#14-meilensteine)
 15. [Offene Fragen](#15-offene-fragen)
+16. [Kurswechsel: Materialien, Planeten, Rakete](#16-kurswechsel-materialien-planeten-rakete)
 
 ---
 
@@ -194,6 +195,12 @@ er direkt die Produktionsrate senkt.
 ---
 
 ## 6. Prestige: Planetenwechsel
+
+> **Überarbeitet in [§16](#16-kurswechsel-materialien-planeten-rakete).** Der
+> Reset betrifft nicht mehr den einzelnen Planeten, sondern den ganzen
+> Durchlauf. Die Grundidee unten („du besitzt den Planeten ab jetzt") gilt
+> weiter — nur radikaler: Planeten bleiben *begehbar*, nicht nur als
+> Einkommensposten.
 
 ```
      ┌────────── PLANET (wird zurückgesetzt) ──────────┐
@@ -424,6 +431,13 @@ verstärkt. Wer nicht reagiert, verliert wenig — wer reagiert, gewinnt spürba
 
 **Regel:** Jeder Planet führt genau **ein** neues System ein. Das ist der
 wichtigste Schutz gegen Überforderung.
+
+> **Überarbeitet in [§16](#16-kurswechsel-materialien-planeten-rakete).** Die
+> Planeten bleiben, aber sie werden dauerhaft begehbar statt nacheinander
+> abgehakt, und ihr Charakter entsteht aus eigenen Materialien statt aus
+> anderen Zahlen. Die Regel „ein System pro Planet" gilt weiter — sie ist der
+> Grund, warum der Kurswechsel in §16 auf mehrere Meilensteine verteilt ist
+> und nicht am Stück gebaut wird.
 
 ---
 
@@ -659,3 +673,107 @@ Bewusst noch nicht entschieden — sollte während M1/M2 im Spiel getestet werde
   Linear kann spät explodieren.
 - **Story-Präsentation:** Log-Einträge, Dialogfenster oder ein Codex zum
   Nachlesen? Log ist am billigsten und stört den Flow am wenigsten.
+
+---
+
+## 16. Kurswechsel: Materialien, Planeten, Rakete
+
+Entschieden nach M3. **Diese Sektion hat Vorrang vor §6 und §11**, wo sie
+ihnen widerspricht.
+
+Der Auslöser: die Ressourcen greifen zu wenig ineinander. O₂ ist Währung,
+Produktionsziel und Fortschrittsbalken in einem, und Bevölkerung ist nur ein
+Multiplikator mit Atemkosten. Es fehlt der Stoff, aus dem man tatsächlich
+etwas baut.
+
+### Zwei Ebenen statt einer
+
+Bisher galt: Prestige = Planetenwechsel. Das trennt sich.
+
+**Der Durchlauf.** Mehrere Planeten existieren *gleichzeitig* und dauerhaft.
+Man reist zwischen ihnen hin und her, baut alte Kolonien weiter aus und holt
+dort Material. Beim Wechsel wird nichts zurückgesetzt.
+
+**Der Reset.** Fühlt sich der Fortschritt zu zäh an, setzt man den *ganzen
+Durchlauf* zurück und beginnt wieder auf Planet 1 — mit Genesis-Kernen aus
+dem Erreichten, die im nächsten Durchlauf Upgrades freischalten. Das erste
+Mal typischerweise nach Planet 2.
+
+Damit ist der Reset wieder das, was er im Genre ist: eine freiwillige
+Entscheidung gegen abnehmenden Ertrag, nicht ein Knopf am Ende eines Planeten.
+
+### Rakete und Abschluss sind zwei verschiedene Dinge
+
+| | Bedeutung |
+|---|---|
+| **Rakete** | Der Weg zum nächsten Planeten. Pro Planet anders zu bauen, aus dessen eigenen Materialien. Reines Transportmittel. |
+| **Stabile Atmosphäre** | Der Planet gilt als *fertig*. Fenster und Stabilitäts-Timer aus §4 bleiben unverändert in Kraft. |
+
+Beides ist bewusst entkoppelt: Man darf weiterziehen, bevor ein Planet fertig
+ist, und später zurückkommen, um ihn zu Ende zu terraformen. Genau das gibt
+der Rückkehr ihren Sinn — ohne diese Entkopplung wäre ein alter Planet ein
+abgehakter Punkt.
+
+### Materialien
+
+Holz, Stein, Titan und so weiter. **Jeder Planet hat eigene Vorkommen** — das
+ist der zweite Grund zurückzukehren.
+
+Das Inventar ist **global**: Material von Planet 1 baut auf Planet 3. O₂ und
+Bevölkerung gehören ausdrücklich *nicht* hinein — O₂ ist planetenlokal (§4),
+Bevölkerung ein eigenes System (§5).
+
+Kreisläufe statt reinem Abbau. Beispiel Wald:
+
+```
+Baum pflanzen ──► wächst ──► erzeugt O₂
+                     │
+                     └──► fällen ──► Holz, aber der O₂-Beitrag entfällt
+```
+
+Die Abwägung ist die interessante Stelle: Bauholz kostet Atmosphäre.
+
+### Bevölkerung: Bedürfnisse und Berufe
+
+Menschen tauchen nicht mehr einfach ab einem O₂-Wert auf. Sie brauchen erst
+**Hütten, Essen und Trinken**.
+
+**Berufe** sind die zweite Hälfte: Förster bauen den Wald auf, andere Berufe
+andere Ketten. Jemanden einzustellen kostet Ressourcen.
+
+Gebäude kosten **einmalig** Bevölkerung — die Leute ziehen ein, danach läuft
+das Gebäude allein. Keine dauerhafte Arbeiterbindung, kein Zuweisungs-
+Mikromanagement.
+
+### Planeten sollen sich unterschiedlich anfühlen
+
+Ein Lavabrocken, eine Eiswüste, eine Gasquelle zum Anzapfen. Der Unterschied
+steckt in den **Materialien, den Bauketten und der Rakete** — nicht in
+anderen Zahlen für dieselbe Sache. Ein Planet, der sich nur durch einen
+höheren `baseAtmosphere` unterscheidet, ist kein neuer Planet.
+
+### Überarbeitete Meilensteinfolge
+
+Die Anoxen rücken nach hinten. Sie sind ein Konflikt-System und brauchen
+etwas, worum es sich zu kämpfen lohnt — das entsteht erst mit Materialien
+und dauerhaften Kolonien.
+
+| | Inhalt | Warum diese Reihenfolge |
+|---|---|---|
+| **M4** | Materialien + globales Inventar, erste Bauketten (Wald) | Löst das eigentliche Problem sofort und passt noch in die heutige Architektur |
+| **M5** | Bevölkerung: Hütten, Nahrung, Wasser, Berufe | Braucht Materialien, um überhaupt bezahlbar zu sein |
+| **M6** | Mehrere Planeten gleichzeitig, Rakete, Reisen — und der Reset auf Durchlauf-Ebene | Der Architektur-Umbau. Reset muss *mit*, weil „Planet abschließen = zurücksetzen" dann nicht mehr gilt |
+| **M7** | Planeten-Identität: Lava, Eis, Gas mit eigenen Ketten | Inhalt auf dem Gerüst von M6 |
+| **M8** | Die Anoxen (bisher M4) | |
+| **M9** | Politur (bisher M7) | |
+
+### Offene Fragen dieses Kurswechsels
+
+- **Überlebt das Material-Inventar den Durchlauf-Reset?** Vermutlich nicht —
+  sonst trivialisiert der zweite Durchlauf den ersten. Naheliegender:
+  Genesis-Upgrades gewähren *Startmaterial*.
+- **Wie viele Planeten pro Durchlauf?** Beim ersten Mal nach Planet 2 zu
+  resetten heißt: der erste Durchlauf ist kurz. Wächst das später auf 5, 10?
+- **Was passiert mit `meta.population` beim Reset?** Bevölkerung ist bisher
+  „überlebt für immer". Unter dem neuen Modell gehört sie vermutlich zum
+  Durchlauf und wird mit zurückgesetzt.
