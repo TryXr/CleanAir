@@ -7,7 +7,7 @@ import { session } from '../state/session.svelte'
 export const SAVE_KEY = 'cleanair.save'
 
 /** Bei jeder Struktur­änderung erhöhen und in migrations.ts eintragen. */
-export const SAVE_VERSION = 1
+export const SAVE_VERSION = 2
 
 export interface SaveData extends SaveShape {
   version: number

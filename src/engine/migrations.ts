@@ -12,15 +12,16 @@
 export type SaveShape = Record<string, unknown>
 
 export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
-  // Version 1 ist das Ausgangsformat — hier steht bewusst noch nichts.
-  //
-  // Beispiel für später (M3, wenn der N₂-Puffer dazukommt):
-  // 2: (s) => {
-  //   const planet = (s.planet ?? {}) as SaveShape
-  //   planet.nitrogen = '0'
-  //   s.planet = planet
-  //   return s
-  // },
+  /** M1: Generatoren, Upgrades und Abschlusszustand kommen zum Planeten dazu. */
+  2: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    planet.generators = {}
+    planet.upgrades = []
+    planet.clicks = 0
+    planet.completed = false
+    s.planet = planet
+    return s
+  },
 }
 
 export interface MigrationResult {

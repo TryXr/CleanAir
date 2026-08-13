@@ -3,9 +3,16 @@ import './app.css'
 import App from './App.svelte'
 
 import { format, formatTime } from './engine/format'
-import { applyOffline, registerSystem, startLoop } from './engine/loop'
+import { applyOffline, registerSystem, runTicks, startLoop, stopLoop } from './engine/loop'
 import { loadGame, saveNow } from './engine/save'
+import * as atmosphere from './systems/atmosphere'
+import * as production from './systems/production'
+import { atmosphereSystem } from './systems/atmosphere'
 import { productionSystem } from './systems/production'
+import { AURORA } from './data/planets'
+import { GENERATORS } from './data/generators'
+import { UPGRADES } from './data/upgrades'
+import { resetPlanet } from './state/planet.svelte'
 import { addLog } from './state/log.svelte'
 import { meta } from './state/meta.svelte'
 import { planet } from './state/planet.svelte'
@@ -23,6 +30,7 @@ registerSystem('zeit', (dt) => {
 })
 
 registerSystem('produktion', productionSystem)
+registerSystem('atmosphäre', atmosphereSystem)
 
 /* --- Start --------------------------------------------------------------- */
 
@@ -42,7 +50,7 @@ switch (loaded.status) {
     addLog('Spielstand stammt aus einer neueren Version und wurde nicht geladen.', 'bad')
     break
   case 'empty':
-    addLog('Atmosphärenprozessor online. Sauerstoffproduktion beginnt.', 'good')
+    addLog(AURORA.intro, 'good')
     break
 }
 
@@ -90,6 +98,27 @@ document.addEventListener('visibilitychange', () => {
     hiddenAt = 0
   }
 })
+
+/* --- Debug --------------------------------------------------------------- */
+
+// Nur im Dev-Build. Gibt in der Browser-Konsole Zugriff auf genau die
+// Instanzen, mit denen das laufende Spiel arbeitet — nötig für
+// Balancing-Simulationen, weil ein eigener `import` im Devtools-Kontext
+// eine zweite, unbeteiligte Kopie der Module bekommt.
+if (import.meta.env.DEV) {
+  Object.assign(window, {
+    cleanair: {
+      planet,
+      meta,
+      settings,
+      loop: { startLoop, stopLoop, runTicks, registerSystem },
+      resetPlanet,
+      production,
+      atmosphere,
+      data: { GENERATORS, UPGRADES, AURORA },
+    },
+  })
+}
 
 /* --- UI ------------------------------------------------------------------ */
 

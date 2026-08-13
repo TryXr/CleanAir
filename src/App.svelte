@@ -1,15 +1,17 @@
 <script lang="ts">
-  import { format, formatRate, formatTime } from './engine/format'
+  import { formatInt, formatTime } from './engine/format'
   import { TICK_RATE } from './engine/loop'
   import { SAVE_VERSION, exportSave, importSave, saveNow, wipeSave } from './engine/save'
-  import { currentO2Rate } from './systems/production'
   import { addLog } from './state/log.svelte'
   import { meta } from './state/meta.svelte'
   import { planet } from './state/planet.svelte'
   import { settings } from './state/settings.svelte'
+  import AtmospherePanel from './ui/AtmospherePanel.svelte'
+  import GeneratorList from './ui/GeneratorList.svelte'
   import LogPanel from './ui/LogPanel.svelte'
   import Panel from './ui/Panel.svelte'
   import TopBar from './ui/TopBar.svelte'
+  import UpgradeGrid from './ui/UpgradeGrid.svelte'
 
   let transfer = $state('')
 
@@ -50,42 +52,29 @@
 
 <main>
   <div class="column">
-    <Panel title="Atmosphäre" hint="Platzhalter bis M1">
-      <div class="readout">
-        <span class="big num">{format(planet.oxygen)}</span>
-        <span class="unit">O₂</span>
-      </div>
-      <div class="rate num">{formatRate(currentO2Rate())}</div>
-      <p class="note">
-        Feste Grundrate ohne Generatoren. Sie existiert nur, um zu zeigen, dass Tick,
-        Zahlformatierung, Speichern und Offline-Fortschritt zusammen funktionieren. In
-        M1 treten hier der Klick-Button und die drei Generatoren an ihre Stelle.
-      </p>
+    <Panel title="Atmosphäre" hint={planet.name}>
+      <AtmospherePanel />
     </Panel>
 
-    <Panel title="Systemstatus" hint="M0 — Gerüst">
-      <dl class="stats">
-        <div><dt>Tickrate</dt><dd class="num">{TICK_RATE} Hz</dd></div>
-        <div><dt>Ticks gesamt</dt><dd class="num">{ticks.toLocaleString('de-DE')}</dd></div>
-        <div><dt>Zeit auf {planet.name}</dt><dd class="num">{formatTime(planet.elapsed)}</dd></div>
-        <div><dt>Gesamtspielzeit</dt><dd class="num">{formatTime(meta.totalPlaytime)}</dd></div>
-        <div><dt>O₂ insgesamt</dt><dd class="num">{format(planet.oxygenTotal)}</dd></div>
-        <div><dt>Save-Version</dt><dd class="num">{SAVE_VERSION}</dd></div>
-        <div><dt>Autosave</dt><dd class="num">alle {settings.autosaveSeconds} s</dd></div>
-        <div>
-          <dt>Offline</dt>
-          <dd class="num">
-            {Math.round(settings.offlineEfficiency * 100)} %, max. {settings.offlineMaxHours} h
-          </dd>
-        </div>
-      </dl>
+    <Panel title="Anlagen">
+      <GeneratorList />
+    </Panel>
+
+    <Panel title="Verbesserungen">
+      <UpgradeGrid />
+    </Panel>
+  </div>
+
+  <div class="column side">
+    <Panel title="Ereignisse">
+      <LogPanel />
     </Panel>
 
     <Panel title="Spielstand">
       <div class="actions">
-        <button class="primary" onclick={onSave}>Jetzt speichern</button>
-        <button onclick={onExport}>Exportieren</button>
-        <button onclick={onImport} disabled={!transfer.trim()}>Importieren</button>
+        <button class="primary" onclick={onSave}>Speichern</button>
+        <button onclick={onExport}>Export</button>
+        <button onclick={onImport} disabled={!transfer.trim()}>Import</button>
         <button class="danger" onclick={onWipe}>Löschen</button>
       </div>
       <textarea
@@ -93,12 +82,24 @@
         spellcheck="false"
         placeholder="Export erscheint hier — oder Save-Text zum Importieren einfügen."
       ></textarea>
-    </Panel>
-  </div>
 
-  <div class="column side">
-    <Panel title="Ereignisse">
-      <LogPanel />
+      <details>
+        <summary>Systemstatus</summary>
+        <dl class="stats">
+          <div><dt>Tickrate</dt><dd class="num">{TICK_RATE} Hz</dd></div>
+          <div><dt>Ticks</dt><dd class="num">{ticks.toLocaleString('de-DE')}</dd></div>
+          <div><dt>Zeit auf {planet.name}</dt><dd class="num">{formatTime(planet.elapsed)}</dd></div>
+          <div><dt>Klicks</dt><dd class="num">{formatInt(planet.clicks)}</dd></div>
+          <div><dt>Save-Version</dt><dd class="num">{SAVE_VERSION}</dd></div>
+          <div><dt>Autosave</dt><dd class="num">{settings.autosaveSeconds} s</dd></div>
+          <div>
+            <dt>Offline</dt>
+            <dd class="num">
+              {Math.round(settings.offlineEfficiency * 100)} % / {settings.offlineMaxHours} h
+            </dd>
+          </div>
+        </dl>
+      </details>
     </Panel>
   </div>
 </main>
@@ -121,49 +122,34 @@
     min-width: 0;
   }
 
-  .side {
-    position: sticky;
-    top: 76px;
-  }
-
-  .readout {
+  .actions {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 10px;
   }
 
-  .big {
-    font-size: 44px;
-    font-weight: 600;
-    color: var(--o2);
-    line-height: 1.1;
-  }
-
-  .unit {
-    font-size: 15px;
-    color: var(--muted);
-  }
-
-  .rate {
-    margin-top: 2px;
+  .actions button {
+    padding: 6px 11px;
     font-size: 13px;
-    color: var(--text-dim);
   }
 
-  .note {
-    margin: 14px 0 0;
-    font-size: 12px;
-    line-height: 1.6;
+  details {
+    margin-top: 14px;
+  }
+
+  summary {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--muted);
-    border-left: 2px solid var(--line);
-    padding-left: 11px;
+    cursor: pointer;
   }
 
   .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 10px 22px;
-    margin: 0;
+    gap: 6px;
+    margin: 12px 0 0;
   }
 
   .stats div {
@@ -171,34 +157,22 @@
     justify-content: space-between;
     gap: 12px;
     border-bottom: 1px dotted var(--line-soft);
-    padding-bottom: 6px;
+    padding-bottom: 5px;
   }
 
   dt {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--muted);
   }
 
   dd {
     margin: 0;
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
+    font-size: 12px;
   }
 
   @media (max-width: 900px) {
     main {
       grid-template-columns: minmax(0, 1fr);
-    }
-
-    .side {
-      position: static;
     }
   }
 </style>
