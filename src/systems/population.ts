@@ -1,9 +1,12 @@
 import Decimal from 'break_infinity.js'
 import { currentPlanetDef, planet } from '../state/planet.svelte'
 import { addLog } from '../state/log.svelte'
-import { o2Percent } from './atmosphere'
+import { meta } from '../state/meta.svelte'
+import { effectiveO2Window, o2Percent } from './atmosphere'
+import { eventEffects } from './eventEffects'
 import { metaEffects } from './metaEffects'
 import { currentO2Rate } from './production'
+import { researchEffects } from './research'
 
 /**
  * Bevölkerung (DESIGN.md §5).
@@ -12,6 +15,10 @@ import { currentO2Rate } from './production'
  * ein O₂-Verbraucher zugleich. Sie zehren an der Luft (`airO2`), nicht am
  * Vorrat — wer zu schnell wachsen lässt, sieht den Atmosphärenwert fallen,
  * behält aber sein Kaufguthaben.
+ *
+ * Seit M3 ist der Zuwanderungsregler damit auch ein Atmosphärenwerkzeug:
+ * steht das O₂ über dem Fenster, sind mehr atmende Menschen die schnellste
+ * Art, es wieder herunterzubekommen.
  */
 
 /**
@@ -37,14 +44,23 @@ const SEED_SETTLERS = 25
 const BIOMASS_PER_SETTLER = 0.04
 
 /**
+ * Forschungspunkte pro Siedler und Sekunde (§5, §10).
+ *
+ * Bewusst nur aus den Siedlern des *aktuellen* Planeten: die abgeschlossenen
+ * Kolonien liefern laut §6 Credits und Wachstum, nicht Forschung. Ihr
+ * passives Einkommen ist Sache von M5.
+ */
+const RESEARCH_PER_SETTLER = 0.0009
+
+/**
  * 0…1 — wie gut der Planet gerade zu bewohnen ist. Unterhalb von `settleAt`
- * bleibt er leer, am Zielfenster ist er voll bewohnbar.
+ * bleibt er leer, an der Untergrenze des O₂-Fensters ist er voll bewohnbar.
  */
 export function habitability(): number {
   const def = currentPlanetDef()
   if (!def.allowsPopulation) return 0
 
-  const span = def.targetO2 - def.settleAt
+  const span = effectiveO2Window().min - def.settleAt
   if (span <= 0) return o2Percent() >= def.settleAt ? 1 : 0
 
   const raw = (o2Percent() - def.settleAt) / span
@@ -54,12 +70,23 @@ export function habitability(): number {
 /** Wie viele Menschen der Planet im aktuellen Zustand trägt. */
 export function populationCapacity(): Decimal {
   const def = currentPlanetDef()
-  return new Decimal(def.popCapacity).mul(habitability()).mul(metaEffects().popCapacity)
+  const factor = metaEffects().popCapacity * researchEffects().popCapacity
+  return new Decimal(def.popCapacity).mul(habitability()).mul(factor)
 }
 
 /** O₂ pro Sekunde, das die Siedler wegatmen. */
 export function o2ConsumptionRate(): Decimal {
-  return planet.settlers.mul(O2_PER_CAPITA).mul(metaEffects().lifeSupport)
+  const perCapita =
+    O2_PER_CAPITA *
+    metaEffects().lifeSupport *
+    researchEffects().lifeSupport *
+    eventEffects().consumption
+  return planet.settlers.mul(perCapita)
+}
+
+/** Forschung pro Sekunde. */
+export function researchRate(): Decimal {
+  return planet.settlers.mul(RESEARCH_PER_SETTLER).mul(researchEffects().researchYield)
 }
 
 /** Was netto in der Luft ankommt. Negativ heißt: die Atmosphäre schrumpft. */
@@ -92,6 +119,7 @@ export function populationSystem(dt: number): void {
     if (planet.airO2.lt(0)) planet.airO2 = new Decimal(0)
 
     planet.biomass = planet.biomass.add(planet.settlers.mul(BIOMASS_PER_SETTLER).mul(dt))
+    meta.research = meta.research.add(researchRate().mul(dt))
   }
 
   if (!def.allowsPopulation) return
@@ -120,8 +148,12 @@ export function populationSystem(dt: number): void {
 
   // Logistisches Wachstum. Über der Kapazität wird der Term negativ und die
   // Bevölkerung schrumpft von selbst — kein Sonderfall nötig.
-  const effects = metaEffects()
-  const rate = BASE_GROWTH * effects.growthRate * planet.immigration
+  const rate =
+    BASE_GROWTH *
+    metaEffects().growthRate *
+    researchEffects().growthRate *
+    eventEffects().growth *
+    planet.immigration
   const room = new Decimal(1).sub(planet.settlers.div(capacity))
   planet.settlers = planet.settlers.add(planet.settlers.mul(rate).mul(room).mul(dt))
 

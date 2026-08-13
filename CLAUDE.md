@@ -2,9 +2,9 @@
 
 Incremental Game über Terraforming. Konzept, Balancing-Ziele und Meilensteine
 stehen in [DESIGN.md](DESIGN.md) — **bei Fragen zu Spielinhalt immer dort
-nachsehen, nicht raten.** Aktueller Stand: M2 abgeschlossen (Aurora, Vesta,
-Prestige, Bevölkerung). Als Nächstes M3: Atmosphären-Mischung, Stabilitäts-Timer,
-Forschung, Ereignisse.
+nachsehen, nicht raten.** Aktueller Stand: M3 abgeschlossen (Atmosphären-
+Mischung, Stabilitäts-Timer, Forschung, Ereignisse, Statistik). Als Nächstes
+M4: die Anoxen — Wellen, Verteidigung, Druck & Temperatur, Planet 3 „Kharon".
 
 ## Befehle
 
@@ -68,6 +68,12 @@ bestimmt. Käufe zehren nur am Guthaben, Atmung nur an der Luft. Diese Trennung
 ist der Grund, warum Fortschritt nie durch einen Generatorkauf rückwärts läuft
 und Bevölkerung trotzdem wehtun kann.
 
+**7. Die Atmosphäre ist eine Mischung, kein Balken.**
+Jeder Anteil ist `100 × menge / gesamt`, wobei `gesamt` das native Inertgas
+einschließt (DESIGN.md §4). Daraus folgt alles Weitere von selbst: N₂ senkt
+den O₂-Anteil, ohne O₂ zu verbrauchen. Nie einen Anteil direkt setzen —
+immer die Menge ändern und den Anteil ausrechnen lassen.
+
 ## Balancing prüfen statt schätzen
 
 Zieldauern pro Planet stehen in DESIGN.md §13 und wurden bisher **simuliert,
@@ -77,9 +83,20 @@ Zugriff auf die laufenden Instanzen (`planet`, `meta`, `production`,
 liefert eine zweite, unbeteiligte Kopie der Module — deshalb immer über
 `window.cleanair` gehen.
 
-Vor dem Festschreiben neuer Zahlen: `loop.stopLoop()`, Planet zurücksetzen, in
-1-Sekunden-Schritten `productionSystem` / `populationSystem` /
-`atmosphereSystem` treiben und die Abschlusszeit gegen §13 prüfen.
+Vor dem Festschreiben neuer Zahlen: **`cleanair.stopPersistence()`**,
+`loop.stopLoop()`, Planet zurücksetzen, in 1-Sekunden-Schritten
+`productionSystem` / `populationSystem` / `atmosphereSystem` treiben und die
+Abschlusszeit gegen §13 prüfen.
+
+`stopPersistence()` ist nicht optional: die Simulation verändert denselben
+Zustand, den das Autosave 30 Sekunden später wegschreibt. Ohne den Schalter
+überschreibt ein Balancing-Lauf den echten Spielstand — beim Bau von M3
+genau einmal passiert.
+
+Ein simulierter Spieler braucht außerdem zwei Dinge, sonst misst man Unsinn:
+**Klicks** (ohne sie kommt er nie an den ersten Generator) und einen
+**Rückfallkauf** — wer nur „das gerade Nötige" kauft und es sich nicht leisten
+kann, kauft sonst gar nichts und der Lauf stockt bei zwölffacher Spielzeit.
 
 ## Ein System pro Planet
 

@@ -1,10 +1,19 @@
 <script lang="ts">
-  import { UPGRADES } from '../data/upgrades'
+  import { UPGRADES, type UpgradeDef } from '../data/upgrades'
   import { format } from '../engine/format'
-  import { buyUpgrade } from '../systems/production'
-  import { hasUpgrade, planet } from '../state/planet.svelte'
+  import { buyUpgrade, upgradeCost } from '../systems/production'
+  import { hasUpgrade, planet, usesNitrogen, usesPollution } from '../state/planet.svelte'
 
-  const visible = $derived(UPGRADES.filter((u) => planet.oxygenTotal.gte(u.revealAt)))
+  /** Kennt der Planet die Mechanik, die dieses Upgrade voraussetzt? */
+  function available(def: UpgradeDef): boolean {
+    if (def.needs === 'nitrogen') return usesNitrogen()
+    if (def.needs === 'pollution') return usesPollution()
+    return true
+  }
+
+  const visible = $derived(
+    UPGRADES.filter((u) => available(u) && planet.oxygenTotal.gte(u.revealAt)),
+  )
 </script>
 
 {#if visible.length === 0}
@@ -13,7 +22,8 @@
   <div class="grid">
     {#each visible as upgrade (upgrade.id)}
       {@const owned = hasUpgrade(upgrade.id)}
-      {@const affordable = !owned && planet.oxygen.gte(upgrade.cost)}
+      {@const cost = upgradeCost(upgrade.id)}
+      {@const affordable = !owned && planet.oxygen.gte(cost)}
       <button
         class="card"
         class:owned
@@ -23,7 +33,7 @@
         <span class="name">{upgrade.name}</span>
         <span class="desc">{upgrade.description}</span>
         <span class="cost num">
-          {owned ? 'gekauft' : `${format(upgrade.cost)} O₂`}
+          {owned ? 'gekauft' : `${format(cost)} O₂`}
         </span>
       </button>
     {/each}

@@ -6,15 +6,20 @@ import { format, formatTime } from './engine/format'
 import { applyOffline, registerSystem, runTicks, startLoop, stopLoop } from './engine/loop'
 import { loadGame, saveNow } from './engine/save'
 import * as atmosphere from './systems/atmosphere'
+import * as events from './systems/events'
 import * as population from './systems/population'
 import * as prestige from './systems/prestige'
 import * as production from './systems/production'
-import { atmosphereSystem } from './systems/atmosphere'
+import * as research from './systems/research'
+import { atmosphereSystem, resetAtmosphereNotices } from './systems/atmosphere'
+import { eventsSystem } from './systems/events'
 import { populationSystem, resetPopulationNotices } from './systems/population'
 import { productionSystem } from './systems/production'
 import { AURORA, PLANETS } from './data/planets'
+import { EVENTS } from './data/events'
 import { GENERATORS } from './data/generators'
 import { META_UPGRADES } from './data/metaUpgrades'
+import { RESEARCH } from './data/research'
 import { UPGRADES } from './data/upgrades'
 import { resetPlanet } from './state/planet.svelte'
 import { addLog } from './state/log.svelte'
@@ -23,9 +28,14 @@ import { planet } from './state/planet.svelte'
 import { settings } from './state/settings.svelte'
 
 /* --- Systeme -------------------------------------------------------------
-   Die Reihenfolge ist Teil des Balancings: erst Zeit fortschreiben, dann
-   produzieren. Ab M1 kommen Verbrauch, Atmosphäre und Bevölkerung dazu —
-   Produktion vor Verbrauch, damit ein Tick nie ins Negative kippt.
+   Die Reihenfolge ist Teil des Balancings, nicht Geschmackssache:
+
+   1. zeit         — Uhren zuerst, alles andere rechnet gegen sie.
+   2. ereignisse   — legen ihre Faktoren an, bevor jemand sie liest.
+   3. produktion   — Zufluss vor Verbrauch, damit ein Tick nie ins Negative kippt.
+   4. bevölkerung  — atmet weg, was eben entstanden ist.
+   5. atmosphäre   — bewertet zuletzt den fertigen Zustand des Ticks und
+                     entscheidet über Brände und den Stabilitäts-Timer.
 -------------------------------------------------------------------------- */
 
 registerSystem('zeit', (dt) => {
@@ -33,6 +43,7 @@ registerSystem('zeit', (dt) => {
   planet.elapsed += dt
 })
 
+registerSystem('ereignisse', eventsSystem)
 registerSystem('produktion', productionSystem)
 registerSystem('bevölkerung', populationSystem)
 registerSystem('atmosphäre', atmosphereSystem)
@@ -80,6 +91,7 @@ function creditAbsence(awayMs: number): void {
 }
 
 resetPopulationNotices()
+resetAtmosphereNotices()
 
 if (loaded.status === 'loaded') creditAbsence(loaded.awayMs)
 
@@ -89,17 +101,33 @@ startLoop()
 
 // Autosave über einen eigenen Timer statt über den Tick: sonst würde der
 // Offline-Nachlauf tausende Speichervorgänge auslösen.
-setInterval(() => saveNow(), Math.max(5, settings.autosaveSeconds) * 1000)
+const autosaveTimer = setInterval(() => saveNow(), Math.max(5, settings.autosaveSeconds) * 1000)
 
-window.addEventListener('beforeunload', () => {
-  saveNow()
-})
+/**
+ * Speichern komplett stilllegen — Timer, Tab-Wechsel und Schließen.
+ *
+ * Nur für Balancing-Simulationen. Wer den Planeten in der Konsole
+ * durchrechnet, verändert denselben Zustand, den das Autosave gleich
+ * wegschreibt; ohne diesen Schalter überschreibt eine Simulation den
+ * echten Spielstand. Genau das ist beim Bau von M3 einmal passiert.
+ */
+let persistenceOff = false
+function stopPersistence(): void {
+  persistenceOff = true
+  clearInterval(autosaveTimer)
+}
+
+function persist(): void {
+  if (!persistenceOff) saveNow()
+}
+
+window.addEventListener('beforeunload', persist)
 
 let hiddenAt = 0
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     hiddenAt = Date.now()
-    saveNow()
+    persist()
   } else if (hiddenAt > 0) {
     creditAbsence(Date.now() - hiddenAt)
     hiddenAt = 0
@@ -119,12 +147,16 @@ if (import.meta.env.DEV) {
       meta,
       settings,
       loop: { startLoop, stopLoop, runTicks, registerSystem },
+      /** Vor jeder Simulation aufrufen, sonst frisst das Autosave den Spielstand. */
+      stopPersistence,
       resetPlanet,
       production,
       atmosphere,
       population,
       prestige,
-      data: { GENERATORS, UPGRADES, META_UPGRADES, AURORA, PLANETS },
+      research,
+      events,
+      data: { GENERATORS, UPGRADES, META_UPGRADES, RESEARCH, EVENTS, AURORA, PLANETS },
     },
   })
 }

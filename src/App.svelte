@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { formatInt, formatTime } from './engine/format'
   import { TICK_RATE } from './engine/loop'
   import { SAVE_VERSION, exportSave, importSave, saveNow, wipeSave } from './engine/save'
   import { addLog } from './state/log.svelte'
@@ -9,12 +8,15 @@
   import { currentPlanetDef } from './state/planet.svelte'
   import { pendingCores } from './systems/prestige'
   import AtmospherePanel from './ui/AtmospherePanel.svelte'
+  import EventPanel from './ui/EventPanel.svelte'
   import GeneratorList from './ui/GeneratorList.svelte'
   import LogPanel from './ui/LogPanel.svelte'
   import MetaTree from './ui/MetaTree.svelte'
   import Panel from './ui/Panel.svelte'
   import PopulationPanel from './ui/PopulationPanel.svelte'
   import PrestigePanel from './ui/PrestigePanel.svelte'
+  import ResearchTree from './ui/ResearchTree.svelte'
+  import StatsPanel from './ui/StatsPanel.svelte'
   import TopBar from './ui/TopBar.svelte'
   import UpgradeGrid from './ui/UpgradeGrid.svelte'
 
@@ -28,6 +30,10 @@
     planet.completed || meta.planetsCompleted > 0 || pendingCores().gte(1),
   )
   const showMetaTree = $derived(meta.genesisCores.gt(0) || meta.metaUpgrades.length > 0)
+  const showResearch = $derived(
+    meta.research.gt(0) || Object.keys(meta.researchNodes).length > 0 || planet.settlers.gt(0),
+  )
+  const showEvents = $derived(currentPlanetDef().hasEvents)
 
   function onSave(): void {
     const ok = saveNow()
@@ -82,6 +88,12 @@
       <UpgradeGrid />
     </Panel>
 
+    {#if showResearch}
+      <Panel title="Forschung" hint="bleibt für immer">
+        <ResearchTree />
+      </Panel>
+    {/if}
+
     {#if showMetaTree}
       <Panel title="Meta-Baum" hint="bleibt für immer">
         <MetaTree />
@@ -90,11 +102,21 @@
   </div>
 
   <div class="column side">
+    {#if showEvents}
+      <Panel title="Lage" hint="Zwischenfälle">
+        <EventPanel />
+      </Panel>
+    {/if}
+
     {#if showPrestige}
       <Panel title="Planetensprung">
         <PrestigePanel />
       </Panel>
     {/if}
+
+    <Panel title="Statistik">
+      <StatsPanel />
+    </Panel>
 
     <Panel title="Ereignisse">
       <LogPanel />
@@ -118,8 +140,6 @@
         <dl class="stats">
           <div><dt>Tickrate</dt><dd class="num">{TICK_RATE} Hz</dd></div>
           <div><dt>Ticks</dt><dd class="num">{ticks.toLocaleString('de-DE')}</dd></div>
-          <div><dt>Zeit auf {planet.name}</dt><dd class="num">{formatTime(planet.elapsed)}</dd></div>
-          <div><dt>Klicks</dt><dd class="num">{formatInt(planet.clicks)}</dd></div>
           <div><dt>Save-Version</dt><dd class="num">{SAVE_VERSION}</dd></div>
           <div><dt>Autosave</dt><dd class="num">{settings.autosaveSeconds} s</dd></div>
           <div>

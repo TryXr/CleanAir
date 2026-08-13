@@ -4,6 +4,7 @@ import { hasNextPlanet, planetForIndex } from '../data/planets'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { currentPlanetDef, planet, resetPlanet } from '../state/planet.svelte'
+import { resetAtmosphereNotices } from './atmosphere'
 import { metaEffects, metaRequirementsMet } from './metaEffects'
 import { resetPopulationNotices } from './population'
 
@@ -58,6 +59,7 @@ export function doPrestige(): boolean {
   const next = planetForIndex(meta.planetsCompleted)
   resetPlanet(next, metaEffects().startingOxygen)
   resetPopulationNotices()
+  resetAtmosphereNotices()
 
   addLog(
     `${finished.name} ist abgeschlossen. +${gained.toString()} Genesis-Kerne.` +

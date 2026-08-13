@@ -114,6 +114,29 @@ Upgrades und schließt seinen ersten Planeten ab.
 Der wichtigste Design-Unterschied zu „Zahl geht hoch": Die Atmosphäre hat
 mehrere Werte, und man muss ein **Fenster** treffen, keinen Schwellenwert.
 
+### Die Rechnung dahinter (seit M3 umgesetzt)
+
+Jeder Planet hat eine Menge nativen Inertgases. Alle Anteile sind echte
+Anteile an der Gesamtmenge:
+
+```
+anteil(gas) = 100 × menge(gas) / (inertgas + O₂ + N₂ + Schadstoffe)
+```
+
+Daraus folgt das gesamte Spiel dieses Systems von selbst, ohne Sonderregeln:
+
+- Mehr O₂ hebt O₂ **und** senkt N₂.
+- **N₂ ist das einzige Werkzeug gegen zu viel O₂** — es baut nichts ab, es
+  verdünnt. Genau das macht es zum „Puffer" der Fiktion.
+- Das native Inertgas verschwindet nie, es wird nur verdünnt. Der Anteil,
+  auf den es gedrückt werden muss, bestimmt die Länge des Planeten.
+- Schadstoffe sind ein Nebenprodukt der **eigenen** Produktion, keine
+  Grundausgasung des Planeten. Eine Rate, die an der Gesamtatmosphäre hängt,
+  verschwindet bei exponentiell wachsender Produktion im Rauschen (gemessen:
+  0,006 % statt der gemeinten 1 %). An die Produktion gekoppelt bleibt der
+  Anteil auf jedem Maßstab gleich spürbar — und die Fiktion ist besser: der
+  Dreck kommt von dir.
+
 | Wert | Zielfenster | Spannung |
 |---|---|---|
 | **O₂** | 19–23 % | Zu wenig = unbewohnbar. **Zu viel = spontane Brände**, Gebäude gehen verloren |
@@ -568,14 +591,18 @@ einem laufenden Spiel getestet statt ins Blaue gebaut.
 
 **Ergebnis:** Der Kern-Reiz des Genres funktioniert.
 
-### M3 — Tiefe
-- Atmosphären-Mischung (N₂, Schadstoffe)
-- Stabilitäts-Timer als Abschlussbedingung
-- Forschungsbaum
-- Zufalls-Ereignisse
-- Statistik-Panel
+### M3 — Tiefe ✅
+- ✅ Atmosphären-Mischung (N₂, Schadstoffe)
+- ✅ Stabilitäts-Timer als Abschlussbedingung
+- ✅ Forschungsbaum (13 Knoten in drei Zweigen, mit Stufen)
+- ✅ Zufalls-Ereignisse (5 Stück, je mit optionaler Klick-Reaktion)
+- ✅ Statistik-Panel
 
 **Ergebnis:** Das Spiel hat Entscheidungen, nicht nur Wartezeiten.
+
+Gemessen (simuliert, nicht geschätzt): Aurora 21,8 min, Vesta 35,5–37,7 min
+je nach Klickrate. Ohne Wäscher pendeln sich die Schadstoffe bei 2,8 % ein —
+Vesta ist dann nicht abschließbar, der Zweig ist also keine Zierde.
 
 ### M4 — Die Anoxen
 - Feind-Spawns, Wellen-System, Wellen-Timer
@@ -616,8 +643,14 @@ einem laufenden Spiel getestet statt ins Blaue gebaut.
 
 Bewusst noch nicht entschieden — sollte während M1/M2 im Spiel getestet werden:
 
-- **Wie hart soll der O₂-Überschuss bestrafen?** Brände als echter
-  Gebäudeverlust, oder nur temporäre Produktionsdrosselung?
+- ~~**Wie hart soll der O₂-Überschuss bestrafen?**~~ **Entschieden in M3:
+  temporäre Drosselung plus Abbrand, kein Gebäudeverlust.** Permanenter
+  Verlust gekaufter Anlagen widerspricht Leitlinie §1.2 und ist in einem
+  Incremental-Spiel der zuverlässigste Weg, jemanden zum Aufhören zu bringen.
+  Der Abbrand macht das Ganze stattdessen selbstregelnd: je weiter über dem
+  Fenster, desto mehr O₂ verschwindet, der Anteil bleibt also knapp über der
+  Grenze stehen statt davonzulaufen. Herunterdrücken muss man ihn selbst —
+  mit N₂ oder mehr atmender Bevölkerung.
 - **Bevölkerung steuerbar oder automatisch?** Ein Regler gibt Kontrolle, aber
   auch Micromanagement-Druck.
 - **Wellen-Frequenz:** an Echtzeit gekoppelt oder an Fortschritt? Fortschritt

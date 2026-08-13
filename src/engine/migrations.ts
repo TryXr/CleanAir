@@ -41,6 +41,35 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.meta = meta
     return s
   },
+
+  /** M3: Atmosphären-Mischung, Stabilitäts-Timer, Forschung, Ereignisse. */
+  4: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    // Bis M3 bestand die Luft nur aus O₂. Ein Puffer war nie aufgebaut
+    // worden, Schadstoffe gab es nicht — beide starten also bei null, und
+    // der Spieler beginnt die Mischung auf dem laufenden Planeten.
+    planet.airN2 = '0'
+    planet.pollution = '0'
+    planet.stability = 0
+    planet.events = []
+    planet.nextEventIn = 150
+    s.planet = planet
+
+    const meta = (s.meta ?? {}) as SaveShape
+    meta.researchNodes = {}
+    // Die Statistik beginnt nicht bei null, sondern mit dem, was der Save
+    // schon weiß. Alles andere wäre eine Lüge über die eigene Spielzeit.
+    meta.stats = {
+      totalOxygen: typeof planet.oxygenTotal === 'string' ? planet.oxygenTotal : '0',
+      totalClicks: typeof planet.clicks === 'number' ? planet.clicks : 0,
+      eventsSeen: 0,
+      eventsHandled: 0,
+      fires: 0,
+      bestPlanetSeconds: 0,
+    }
+    s.meta = meta
+    return s
+  },
 }
 
 export interface MigrationResult {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { format, formatInt } from '../engine/format'
+  import { format, formatInt, formatTime } from '../engine/format'
   import { hasNextPlanet, planetForIndex } from '../data/planets'
   import { biomassToNextCore, canPrestige, doPrestige, pendingCores } from '../systems/prestige'
   import { meta } from '../state/meta.svelte'
@@ -35,7 +35,8 @@
   </p>
 {:else}
   <p class="note muted">
-    Der Sprung wird frei, sobald {def.name} das Zielfenster von {def.targetO2} % erreicht.
+    Der Sprung wird frei, sobald {def.name} alle Werte {formatTime(def.stabilitySeconds)} am Stück
+    im Zielfenster hält.
   </p>
 {/if}
 

@@ -39,6 +39,20 @@ export function runTicks(count: number): void {
   for (let i = 0; i < count; i++) tick()
 }
 
+let catchUp = false
+
+/**
+ * Läuft gerade ein Nachlauf (Offline, Test) statt Echtzeit?
+ *
+ * Bleibt bewusst spielunabhängig: die Engine sagt nur, in welchem Modus sie
+ * tickt. Was das bedeutet, entscheiden die Systeme — Ereignisse etwa spawnen
+ * hier nicht, weil zwölf Stunden Abwesenheit sonst hundert Stürme in den Log
+ * schreiben würden, die niemand mehr abwenden kann.
+ */
+export function isCatchUp(): boolean {
+  return catchUp
+}
+
 let totalTicks = 0
 export function getTotalTicks(): number {
   return totalTicks
@@ -116,7 +130,12 @@ export function applyOffline(
   const creditedSeconds = cappedSeconds * efficiency
   const ticks = Math.floor(creditedSeconds / TICK_DT)
 
-  runTicks(ticks)
+  catchUp = true
+  try {
+    runTicks(ticks)
+  } finally {
+    catchUp = false
+  }
 
   return { elapsedSeconds, creditedSeconds, ticks }
 }

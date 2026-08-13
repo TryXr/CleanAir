@@ -1,8 +1,11 @@
 /**
- * Die sechs Upgrades von Planet 1 (DESIGN.md §14, M1):
- * zwei auf den Klick, drei auf einzelne Generatoren, eines global.
+ * Lokale Upgrades — Einmalkäufe, die mit dem Planeten zurückgesetzt werden.
+ * Gestufte, dauerhafte Verbesserungen sind Sache des Forschungsbaums
+ * (data/research.ts).
  *
- * Einmalkauf, kein Level-System — das kommt frühestens mit dem Tech-Baum.
+ * Die ersten sechs sind Planet 1 (DESIGN.md §14, M1): zwei auf den Klick,
+ * drei auf einzelne Generatoren, eines global. Die restlichen tauchen erst
+ * auf, wenn der Planet Puffer und Schadstoffe kennt.
  */
 export type UpgradeEffect =
   /** Multipliziert den Klick-Ertrag. */
@@ -12,6 +15,9 @@ export type UpgradeEffect =
   /** Multipliziert alle Generatoren. */
   | { kind: 'global'; factor: number }
 
+/** Mechanik, die der Planet führen muss, damit das Upgrade erscheint. */
+export type Requirement = 'nitrogen' | 'pollution'
+
 export interface UpgradeDef {
   id: string
   name: string
@@ -19,6 +25,7 @@ export interface UpgradeDef {
   cost: number
   effect: UpgradeEffect
   revealAt: number
+  needs?: Requirement
 }
 
 export const UPGRADES: readonly UpgradeDef[] = [
@@ -69,6 +76,35 @@ export const UPGRADES: readonly UpgradeDef[] = [
     cost: 14000,
     effect: { kind: 'generator', generatorId: 'processor', factor: 2 },
     revealAt: 7000,
+  },
+
+  /* --- Puffer und Schadstoffe ------------------------------------------ */
+  {
+    id: 'coldtraps',
+    name: 'Kältefallen',
+    description: 'Sublimatoren halten den Permafrost offen und liefern doppelt so viel N₂.',
+    cost: 1800,
+    effect: { kind: 'generator', generatorId: 'sublimator', factor: 2 },
+    revealAt: 900,
+    needs: 'nitrogen',
+  },
+  {
+    id: 'membranes',
+    name: 'Selektive Membranen',
+    description: 'Wäscher binden 80 % mehr Kohlendioxid pro Durchgang.',
+    cost: 9000,
+    effect: { kind: 'generator', generatorId: 'scrubber', factor: 1.8 },
+    revealAt: 4000,
+    needs: 'pollution',
+  },
+  {
+    id: 'saltworks',
+    name: 'Salzwerk-Ausbau',
+    description: 'Nitrat-Cracker arbeiten doppelt so schnell.',
+    cost: 40000,
+    effect: { kind: 'generator', generatorId: 'cracker', factor: 2 },
+    revealAt: 20000,
+    needs: 'nitrogen',
   },
 ]
 
