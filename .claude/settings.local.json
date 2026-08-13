@@ -4,7 +4,18 @@
       "Read(//c/Users/Daniel/.claude//**)",
       "Bash(npm -v)",
       "Bash(git --version)",
-      "PowerShell(foreach \\($c in 'node','npm','pnpm','code'\\) { $p = \\(Get-Command $c -ErrorAction SilentlyContinue\\); if \\($p\\) { \"$c -> $\\($p.Source\\)\" } else { \"$c -> NOT FOUND\" } })"
+      "PowerShell(foreach \\($c in 'node','npm','pnpm','code'\\) { $p = \\(Get-Command $c -ErrorAction SilentlyContinue\\); if \\($p\\) { \"$c -> $\\($p.Source\\)\" } else { \"$c -> NOT FOUND\" } })",
+      "PowerShell(winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements --silent --disable-interactivity)",
+      "PowerShell(git init)",
+      "PowerShell(git config user.email)",
+      "PowerShell(git config user.name)",
+      "PowerShell(winget list --id OpenJS.NodeJS.LTS; \"--- paths:\"; foreach \\($p in \"$env:ProgramFiles\\\\nodejs\\\\node.exe\", \"${env:ProgramFiles\\(x86\\)}\\\\nodejs\\\\node.exe\", \"$env:LOCALAPPDATA\\\\Programs\\\\nodejs\\\\node.exe\"\\) { if \\(Test-Path $p\\) { \"FOUND $p\" } }; \"--- machine PATH node entries:\"; \\([Environment]::GetEnvironmentVariable\\('Path','Machine'\\) + ';' + [Environment]::GetEnvironmentVariable\\('Path','User'\\)\\) -split ';' | Where-Object { $_ -match 'node' })",
+      "PowerShell($env:Path = \"C:\\\\Program Files\\\\nodejs;$env:Path\"; npm install -D vite @sveltejs/vite-plugin-svelte svelte typescript svelte-check @tsconfig/svelte; if \\($?\\) { npm install break_infinity.js })",
+      "Bash(tail -40 \"/c/Users/Daniel/AppData/Local/Temp/claude/C--Users-Daniel-CleanAir/8f5f8dce-7aa5-4127-a776-304bf290f1b3/tasks/b2hdmelg4.output\")",
+      "PowerShell($env:Path = \"C:\\\\Program Files\\\\nodejs;$env:Path\"; npm install -D \"typescript@^6\"; if \\($?\\) { npm install break_infinity.js })",
+      "PowerShell($env:Path = \"C:\\\\Program Files\\\\nodejs;$env:Path\"; npm run typecheck)",
+      "PowerShell(Remove-Item C:\\\\Users\\\\Daniel\\\\CleanAir\\\\tsconfig.node.json -Force; $env:Path = \"C:\\\\Program Files\\\\nodejs;$env:Path\"; npm run typecheck)",
+      "PowerShell($env:Path = \"C:\\\\Program Files\\\\nodejs;$env:Path\"; npm run build)"
     ]
   }
 }

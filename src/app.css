@@ -1,0 +1,121 @@
+/* --- Design-Sprache -------------------------------------------------------
+   Dunkel, technisch, ruhig. Der einzige gesättigte Farbton ist das O₂-Cyan;
+   alles andere ist Grau, damit Zahlen und Fortschritt die Aufmerksamkeit
+   bekommen und nicht das Interface.
+--------------------------------------------------------------------------- */
+
+:root {
+  --bg: #05090e;
+  --bg-grad: radial-gradient(1200px 800px at 70% -10%, #0d1a24 0%, #05090e 60%);
+  --panel: #0b131b;
+  --panel-soft: #101b25;
+  --line: #1c2b39;
+  --line-soft: #14202b;
+
+  --text: #d6e0ea;
+  --text-dim: #93a4b6;
+  --muted: #6d7f92;
+
+  --o2: #46d6c6;
+  --o2-dim: #1c6f69;
+  --good: #6fcf82;
+  --warn: #e6b451;
+  --bad: #e46b60;
+
+  --radius: 10px;
+  --gap: 14px;
+
+  color-scheme: dark;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  background-image: var(--bg-grad);
+  background-attachment: fixed;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Zahlen laufen im Tick — ohne tabular-nums zappelt das ganze Layout. */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    transform 0.06s ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--o2-dim);
+  background: #14212c;
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button.primary {
+  border-color: var(--o2-dim);
+  background: linear-gradient(180deg, #12403d, #0d2f2d);
+  color: #d9fffb;
+}
+
+button.primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #16504c, #0f3937);
+}
+
+button.danger:hover:not(:disabled) {
+  border-color: var(--bad);
+  color: #ffd9d5;
+}
+
+textarea {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 12px;
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  color: var(--text-dim);
+  background: #070d13;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+::selection {
+  background: var(--o2-dim);
+  color: #eafffd;
+}
