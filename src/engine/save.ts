@@ -24,7 +24,21 @@ export function buildSave(): SaveData {
   }
 }
 
+/**
+ * Wurde der Stand bewusst verworfen?
+ *
+ * Ohne diese Sperre wirkt Löschen nicht: `wipeSave()` entfernt den Eintrag,
+ * der übliche `location.reload()` danach löst aber `beforeunload` aus — und
+ * der Handler schreibt den noch im Speicher stehenden Stand sofort wieder
+ * hin. Man landet nach dem Neuladen auf demselben Planeten wie vorher.
+ *
+ * Die Sperre gilt bis zum Neuladen. Ein Import hebt sie auf, denn wer
+ * importiert, will wieder gespeichert haben.
+ */
+let discarded = false
+
 export function saveGame(): boolean {
+  if (discarded) return false
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(buildSave()))
     return true
@@ -39,6 +53,10 @@ export function saveGame(): boolean {
  * `saveGame()` bleibt der stumme Unterbau für Tests und Import.
  */
 export function saveNow(): boolean {
+  // Kein Fehler, sondern Absicht: nach dem Verwerfen gibt es nichts zu
+  // speichern. Ein rotes „Speichern fehlgeschlagen" wäre hier gelogen.
+  if (discarded) return true
+
   const ok = saveGame()
   session.saveFailed = !ok
   if (ok) session.lastSavedAt = Date.now()
@@ -98,6 +116,7 @@ export function loadGame(): LoadResult {
 }
 
 export function wipeSave(): void {
+  discarded = true
   try {
     localStorage.removeItem(SAVE_KEY)
   } catch {
@@ -139,6 +158,8 @@ export function importSave(encoded: string): boolean {
     deserializeSettings(save.settings)
     deserializeMeta(save.meta)
     deserializePlanet(save.planet)
+    // Wer importiert, will wieder gespeichert haben.
+    discarded = false
     saveGame()
     return true
   } catch {

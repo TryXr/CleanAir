@@ -8,6 +8,7 @@
   import { currentPlanetDef } from './state/planet.svelte'
   import { pendingCores } from './systems/prestige'
   import AtmospherePanel from './ui/AtmospherePanel.svelte'
+  import DebugPanel from './ui/DebugPanel.svelte'
   import EventPanel from './ui/EventPanel.svelte'
   import GeneratorList from './ui/GeneratorList.svelte'
   import LogPanel from './ui/LogPanel.svelte'
@@ -34,6 +35,9 @@
     meta.research.gt(0) || Object.keys(meta.researchNodes).length > 0 || planet.settlers.gt(0),
   )
   const showEvents = $derived(currentPlanetDef().hasEvents)
+
+  /** Debug-Werkzeuge gibt es nur im Dev-Build, nie im ausgelieferten Spiel. */
+  const isDev = import.meta.env.DEV
 
   function onSave(): void {
     const ok = saveNow()
@@ -102,6 +106,12 @@
   </div>
 
   <div class="column side">
+    {#if isDev}
+      <Panel title="Debug" hint="nur im Dev-Build">
+        <DebugPanel />
+      </Panel>
+    {/if}
+
     {#if showEvents}
       <Panel title="Lage" hint="Zwischenfälle">
         <EventPanel />
