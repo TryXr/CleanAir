@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Daniel/.claude//**)",
+      "Bash(npm -v)",
+      "Bash(git --version)",
+      "PowerShell(foreach \\($c in 'node','npm','pnpm','code'\\) { $p = \\(Get-Command $c -ErrorAction SilentlyContinue\\); if \\($p\\) { \"$c -> $\\($p.Source\\)\" } else { \"$c -> NOT FOUND\" } })"
+    ]
+  }
+}
