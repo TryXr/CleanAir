@@ -6,11 +6,15 @@ import { format, formatTime } from './engine/format'
 import { applyOffline, registerSystem, runTicks, startLoop, stopLoop } from './engine/loop'
 import { loadGame, saveNow } from './engine/save'
 import * as atmosphere from './systems/atmosphere'
+import * as population from './systems/population'
+import * as prestige from './systems/prestige'
 import * as production from './systems/production'
 import { atmosphereSystem } from './systems/atmosphere'
+import { populationSystem, resetPopulationNotices } from './systems/population'
 import { productionSystem } from './systems/production'
-import { AURORA } from './data/planets'
+import { AURORA, PLANETS } from './data/planets'
 import { GENERATORS } from './data/generators'
+import { META_UPGRADES } from './data/metaUpgrades'
 import { UPGRADES } from './data/upgrades'
 import { resetPlanet } from './state/planet.svelte'
 import { addLog } from './state/log.svelte'
@@ -30,6 +34,7 @@ registerSystem('zeit', (dt) => {
 })
 
 registerSystem('produktion', productionSystem)
+registerSystem('bevölkerung', populationSystem)
 registerSystem('atmosphäre', atmosphereSystem)
 
 /* --- Start --------------------------------------------------------------- */
@@ -74,6 +79,8 @@ function creditAbsence(awayMs: number): void {
   )
 }
 
+resetPopulationNotices()
+
 if (loaded.status === 'loaded') creditAbsence(loaded.awayMs)
 
 startLoop()
@@ -115,7 +122,9 @@ if (import.meta.env.DEV) {
       resetPlanet,
       production,
       atmosphere,
-      data: { GENERATORS, UPGRADES, AURORA },
+      population,
+      prestige,
+      data: { GENERATORS, UPGRADES, META_UPGRADES, AURORA, PLANETS },
     },
   })
 }

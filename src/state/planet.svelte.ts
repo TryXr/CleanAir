@@ -1,5 +1,5 @@
 import Decimal from 'break_infinity.js'
-import { AURORA } from '../data/planets'
+import { AURORA, findPlanet, type PlanetDef } from '../data/planets'
 import { GENERATORS } from '../data/generators'
 import { UPGRADES } from '../data/upgrades'
 import { readDecimal, readNumber, readString, writeDecimal } from '../engine/serialize'
@@ -8,28 +8,44 @@ import { readDecimal, readNumber, readString, writeDecimal } from '../engine/ser
  * PLANET — wird beim Planetenwechsel vollständig zurückgesetzt.
  *
  * Alles, was einen Prestige-Sprung überleben soll, gehört nach meta.svelte.ts.
- * Diese Trennung ab Tag eins zu haben ist der Grund, warum M2 später ein
- * kleiner Schritt wird statt eines Umbaus.
+ * Diese Trennung ab Tag eins zu haben ist der Grund, warum der Wechsel in M2
+ * ein Schritt war und kein Umbau.
  */
-function initialPlanet() {
+function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new Decimal(0)) {
   return {
-    id: AURORA.id,
-    name: AURORA.name,
+    id: def.id,
+    name: def.name,
 
-    /** Aktueller Vorrat — wird zum Kaufen ausgegeben. */
-    oxygen: new Decimal(0),
-    /** Jemals freigesetzt. Treibt Atmosphäre und später die Genesis-Kerne. */
-    oxygenTotal: new Decimal(0),
+    /** Vorrat zum Ausgeben — Generatoren und Upgrades zahlen hieraus. */
+    oxygen: startingOxygen,
+    /** Jemals produziert. Rein statistisch, wächst monoton. */
+    oxygenTotal: startingOxygen,
+
+    /**
+     * Was tatsächlich in der Luft steht. Steigt durch Produktion, sinkt
+     * durch Atmung — Käufe rühren es nicht an. Genau diese Trennung erzeugt
+     * die Spannung aus DESIGN.md §5: mehr Bevölkerung heißt mehr Produktion
+     * *und* fallender Atmosphärenwert.
+     */
+    airO2: startingOxygen,
+
+    /** Grundlage der Genesis-Kerne beim Abschluss (§6). */
+    biomass: new Decimal(0),
 
     /** Generator-id -> Anzahl. */
     generators: {} as Record<string, number>,
     /** ids gekaufter Upgrades. */
     upgrades: [] as string[],
 
+    /** Menschen auf *diesem* Planeten. Beim Wechsel werden sie zur Kolonie. */
+    settlers: new Decimal(0),
+    /** Zuwanderungsregler 0…1 (§5). */
+    immigration: 1,
+
     clicks: 0,
     /** Sekunden auf diesem Planeten. */
     elapsed: 0,
-    /** Zielfenster erreicht. In M2 löst das den Planetenwechsel aus. */
+    /** Zielfenster erreicht. Rastet ein und fällt nicht zurück. */
     completed: false,
   }
 }
@@ -39,8 +55,13 @@ export const planet = $state(initialPlanet())
 export type PlanetState = typeof planet
 
 /** Planetenwechsel: lokalen Zustand verwerfen, Meta bleibt unberührt. */
-export function resetPlanet(): void {
-  Object.assign(planet, initialPlanet())
+export function resetPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new Decimal(0)): void {
+  Object.assign(planet, initialPlanet(def, startingOxygen))
+}
+
+/** Die Definition zum aktuell bespielten Planeten. */
+export function currentPlanetDef(): PlanetDef {
+  return findPlanet(planet.id) ?? AURORA
 }
 
 export function generatorCount(id: string): number {
@@ -57,8 +78,12 @@ export function serializePlanet() {
     name: planet.name,
     oxygen: writeDecimal(planet.oxygen),
     oxygenTotal: writeDecimal(planet.oxygenTotal),
+    airO2: writeDecimal(planet.airO2),
+    biomass: writeDecimal(planet.biomass),
     generators: { ...planet.generators },
     upgrades: [...planet.upgrades],
+    settlers: writeDecimal(planet.settlers),
+    immigration: planet.immigration,
     clicks: planet.clicks,
     elapsed: planet.elapsed,
     completed: planet.completed,
@@ -69,9 +94,13 @@ export function deserializePlanet(raw: unknown): void {
   const s = (raw ?? {}) as Record<string, unknown>
 
   planet.id = readString(s.id, AURORA.id)
-  planet.name = readString(s.name, AURORA.name)
+  planet.name = findPlanet(planet.id)?.name ?? readString(s.name, AURORA.name)
   planet.oxygen = readDecimal(s.oxygen, 0)
   planet.oxygenTotal = readDecimal(s.oxygenTotal, 0)
+  planet.airO2 = readDecimal(s.airO2, 0)
+  planet.biomass = readDecimal(s.biomass, 0)
+  planet.settlers = readDecimal(s.settlers, 0)
+  planet.immigration = Math.min(1, Math.max(0, readNumber(s.immigration, 1)))
   planet.clicks = readNumber(s.clicks, 0)
   planet.elapsed = readNumber(s.elapsed, 0)
   planet.completed = s.completed === true

@@ -6,16 +6,28 @@
   import { meta } from './state/meta.svelte'
   import { planet } from './state/planet.svelte'
   import { settings } from './state/settings.svelte'
+  import { currentPlanetDef } from './state/planet.svelte'
+  import { pendingCores } from './systems/prestige'
   import AtmospherePanel from './ui/AtmospherePanel.svelte'
   import GeneratorList from './ui/GeneratorList.svelte'
   import LogPanel from './ui/LogPanel.svelte'
+  import MetaTree from './ui/MetaTree.svelte'
   import Panel from './ui/Panel.svelte'
+  import PopulationPanel from './ui/PopulationPanel.svelte'
+  import PrestigePanel from './ui/PrestigePanel.svelte'
   import TopBar from './ui/TopBar.svelte'
   import UpgradeGrid from './ui/UpgradeGrid.svelte'
 
   let transfer = $state('')
 
   const ticks = $derived(Math.round(meta.totalPlaytime * TICK_RATE))
+
+  // Schrittweise Enthüllung: kein Panel zeigen, bevor es etwas zu entscheiden gibt.
+  const showPopulation = $derived(currentPlanetDef().allowsPopulation)
+  const showPrestige = $derived(
+    planet.completed || meta.planetsCompleted > 0 || pendingCores().gte(1),
+  )
+  const showMetaTree = $derived(meta.genesisCores.gt(0) || meta.metaUpgrades.length > 0)
 
   function onSave(): void {
     const ok = saveNow()
@@ -56,6 +68,12 @@
       <AtmospherePanel />
     </Panel>
 
+    {#if showPopulation}
+      <Panel title="Bevölkerung" hint="atmet mit">
+        <PopulationPanel />
+      </Panel>
+    {/if}
+
     <Panel title="Anlagen">
       <GeneratorList />
     </Panel>
@@ -63,9 +81,21 @@
     <Panel title="Verbesserungen">
       <UpgradeGrid />
     </Panel>
+
+    {#if showMetaTree}
+      <Panel title="Meta-Baum" hint="bleibt für immer">
+        <MetaTree />
+      </Panel>
+    {/if}
   </div>
 
   <div class="column side">
+    {#if showPrestige}
+      <Panel title="Planetensprung">
+        <PrestigePanel />
+      </Panel>
+    {/if}
+
     <Panel title="Ereignisse">
       <LogPanel />
     </Panel>

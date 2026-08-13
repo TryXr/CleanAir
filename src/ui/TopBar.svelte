@@ -29,7 +29,8 @@
     </div>
     <div class="res">
       <span class="label">Bevölkerung</span>
-      <span class="value num">{formatInt(meta.population)}</span>
+      <!-- Siedler hier plus schon bestehende Kolonien -->
+      <span class="value num">{formatInt(meta.population.add(planet.settlers))}</span>
     </div>
     <div class="res">
       <span class="label">Credits</span>

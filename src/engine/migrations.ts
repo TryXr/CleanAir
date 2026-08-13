@@ -22,6 +22,25 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.planet = planet
     return s
   },
+
+  /** M2: Luft-O₂ getrennt vom Vorrat, Bevölkerung, Biomasse, Meta-Baum. */
+  3: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    // Bis M2 war der Atmosphärenwert das kumulierte O₂. Genau das war der
+    // Stand der Luft, also übernimmt airO2 diesen Wert unverändert — der
+    // Spieler verliert durch die Umstellung keinen Fortschritt.
+    const produced = typeof planet.oxygenTotal === 'string' ? planet.oxygenTotal : '0'
+    planet.airO2 = produced
+    planet.biomass = produced
+    planet.settlers = '0'
+    planet.immigration = 1
+    s.planet = planet
+
+    const meta = (s.meta ?? {}) as SaveShape
+    meta.metaUpgrades = []
+    s.meta = meta
+    return s
+  },
 }
 
 export interface MigrationResult {

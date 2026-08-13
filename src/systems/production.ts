@@ -2,18 +2,34 @@ import Decimal from 'break_infinity.js'
 import { GENERATORS, findGenerator, type GeneratorDef } from '../data/generators'
 import { UPGRADES, findUpgrade } from '../data/upgrades'
 import { generatorCount, hasUpgrade, planet } from '../state/planet.svelte'
+import { metaEffects } from './metaEffects'
 
 /**
  * Produktion — die einzige Stelle, an der Multiplikatoren zusammenlaufen.
  *
  * DESIGN.md §13: „Alle Multiplikatoren zentral sammeln — niemals verstreut."
- * Wenn später Arbeitskraft, Druckfaktor und Forschung dazukommen, kommen sie
- * hierher und nirgendwo sonst. Sonst ist nach drei Meilensteinen nicht mehr
- * nachvollziehbar, woher eine Zahl stammt.
+ * Aktuell sind das lokale Upgrades, der Meta-Baum und die Arbeitskraft.
+ * Druckfaktor und Forschung kommen später hierher und nirgendwo sonst.
+ *
+ *   rate = basisRate × anzahl × Π(upgrades) × global × arbeitskraft
  */
 
 /** Klick-Ertrag vor allen Multiplikatoren. */
 const BASE_CLICK = 1
+
+/**
+ * Teiler der Arbeitskraft-Kurve. Wurzelförmig, damit Bevölkerung spürbar
+ * hilft, ohne die Produktion zu übernehmen — sie soll ein Verstärker sein,
+ * kein Ersatz für Generatoren.
+ */
+const WORKFORCE_SCALE = 40
+
+/** Produktionsbonus durch Siedler: 1 + √siedler / scale. */
+export function workforceMultiplier(): Decimal {
+  if (planet.settlers.lte(0)) return new Decimal(1)
+  const bonus = planet.settlers.sqrt().div(WORKFORCE_SCALE).mul(metaEffects().workforce)
+  return bonus.add(1)
+}
 
 interface Multipliers {
   click: Decimal
@@ -22,7 +38,12 @@ interface Multipliers {
 }
 
 function collectMultipliers(): Multipliers {
-  const m: Multipliers = { click: new Decimal(1), global: new Decimal(1), perGenerator: {} }
+  const effects = metaEffects()
+  const m: Multipliers = {
+    click: effects.clickPower.mul(BASE_CLICK),
+    global: effects.globalProduction.mul(workforceMultiplier()),
+    perGenerator: {},
+  }
 
   for (const upgrade of UPGRADES) {
     if (!hasUpgrade(upgrade.id)) continue
@@ -58,7 +79,7 @@ export function generatorRate(def: GeneratorDef): Decimal {
     .mul(m.global)
 }
 
-/** Gesamte Produktionsrate des Planeten. */
+/** Gesamte Produktionsrate des Planeten, vor Verbrauch. */
 export function currentO2Rate(): Decimal {
   let total = new Decimal(0)
   for (const def of GENERATORS) total = total.add(generatorRate(def))
@@ -66,7 +87,7 @@ export function currentO2Rate(): Decimal {
 }
 
 export function clickGain(): Decimal {
-  return collectMultipliers().click.mul(BASE_CLICK)
+  return collectMultipliers().click
 }
 
 // --- Kosten ---------------------------------------------------------------
@@ -125,15 +146,23 @@ export function buyUpgrade(id: string): boolean {
 /** Der Klick-Button. Die einzige Aktion, die es in Minute eins gibt. */
 export function releaseOxygen(): void {
   const gain = clickGain()
-  planet.oxygen = planet.oxygen.add(gain)
-  planet.oxygenTotal = planet.oxygenTotal.add(gain)
+  addOxygen(gain)
   planet.clicks++
+}
+
+/**
+ * Zentraler Zufluss. Produktion speist drei Töpfe gleichzeitig:
+ * den ausgebbaren Vorrat, die Statistik und die tatsächliche Luft.
+ */
+function addOxygen(amount: Decimal): void {
+  planet.oxygen = planet.oxygen.add(amount)
+  planet.oxygenTotal = planet.oxygenTotal.add(amount)
+  planet.airO2 = planet.airO2.add(amount)
+  planet.biomass = planet.biomass.add(amount)
 }
 
 export function productionSystem(dt: number): void {
   const gain = currentO2Rate().mul(dt)
   if (gain.lte(0)) return
-
-  planet.oxygen = planet.oxygen.add(gain)
-  planet.oxygenTotal = planet.oxygenTotal.add(gain)
+  addOxygen(gain)
 }

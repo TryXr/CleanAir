@@ -2,7 +2,9 @@
 
 Incremental Game über Terraforming. Konzept, Balancing-Ziele und Meilensteine
 stehen in [DESIGN.md](DESIGN.md) — **bei Fragen zu Spielinhalt immer dort
-nachsehen, nicht raten.** Aktueller Stand: M0 abgeschlossen.
+nachsehen, nicht raten.** Aktueller Stand: M2 abgeschlossen (Aurora, Vesta,
+Prestige, Bevölkerung). Als Nächstes M3: Atmosphären-Mischung, Stabilitäts-Timer,
+Forschung, Ereignisse.
 
 ## Befehle
 
@@ -55,8 +57,29 @@ Neue Felder brauchen einen defensiven Leser aus
 [serialize.ts](src/engine/serialize.ts) mit sinnvollem Default.
 
 **5. Balancing gehört nach `data/`, nicht in Formeln.**
-Alle Multiplikatoren laufen zentral in `systems/production.ts` zusammen, damit
+Alle Multiplikatoren laufen zentral in `systems/production.ts` zusammen (lokale
+Upgrades, Arbeitskraft) bzw. in `systems/metaEffects.ts` (Meta-Baum), damit
 später nachvollziehbar bleibt, woher eine Zahl kommt.
+
+**6. Drei O₂-Töpfe nicht verwechseln.**
+`oxygen` ist das ausgebbare Guthaben, `oxygenTotal` reine Statistik, und
+`airO2` ist das, was tatsächlich in der Luft steht und den Atmosphärenwert
+bestimmt. Käufe zehren nur am Guthaben, Atmung nur an der Luft. Diese Trennung
+ist der Grund, warum Fortschritt nie durch einen Generatorkauf rückwärts läuft
+und Bevölkerung trotzdem wehtun kann.
+
+## Balancing prüfen statt schätzen
+
+Zieldauern pro Planet stehen in DESIGN.md §13 und wurden bisher **simuliert,
+nicht geraten**. Im Dev-Build gibt `window.cleanair` in der Browser-Konsole
+Zugriff auf die laufenden Instanzen (`planet`, `meta`, `production`,
+`population`, `prestige`, `data`, `loop`). Ein eigener `import` in den Devtools
+liefert eine zweite, unbeteiligte Kopie der Module — deshalb immer über
+`window.cleanair` gehen.
+
+Vor dem Festschreiben neuer Zahlen: `loop.stopLoop()`, Planet zurücksetzen, in
+1-Sekunden-Schritten `productionSystem` / `populationSystem` /
+`atmosphereSystem` treiben und die Abschlusszeit gegen §13 prüfen.
 
 ## Ein System pro Planet
 

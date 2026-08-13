@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { AURORA } from '../data/planets'
   import { format, formatRate } from '../engine/format'
   import { o2Percent, remainingToTarget, targetProgress } from '../systems/atmosphere'
   import { clickGain, currentO2Rate, releaseOxygen } from '../systems/production'
-  import { planet } from '../state/planet.svelte'
+  import { currentPlanetDef, planet } from '../state/planet.svelte'
 
+  const def = $derived(currentPlanetDef())
   const percent = $derived(o2Percent())
   const progress = $derived(targetProgress())
   const rate = $derived(currentO2Rate())
@@ -18,7 +18,7 @@
     <span class="unit">O₂ in der Atmosphäre</span>
   </div>
   <div class="target">
-    Ziel <strong class="num">{AURORA.targetO2} %</strong>
+    Ziel <strong class="num">{def.targetO2} %</strong>
   </div>
 </div>
 
@@ -28,8 +28,8 @@
 
 {#if planet.completed}
   <p class="done-note">
-    Aurora ist atembar. Der Planetenwechsel und die Genesis-Kerne folgen in M2 —
-    bis dahin läuft die Produktion einfach weiter.
+    {def.name} ist atembar. Der Sprung steht offen — länger bleiben bringt mehr Biomasse
+    und damit mehr Genesis-Kerne, mit abnehmendem Ertrag.
   </p>
 {:else}
   <p class="remaining">
