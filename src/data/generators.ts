@@ -95,6 +95,16 @@ export interface GeneratorDef {
   revealAt: number
 
   /**
+   * Arbeitsplätze pro Stück (§17).
+   *
+   * Der Kern des Kurswechsels: eine Anlage mit Plätzen produziert **nichts**,
+   * solange niemand zugewiesen ist. Halb besetzt heißt halbe Leistung. Fehlt
+   * das Feld, läuft die Anlage wie bisher von allein — so können die alten
+   * Planeten weiterlaufen, bis M13 sie nachzieht.
+   */
+  workSlots?: number
+
+  /**
    * Ausdrückliche Planetenbindung. Fehlt sie, ergibt sich die Verfügbarkeit
    * aus `output` (N₂-Anlagen nur mit Puffer, Abbau nur beim passenden
    * Vorkommen). Nötig für Anlagen, die ein Planet *allein* hat, obwohl ihre
@@ -108,12 +118,42 @@ export const GENERATORS: readonly GeneratorDef[] = [
   {
     id: 'electrolysis',
     name: 'Elektrolyse-Zelle',
-    description: 'Spaltet gebundenes Wasser im Gestein. Langsam, aber sie läuft überall.',
+    description:
+      'Spaltet gebundenes Wasser im Gestein. Langsam, aber sie läuft überall — solange jemand sie bedient.',
     output: { kind: 'gas', gas: 'o2' },
     baseCost: 10,
     costGrowth: 1.12,
     baseRate: 0.3,
     revealAt: 0,
+    workSlots: 1,
+  },
+
+  /* --- Überleben auf Aurora ---------------------------------------------
+     Beide kosten kein Material: Aurora hat keins. Sie sind die Antwort auf
+     die endlichen Rationen und damit das erste, was gebaut werden muss.
+  ---------------------------------------------------------------------- */
+  {
+    id: 'condenser',
+    name: 'Kondensator',
+    description:
+      'Presst Feuchtigkeit aus der dünnen Luft. Wenig, aber es hört nicht auf — anders als die Kisten.',
+    output: { kind: 'supply', supply: 'water' },
+    baseCost: 25,
+    costGrowth: 1.15,
+    baseRate: 0.09,
+    revealAt: 0,
+    workSlots: 1,
+  },
+  {
+    id: 'sprouter',
+    name: 'Keimkammer',
+    description: 'Sprossen unter Lampen. Schmeckt nach nichts und hält alle am Leben.',
+    output: { kind: 'supply', supply: 'food' },
+    baseCost: 40,
+    costGrowth: 1.15,
+    baseRate: 0.07,
+    revealAt: 0,
+    workSlots: 1,
   },
   {
     id: 'photolysis',
@@ -124,6 +164,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.13,
     baseRate: 4,
     revealAt: 40,
+    workSlots: 2,
   },
   {
     id: 'processor',
@@ -134,6 +175,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.14,
     baseRate: 55,
     revealAt: 400,
+    workSlots: 3,
   },
 
   /* --- Puffer -----------------------------------------------------------
@@ -207,6 +249,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.13,
     baseRate: 0.5,
     revealAt: 600,
+    workSlots: 1,
   },
   {
     id: 'sawmill',

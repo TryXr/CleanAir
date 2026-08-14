@@ -73,7 +73,22 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
     upgrades: [] as string[],
 
     /** Menschen auf *diesem* Planeten. Beim Wechsel werden sie zur Kolonie. */
-    settlers: new Decimal(0),
+    settlers: new Decimal(def.startSettlers),
+
+    /**
+     * Zugewiesene Bewohner je Anlage (§17). Ohne Besetzung produziert eine
+     * Anlage mit Arbeitsplätzen nichts.
+     */
+    staff: {} as Record<string, number>,
+    /**
+     * 0…1 — wie gut die Leute versorgt sind, und damit ihre Arbeitsleistung.
+     *
+     * Bewusst träge: eine Sekunde ohne Wasser soll nicht sofort die ganze
+     * Kolonie lahmlegen, und ein kurzer Engpass ist eine Warnung statt einer
+     * Katastrophe. Wer gar nichts hat, arbeitet nicht — stirbt aber auch
+     * nicht (§17). Damit verliert man offline nur Produktion, nie Menschen.
+     */
+    satiety: 1,
     /** Zuwanderungsregler 0…1 (§5). */
     immigration: 1,
 
@@ -81,8 +96,8 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
      * Vorräte. Planetenlokal wie die Luft, nicht im globalen Lager — jede
      * Kolonie muss sich selbst ernähren (DESIGN.md §16).
      */
-    food: new Decimal(0),
-    water: new Decimal(0),
+    food: new Decimal(def.startFood),
+    water: new Decimal(def.startWater),
 
     /**
      * Menschen, die Gebäude beim Bau verschluckt haben. Sie leben und atmen
@@ -192,6 +207,8 @@ export function serializePlanet() {
     generators: { ...planet.generators },
     upgrades: [...planet.upgrades],
     settlers: writeDecimal(planet.settlers),
+    staff: { ...planet.staff },
+    satiety: planet.satiety,
     immigration: planet.immigration,
     food: writeDecimal(planet.food),
     water: writeDecimal(planet.water),
@@ -229,6 +246,7 @@ export function deserializePlanet(raw: unknown): void {
   planet.stability = Math.max(0, readNumber(s.stability, 0))
   planet.biomass = readDecimal(s.biomass, 0)
   planet.settlers = readDecimal(s.settlers, 0)
+  planet.satiety = Math.min(1, Math.max(0, readNumber(s.satiety, 1)))
   planet.immigration = Math.min(1, Math.max(0, readNumber(s.immigration, 1)))
   planet.food = readDecimal(s.food, 0)
   planet.water = readDecimal(s.water, 0)
@@ -282,6 +300,15 @@ export function deserializePlanet(raw: unknown): void {
 
   // Nur bekannte ids übernehmen. Ein Save, der aus einer Version mit anderen
   // Generatoren stammt, soll keine Geister-Einträge einschleppen.
+  // Zuweisungen nur für bekannte Anlagen übernehmen.
+  const savedStaff = (s.staff ?? {}) as Record<string, unknown>
+  const staff: Record<string, number> = {}
+  for (const def of GENERATORS) {
+    const n = Math.floor(readNumber(savedStaff[def.id], 0))
+    if (n > 0) staff[def.id] = n
+  }
+  planet.staff = staff
+
   const savedGenerators = (s.generators ?? {}) as Record<string, unknown>
   const generators: Record<string, number> = {}
   for (const def of GENERATORS) {

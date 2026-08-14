@@ -1076,7 +1076,7 @@ Jeder Pfeil braucht Hände. Ohne zugewiesene Bewohner steht die ganze Kette.
 
 | | Inhalt | Warum diese Reihenfolge |
 |---|---|---|
-| **M10** | Aurora startet mit 10 Bewohnern und endlichen Rationen. Berufe *produzieren* statt zu multiplizieren. Sättigung regelt die Arbeitsleistung. | Kleinstmöglicher vollständiger Loop, an dem sich das Modell beweisen muss |
+| **M10** ✓ | Aurora startet mit 10 Bewohnern und endlichen Rationen. Berufe *produzieren* statt zu multiplizieren. Sättigung regelt die Arbeitsleistung. | Kleinstmöglicher vollständiger Loop, an dem sich das Modell beweisen muss |
 | **M11** | Bauen kostet Hände und Zeit: Bauplatz, Bauarbeiter, Fertigstellung. Lagerhallen mit echter Kapazitätsgrenze, Wohnhäuser. | Braucht den Arbeitskraft-Begriff aus M10 |
 | **M12** | Verarbeitungsketten mit Zwischengütern und Rezepten. Rakete aus Metallplatten statt aus O₂. | Braucht Gebäude und Lager aus M11 |
 | **M13** | Aurora als Mars zu Ende, dann Vesta bis Nimbus auf die neue Wirtschaft umstellen und vollständig neu balancieren. | Aufräumen, wenn das Modell steht |

@@ -12,6 +12,8 @@ import { atmosphereSystem, n2Percent } from '../systems/atmosphere'
 import { meta } from '../state/meta.svelte'
 import { achievementsSystem } from '../systems/achievements'
 import { combatSystem } from '../systems/combat'
+import { assign, unassign } from '../systems/labor'
+import { populationSystem } from '../systems/population'
 import { clickGain, currentO2Rate, isAvailable, productionSystem } from '../systems/production'
 import { buildRocket, travelTo } from '../systems/travel'
 
@@ -212,6 +214,11 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     freshRun()
     travelTo('pyra')
     planet.generators = { electrolysis: 100 }
+    // Seit §17 produziert eine Anlage nur mit zugewiesenen Leuten. Ohne diese
+    // Zeilen misst der Test zweimal null und beweist nichts.
+    planet.settlers = new Decimal(100)
+    planet.staff = { electrolysis: 100 }
+    planet.satiety = 1
     const volleRate = currentO2Rate().toNumber()
     planet.disabled = { electrolysis: 60 }
     const gedrosselt = currentO2Rate().toNumber()
@@ -234,6 +241,40 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     planet.airO2 = new Decimal(1e9)
     for (let i = 0; i < 2000; i++) combatSystem(1)
     check(r, 'Planeten ohne Anoxen bleiben verschont', planet.waveNumber === 0)
+
+    /* --- Arbeitskraft (§17) -----------------------------------------------
+       Die neue Kernregel: ohne zugewiesene Leute läuft nichts. Und niemand
+       verhungert — Versorgungsmangel senkt die Leistung, tötet aber nicht.
+    --------------------------------------------------------------------- */
+    freshRun()
+    check(r, 'Aurora startet mit Mannschaft', planet.settlers.eq(10), planet.settlers.toString())
+    check(r, 'Aurora startet mit Rationen', planet.food.gt(0) && planet.water.gt(0))
+
+    planet.generators = { electrolysis: 5 }
+    planet.staff = {}
+    check(r, 'Unbesetzte Anlagen produzieren nichts', currentO2Rate().eq(0))
+    assign('electrolysis', 5)
+    check(r, 'Besetzte Anlagen produzieren', currentO2Rate().gt(0))
+
+    // Halb besetzt heißt halbe Leistung.
+    const voll = currentO2Rate().toNumber()
+    unassign('electrolysis', 3)
+    const teilweise = currentO2Rate().toNumber()
+    check(r, 'Halbe Besetzung heißt halbe Leistung', teilweise < voll && teilweise > 0)
+
+    // Leere Vorräte legen die Arbeit lahm, töten aber niemanden.
+    planet.food = new Decimal(0)
+    planet.water = new Decimal(0)
+    const leuteVorher = planet.settlers.toNumber()
+    for (let i = 0; i < 3000; i++) populationSystem(1)
+    check(r, 'Leere Vorräte senken die Sättigung', planet.satiety < 0.2, `${planet.satiety}`)
+    check(r, 'Hunger tötet niemanden', planet.settlers.toNumber() >= leuteVorher - 0.001)
+
+    // Und der Rückweg bleibt offen: Versorgung erholt sich wieder.
+    planet.food = new Decimal(500)
+    planet.water = new Decimal(500)
+    for (let i = 0; i < 3000; i++) populationSystem(1)
+    check(r, 'Versorgung erholt sich wieder', planet.satiety > 0.9, `${planet.satiety}`)
 
     /* --- Achievements ----------------------------------------------------
        Sie müssen sich auslösen *und* wirken. Ein Erfolg ohne Effekt wäre

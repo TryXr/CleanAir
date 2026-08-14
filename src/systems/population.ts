@@ -6,6 +6,7 @@ import { meta } from '../state/meta.svelte'
 import { effectiveO2Window, o2Percent } from './atmosphere'
 import { eventEffects } from './eventEffects'
 import { enforceJobLimit } from './jobs'
+import { enforceStaffLimit } from './labor'
 import { metaEffects } from './metaEffects'
 import { currentO2Rate } from './production'
 import { achievementEffects } from './achievements'
@@ -23,19 +24,6 @@ import { researchEffects } from './research'
  * steht das O₂ über dem Fenster, sind mehr atmende Menschen die schnellste
  * Art, es wieder herunterzubekommen.
  */
-
-/**
- * O₂ pro Sekunde und Kopf, vor Lebenserhaltung.
- *
- * Der Wert wirkt hoch, ist aber der Angelpunkt des ganzen Systems: der
- * Arbeitskraft-Bonus wächst mit √Bevölkerung, der Verbrauch linear. Daraus
- * entsteht von selbst ein Kipppunkt — bis dahin zahlen sich Menschen aus,
- * danach kosten sie mehr, als sie bringen. Genau die Entscheidung aus §5.
- * Zu klein gewählt (der erste Entwurf lag bei 0.0022) verbraucht die
- * Bevölkerung 0,09 % der Produktion und die Spannung existiert nur auf dem
- * Papier.
- */
-const O2_PER_CAPITA = 1.2
 
 /** Logistische Wachstumsrate pro Sekunde bei voller Zuwanderung. */
 const BASE_GROWTH = 0.025
@@ -70,12 +58,20 @@ export function habitability(): number {
   return Math.min(1, Math.max(0, raw))
 }
 
-/** Nahrung und Wasser, die eine Person pro Sekunde braucht. */
-const FOOD_PER_CAPITA = 0.0012
-const WATER_PER_CAPITA = 0.0016
+/*
+ * Der Pro-Kopf-Verbrauch steht seit §17 am Planeten, nicht mehr hier: Aurora
+ * rechnet mit einem Dutzend Leuten, Vesta bis Nimbus noch mit Zehntausenden.
+ * Ein gemeinsamer Wert kann nicht beides sein.
+ */
 
-/** Anteil der Bevölkerung, der pro Sekunde geht, wenn nichts mehr da ist. */
-const STARVE_RATE = 0.004
+/**
+ * Wie schnell sich die Sättigung an die Versorgungslage angleicht (§17).
+ *
+ * Träge gewählt: eine Sekunde ohne Wasser darf nicht die ganze Kolonie
+ * lahmlegen. So wird aus einem kurzen Engpass eine Warnung statt einer
+ * Katastrophe — und aus einem langen ein echter Stillstand.
+ */
+const SATIETY_ADJUST = 0.05
 
 /**
  * Wohnraum aus Kuppeln.
@@ -86,7 +82,7 @@ const STARVE_RATE = 0.004
  * schlagartig Betten verschwinden.
  */
 export function housingCapacity(): Decimal {
-  let beds = 0
+  let beds = currentPlanetDef().baseHousing
   for (const def of GENERATORS) {
     if (def.output.kind === 'housing') beds += generatorCount(def.id) * def.baseRate
   }
@@ -107,17 +103,26 @@ export function populationCapacity(): Decimal {
   const def = currentPlanetDef()
   const factor =
     metaEffects().popCapacity * researchEffects().popCapacity * achievementEffects().popCapacity
-  const byPlanet = new Decimal(def.popCapacity).mul(habitability()).mul(factor)
+  /*
+   * Wohnraum entscheidet, nicht die Außenluft (§17).
+   *
+   * Bis M9 skalierte die Bewohnbarkeit die Kapazität — auf Aurora mit 0 % O₂
+   * war sie damit null, und die zehn mitgebrachten Leute wären in der ersten
+   * Minute weggestorben. Das ist auch fiktional falsch: eine Marskolonie lebt
+   * in versiegelten Kapseln, nicht von der Luft draußen. Die Atmosphäre
+   * bestimmt jetzt, wie gut es sich *vermehrt*, nicht ob man überlebt.
+   */
+  const byPlanet = new Decimal(def.popCapacity).mul(factor)
   return Decimal.min(byPlanet, housingCapacity())
 }
 
 /** Nahrung pro Sekunde, die verbraucht wird. */
 export function foodConsumption(): Decimal {
-  return planet.settlers.mul(FOOD_PER_CAPITA)
+  return planet.settlers.mul(currentPlanetDef().foodPerCapita)
 }
 
 export function waterConsumption(): Decimal {
-  return planet.settlers.mul(WATER_PER_CAPITA)
+  return planet.settlers.mul(currentPlanetDef().waterPerCapita)
 }
 
 /** Fehlt gerade etwas zum Leben? */
@@ -132,7 +137,7 @@ export function isStarving(): boolean {
 /** O₂ pro Sekunde, das die Siedler wegatmen. */
 export function o2ConsumptionRate(): Decimal {
   const perCapita =
-    O2_PER_CAPITA *
+    currentPlanetDef().o2PerCapita *
     metaEffects().lifeSupport *
     researchEffects().lifeSupport *
     eventEffects().consumption
@@ -184,33 +189,39 @@ export function populationSystem(dt: number): void {
 
   if (!def.allowsPopulation) return
 
-  /* --- Versorgung ---------------------------------------------------------
-     Erst essen und trinken, dann wachsen. Wer nichts hat, wächst nicht und
-     verliert langsam Leute — langsam, weil Rückschläge temporär sein sollen
-     und kein Zusammenbruch (§1.2).
+  /* --- Versorgung und Sättigung (§17) --------------------------------------
+     Niemand verhungert. Fehlende Versorgung senkt die *Arbeitsleistung*, und
+     zwar träge: aus einem kurzen Engpass wird eine Warnung, aus einem langen
+     ein Stillstand. Der Vorteil gegenüber einer Hungertod-Mechanik ist nicht
+     nur Milde — es macht Abwesenheit von selbst ungefährlich (§1.3), ohne
+     dafür eine Sonderregel für den Offline-Nachlauf zu brauchen.
   ---------------------------------------------------------------------- */
   if (planet.settlers.gt(0)) {
-    planet.food = planet.food.sub(foodConsumption().mul(dt))
-    planet.water = planet.water.sub(waterConsumption().mul(dt))
+    const essenBedarf = foodConsumption().mul(dt)
+    const wasserBedarf = waterConsumption().mul(dt)
+
+    const essenDa = Decimal.min(planet.food, essenBedarf)
+    const wasserDa = Decimal.min(planet.water, wasserBedarf)
+    planet.food = planet.food.sub(essenDa)
+    planet.water = planet.water.sub(wasserDa)
     if (planet.food.lt(0)) planet.food = new Decimal(0)
     if (planet.water.lt(0)) planet.water = new Decimal(0)
+
+    // Der knappere der beiden Posten bestimmt die Lage — satt wird man nicht
+    // von Wasser allein.
+    const essenAnteil = essenBedarf.lte(0) ? 1 : essenDa.div(essenBedarf).toNumber()
+    const wasserAnteil = wasserBedarf.lte(0) ? 1 : wasserDa.div(wasserBedarf).toNumber()
+    const gedeckt = Math.min(essenAnteil, wasserAnteil)
+
+    planet.satiety += (gedeckt - planet.satiety) * SATIETY_ADJUST * dt
+    planet.satiety = Math.min(1, Math.max(0, planet.satiety))
   }
 
-  const starving = isStarving()
-  if (starving) {
-    planet.settlers = planet.settlers.mul(Math.max(0, 1 - STARVE_RATE * dt))
-    if (planet.settlers.lt(1)) planet.settlers = new Decimal(0)
-    // Gebundene können nicht mehr sein als lebende Menschen.
-    if (planet.bound.gt(planet.settlers)) planet.bound = planet.settlers
-    enforceJobLimit()
-
-    if (!wasStarving) {
-      addLog('Die Vorräte sind leer. Die Siedlung schrumpft.', 'bad')
-    }
+  const knapp = planet.satiety < 0.6
+  if (knapp && !wasStarving) {
+    addLog('Die Vorräte reichen nicht. Die Arbeit wird langsamer.', 'warn')
     wasStarving = true
-    return
-  }
-  if (wasStarving) {
+  } else if (!knapp && wasStarving) {
     addLog('Die Versorgung steht wieder.', 'good')
     wasStarving = false
   }
@@ -237,11 +248,18 @@ export function populationSystem(dt: number): void {
     return
   }
 
-  // Logistisches Wachstum. Über der Kapazität wird der Term negativ und die
-  // Bevölkerung schrumpft von selbst — kein Sonderfall nötig.
+  /*
+   * Logistisches Wachstum, aber nur bei guter Versorgung (§17): Nachwuchs
+   * setzt Überschuss voraus, nicht bloß Überleben. Bei knapper Sättigung
+   * steht die Kolonie still, statt weiter zu wachsen und alles zu verschärfen.
+   */
   const rate =
     BASE_GROWTH *
     def.growthFactor *
+    Math.max(0, (planet.satiety - 0.7) / 0.3) *
+    // Draußen atembare Luft macht Nachwuchs attraktiver, ist aber keine
+    // Bedingung mehr — in der Kapsel lebt es sich auch, nur enger.
+    (0.25 + 0.75 * habitability()) *
     metaEffects().growthRate *
     researchEffects().growthRate *
     eventEffects().growth *
@@ -250,6 +268,11 @@ export function populationSystem(dt: number): void {
   planet.settlers = planet.settlers.add(planet.settlers.mul(rate).mul(room).mul(dt))
 
   if (planet.settlers.lt(0)) planet.settlers = new Decimal(0)
+
+  // Schrumpft die Kolonie, dürfen keine Leute an Plätzen stehenbleiben, die
+  // es nicht mehr gibt.
+  enforceJobLimit()
+  enforceStaffLimit()
 
   const negative = netO2Rate().lt(0)
   if (negative && !wasNegative) {

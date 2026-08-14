@@ -111,8 +111,38 @@ export interface PlanetDef {
     accent: string
   }
 
-  /** Führt dieser Planet Bevölkerung ein? Aurora bewusst nicht. */
+  /** Führt dieser Planet Bevölkerung ein? */
   allowsPopulation: boolean
+
+  /**
+   * Menschen, die schon da sind, wenn man ankommt (§17).
+   *
+   * Aurora ist keine Landung auf leerem Fels mehr, sondern eine Landung mit
+   * Mannschaft: zehn Leute und Rationen. Damit steht die Aufgabe von Sekunde
+   * eins fest — eigene Versorgung aufbauen, bevor die Kisten leer sind.
+   */
+  startSettlers: number
+  /**
+   * Verbrauch pro Kopf und Sekunde.
+   *
+   * Steht am Planeten, weil die alten Planeten noch mit Zehntausenden von
+   * Siedlern rechnen (§17 stellt sie erst in M13 um). Ein Wert, der bei zwölf
+   * Leuten Druck erzeugt, würde dort in Sekunden alles leerfressen.
+   */
+  foodPerCapita: number
+  waterPerCapita: number
+  /** O₂ pro Kopf und Sekunde. Aus demselben Grund am Planeten wie oben. */
+  o2PerCapita: number
+  /** Mitgebrachte Rationen. Endlich, und genau das ist der Druck. */
+  startFood: number
+  startWater: number
+  /**
+   * Wohnplätze, die von Anfang an stehen — die Landekapseln.
+   *
+   * Ohne sie greift die Wohnraum-Grenze aus M5 sofort und die mitgebrachte
+   * Mannschaft hätte kein Dach, würde also augenblicklich schrumpfen.
+   */
+  baseHousing: number
   /** Ab diesem O₂-Anteil landen die ersten Siedler. */
   settleAt: number
   /** Bevölkerungsobergrenze bei vollständig atembarer Atmosphäre. */
@@ -122,15 +152,23 @@ export interface PlanetDef {
 export const AURORA: PlanetDef = {
   id: 'aurora',
   name: 'Aurora',
-  intro: 'Aurora. Kein Grün, kein Laut, keine Atmosphäre. Der erste Handgriff gehört dir.',
+  intro:
+    'Aurora. Roter Staub, dünne Luft, kein Laut. Zehn Menschen steigen aus, dazu Kisten mit Wasser und Rationen — mehr gibt es nicht, und nachgeliefert wird nichts.',
 
   /**
-   * Aus der Sättigungskurve von M2 umgerechnet, damit die simulierte
-   * Spieldauer erhalten bleibt: 19 % verlangen weiterhin exakt 2,85 M O₂
-   * (12,15 M × 19/81). Vier Spielstile lagen damit bei 20,0 / 21,2 / 23,6 /
-   * 25,6 Minuten — das Fenster aus DESIGN.md §13.
+   * Seit §17 um den Faktor 30 kleiner — und das ist kein Versehen.
+   *
+   * Bis M9 stand hier 12,15 M, ausgelegt auf einen Spieler mit beliebig
+   * vielen Anlagen und unbegrenzter Arbeitskraft. Mit einem Dutzend Bewohnern,
+   * die jede Anlage erst besetzen müssen, liegt die erreichbare O₂-Rate bei
+   * rund 100/s statt bei Tausenden. Gemessen war Aurora mit dem alten Wert
+   * schlicht unschaffbar: nach 90 Minuten stand der Anteil bei 0,00 %.
+   *
+   * Simuliert mit einem Spieler, der die Zuweisung nachjustiert:
+   * 3·10⁴ → 7,6 min, 1·10⁵ → 10,2 min, 3·10⁵ → 17,7 min. Mit diesem Wert
+   * liegt Aurora bei rund 20 Minuten — dem Fenster aus §13.
    */
-  baseAtmosphere: 12150000,
+  baseAtmosphere: 400000,
 
   /**
    * Nach oben offen: Aurora hat kein N₂ zum Verdünnen, ein Deckel wäre also
@@ -171,9 +209,29 @@ export const AURORA: PlanetDef = {
   palette: { rock: '#6f757c', sky: '#33495c', accent: '#8b9199' },
 
   growthFactor: 1,
-  allowsPopulation: false,
+
+  /*
+   * Aurora ist ab §17 der Mars: keine leere Welt, die man später besiedelt,
+   * sondern eine Landung mit Mannschaft. Die Bevölkerung ist damit von der
+   * ersten Sekunde an das Thema — und nicht mehr eine Belohnung für 19 % O₂.
+   */
+  allowsPopulation: true,
+  startSettlers: 10,
+  foodPerCapita: 0.0104,
+  waterPerCapita: 0.0139,
+  o2PerCapita: 0.03,
+  /**
+   * Rationen für rund zwölf Minuten bei zehn Leuten. Lang genug, um in Ruhe
+   * zu verstehen, was zu tun ist; kurz genug, dass Nichtstun auffällt.
+   */
+  startFood: 90,
+  startWater: 120,
+  /** Die Landekapseln. Platz für die Mannschaft und zwei Nachkommen. */
+  baseHousing: 12,
+
+  /** Sie sind schon da — es gibt keine Schwelle mehr zu überschreiten. */
   settleAt: 0,
-  popCapacity: 0,
+  popCapacity: 60,
 }
 
 export const VESTA: PlanetDef = {
@@ -224,6 +282,13 @@ export const VESTA: PlanetDef = {
 
   growthFactor: 1,
   allowsPopulation: true,
+  startSettlers: 0,
+  foodPerCapita: 0.0012,
+  waterPerCapita: 0.0016,
+  o2PerCapita: 1.2,
+  startFood: 0,
+  startWater: 0,
+  baseHousing: 0,
   /**
    * Früh genug, dass die Siedler den Aufbau noch mitprägen.
    *
@@ -285,6 +350,13 @@ export const PYRA: PlanetDef = {
 
   growthFactor: 0.8,
   allowsPopulation: true,
+  startSettlers: 0,
+  foodPerCapita: 0.0012,
+  waterPerCapita: 0.0016,
+  o2PerCapita: 1.2,
+  startFood: 0,
+  startWater: 0,
+  baseHousing: 0,
   settleAt: 2,
   popCapacity: 30000,
 }
@@ -320,6 +392,13 @@ export const KRYO: PlanetDef = {
   /** Der eigentliche Widerstand dieses Planeten. */
   growthFactor: 0.45,
   allowsPopulation: true,
+  startSettlers: 0,
+  foodPerCapita: 0.0012,
+  waterPerCapita: 0.0016,
+  o2PerCapita: 1.2,
+  startFood: 0,
+  startWater: 0,
+  baseHousing: 0,
   /** In der Kälte wird es erst spät wohnlich. */
   settleAt: 6,
   popCapacity: 40000,
@@ -371,6 +450,13 @@ export const NIMBUS: PlanetDef = {
 
   growthFactor: 0.9,
   allowsPopulation: true,
+  startSettlers: 0,
+  foodPerCapita: 0.0012,
+  waterPerCapita: 0.0016,
+  o2PerCapita: 1.2,
+  startFood: 0,
+  startWater: 0,
+  baseHousing: 0,
   settleAt: 3,
   popCapacity: 60000,
 }

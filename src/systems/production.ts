@@ -13,6 +13,7 @@ import { addMaterial, affordableCount, canAffordMaterials, spendMaterials } from
 import { play } from '../engine/audio'
 import { achievementEffects } from './achievements'
 import { fireThrottle, n2Percent } from './atmosphere'
+import { laborFactor } from './labor'
 import { eventEffects } from './eventEffects'
 import { WOOD_PER_TREE, forestO2Rate, forestRoom } from './forest'
 import { freePopulation, jobEffects } from './jobs'
@@ -124,6 +125,14 @@ export function generatorRate(def: GeneratorDef): Decimal {
   const count = Math.max(0, generatorCount(def.id) - (planet.disabled[def.id] ?? 0))
   if (count <= 0) return new Decimal(0)
 
+  /*
+   * Arbeitskraft (§17). Eine Anlage mit Plätzen produziert nichts, solange
+   * niemand zugewiesen ist — nicht weniger, nichts. Das ist die eine Zeile,
+   * die Bevölkerung vom Multiplikator zur Voraussetzung macht.
+   */
+  const labor = laborFactor(def)
+  if (labor <= 0) return new Decimal(0)
+
   const m = collectMultipliers()
   // Forschungsboni gelten je Gasart; Abbau und Wald hängen bislang nur an
   // den globalen Faktoren.
@@ -134,6 +143,7 @@ export function generatorRate(def: GeneratorDef): Decimal {
     .mul(m.perGenerator[def.id] ?? 1)
     .mul(specific)
     .mul(m.global)
+    .mul(labor)
 }
 
 function rateForGas(gas: GasKind): Decimal {

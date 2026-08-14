@@ -176,6 +176,21 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.settings = settings
     return s
   },
+
+  /**
+   * M10: Bewohner, Zuweisung und Sättigung (§17).
+   *
+   * Ein alter Stand hat weder Zuweisungen noch eine Sättigung. Volle
+   * Sättigung als Start ist die freundliche Wahl: niemand soll nach dem
+   * Laden in einer Hungersnot aufwachen, die er nicht verschuldet hat.
+   */
+  11: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    planet.staff = {}
+    planet.satiety = 1
+    s.planet = planet
+    return s
+  },
 }
 
 export interface MigrationResult {

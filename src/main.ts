@@ -12,6 +12,7 @@ import * as events from './systems/events'
 import * as combat from './systems/combat'
 import * as forest from './systems/forest'
 import * as jobs from './systems/jobs'
+import * as labor from './systems/labor'
 import * as population from './systems/population'
 import * as prestige from './systems/prestige'
 import * as production from './systems/production'
@@ -183,6 +184,7 @@ if (import.meta.env.DEV) {
       events,
       forest,
       jobs,
+      labor,
       combat,
       achievements,
       travel,

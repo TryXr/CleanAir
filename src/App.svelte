@@ -27,6 +27,7 @@
   import PlanetView from './ui/PlanetView.svelte'
   import PopulationPanel from './ui/PopulationPanel.svelte'
   import PrestigePanel from './ui/PrestigePanel.svelte'
+  import StaffPanel from './ui/StaffPanel.svelte'
   import ResearchTree from './ui/ResearchTree.svelte'
   import StatsPanel from './ui/StatsPanel.svelte'
   import SupplyPanel from './ui/SupplyPanel.svelte'
@@ -151,6 +152,10 @@
     {/if}
 
     {#if session.tab === 'kolonie'}
+      <Panel title="Zuweisung" hint="ohne Hände läuft nichts">
+        <StaffPanel />
+      </Panel>
+
       <Panel title="Bevölkerung" hint="atmet mit">
         <PopulationPanel />
       </Panel>
