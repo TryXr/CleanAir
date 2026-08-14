@@ -66,6 +66,17 @@ export interface PlanetDef {
   hasEvents: boolean
 
   /**
+   * Leben hier Anoxen (§7)? Sie tauchen erst ab dem dritten Planeten auf —
+   * vorher hat der Spieler genug damit zu tun, die Atmosphäre zu verstehen.
+   */
+  hasAnoxen: boolean
+  /**
+   * Wie aggressiv sie sind. Skaliert Wellenstärke und Frequenz, damit sich
+   * die Bedrohung pro Planet unterscheidet statt überall gleich zu sein.
+   */
+  anoxenPressure: number
+
+  /**
    * Welche Materialien es hier gibt (DESIGN.md §16). Leer = dieser Planet
    * kennt keine — der Hauptgrund, später zu einem alten Planeten
    * zurückzukehren, ist genau diese Liste.
@@ -116,6 +127,9 @@ export const AURORA: PlanetDef = {
   stabilitySeconds: 30,
   hasEvents: false,
 
+  hasAnoxen: false,
+  anoxenPressure: 0,
+
   /**
    * Aurora bleibt das reine O₂-Tutorial. Materialien wären hier das zweite
    * System auf demselben Planeten, und genau davor schützt §11. Sie beginnen
@@ -161,6 +175,10 @@ export const VESTA: PlanetDef = {
 
   stabilitySeconds: 180,
   hasEvents: true,
+
+  /** Vesta bleibt verschont — hier lernt man erst die Mischung. */
+  hasAnoxen: false,
+  anoxenPressure: 0,
 
   /**
    * Vesta führt die Materialien ein. Titan gibt es vorerst nur hier — der
@@ -217,6 +235,13 @@ export const PYRA: PlanetDef = {
   stabilitySeconds: 240,
   hasEvents: true,
 
+  /**
+   * Der erste Planet mit Anoxen (§7). Passend zur Fiktion: wo es warm und
+   * sauerstofffrei ist, sitzen sie am dichtesten.
+   */
+  hasAnoxen: true,
+  anoxenPressure: 1,
+
   materials: ['obsidian', 'schwefel'],
   /** Nichts wächst auf frischer Lava. */
   forestCapacity: 0,
@@ -243,6 +268,10 @@ export const KRYO: PlanetDef = {
 
   stabilitySeconds: 240,
   hasEvents: true,
+
+  /** In der Kälte sind sie träge — seltener, aber zäher. */
+  hasAnoxen: true,
+  anoxenPressure: 0.75,
 
   materials: ['eis', 'stein'],
   /** Zwergsträucher unter Folie. Mehr gibt die Kälte nicht her. */
@@ -288,6 +317,10 @@ export const NIMBUS: PlanetDef = {
 
   stabilitySeconds: 300,
   hasEvents: true,
+
+  /** Der größte Druck des Durchlaufs — hier sitzt ihre Hochburg. */
+  hasAnoxen: true,
+  anoxenPressure: 1.4,
 
   materials: ['helium'],
   /** Kein fester Boden, kein Wald. */

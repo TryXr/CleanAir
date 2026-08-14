@@ -1,5 +1,7 @@
 import Decimal from 'break_infinity.js'
 import { AURORA, findPlanet, type PlanetDef } from '../data/planets'
+import { ABILITIES } from '../data/abilities'
+import { DEFENSES } from '../data/defenses'
 import { EVENTS } from '../data/events'
 import { GENERATORS } from '../data/generators'
 import { JOBS } from '../data/jobs'
@@ -95,6 +97,39 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
     events: [] as ActiveEvent[],
     nextEventIn: FIRST_EVENT_DELAY,
 
+    /* --- Anoxen (§7) ------------------------------------------------------
+       Planetenlokal, damit eine Belagerung auf Pyra nicht mit nach Kryo
+       fliegt — und damit sie beim Rückflug genau so weiterläuft.
+    -------------------------------------------------------------------- */
+    /** Verteidigungsanlage-id -> Anzahl. */
+    defenses: {} as Record<string, number>,
+    /**
+     * Lahmgelegte Anlagen: Generator-id -> Anzahl außer Betrieb.
+     *
+     * Bewusst *nicht* gelöschte Anlagen. §1.2 nennt Angriffe ausdrücklich als
+     * temporären Rückschlag, und in einem Incremental ist der Verlust
+     * gekaufter Gebäude der zuverlässigste Weg, jemanden zum Aufhören zu
+     * bringen. Sie kommen von selbst zurück, mit Depot schneller.
+     */
+    disabled: {} as Record<string, number>,
+    /**
+     * Aufgestauter Druck. Wächst mit dem Fortschritt — „der Fortschritt
+     * erzeugt die Bedrohung" (§7), keine künstlichen Trigger.
+     */
+    threat: 0,
+    /** Die wievielte Welle dieses Planeten läuft bzw. kam zuletzt. */
+    waveNumber: 0,
+    /** Verbleibende Kampfkraft der laufenden Welle. 0 = keine Welle. */
+    wavePower: 0,
+    /** Restdauer der laufenden Welle in Sekunden. */
+    waveRemaining: 0,
+    /** Abklingzeiten der drei Fähigkeiten in Sekunden. */
+    cooldowns: {} as Record<string, number>,
+    /** Läuft gerade ein Notfall-Schild, und wie lange noch? */
+    shieldRemaining: 0,
+    /** Wurde für diese Welle evakuiert? */
+    evacuated: false,
+
     /**
      * Steht die Rakete dieses Planeten? Sie ist der Weg zum *nächsten*
      * Planeten und völlig unabhängig von `completed` — man darf weiterziehen,
@@ -164,6 +199,15 @@ export function serializePlanet() {
     jobs: { ...planet.jobs },
     events: planet.events.map((e) => ({ ...e })),
     nextEventIn: planet.nextEventIn,
+    defenses: { ...planet.defenses },
+    disabled: { ...planet.disabled },
+    threat: planet.threat,
+    waveNumber: planet.waveNumber,
+    wavePower: planet.wavePower,
+    waveRemaining: planet.waveRemaining,
+    cooldowns: { ...planet.cooldowns },
+    shieldRemaining: planet.shieldRemaining,
+    evacuated: planet.evacuated,
     rocketBuilt: planet.rocketBuilt,
     clicks: planet.clicks,
     elapsed: planet.elapsed,
@@ -199,6 +243,38 @@ export function deserializePlanet(raw: unknown): void {
   }
   planet.jobs = jobs
   planet.nextEventIn = Math.max(0, readNumber(s.nextEventIn, FIRST_EVENT_DELAY))
+  planet.threat = Math.max(0, readNumber(s.threat, 0))
+  planet.waveNumber = Math.max(0, Math.floor(readNumber(s.waveNumber, 0)))
+  planet.wavePower = Math.max(0, readNumber(s.wavePower, 0))
+  planet.waveRemaining = Math.max(0, readNumber(s.waveRemaining, 0))
+  planet.shieldRemaining = Math.max(0, readNumber(s.shieldRemaining, 0))
+  planet.evacuated = s.evacuated === true
+
+  // Nur bekannte ids übernehmen — dieselbe Vorsicht wie bei Generatoren.
+  const savedDefenses = (s.defenses ?? {}) as Record<string, unknown>
+  const defenses: Record<string, number> = {}
+  for (const def of DEFENSES) {
+    const count = readNumber(savedDefenses[def.id], 0)
+    if (count > 0) defenses[def.id] = Math.floor(count)
+  }
+  planet.defenses = defenses
+
+  const savedDisabled = (s.disabled ?? {}) as Record<string, unknown>
+  const disabled: Record<string, number> = {}
+  for (const def of GENERATORS) {
+    const count = readNumber(savedDisabled[def.id], 0)
+    if (count > 0) disabled[def.id] = Math.floor(count)
+  }
+  planet.disabled = disabled
+
+  const savedCooldowns = (s.cooldowns ?? {}) as Record<string, unknown>
+  const cooldowns: Record<string, number> = {}
+  for (const a of ABILITIES) {
+    const left = readNumber(savedCooldowns[a.id], 0)
+    if (left > 0) cooldowns[a.id] = left
+  }
+  planet.cooldowns = cooldowns
+
   planet.rocketBuilt = s.rocketBuilt === true
   planet.clicks = readNumber(s.clicks, 0)
   planet.elapsed = readNumber(s.elapsed, 0)

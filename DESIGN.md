@@ -667,8 +667,11 @@ Bewusst noch nicht entschieden — sollte während M1/M2 im Spiel getestet werde
   mit N₂ oder mehr atmender Bevölkerung.
 - **Bevölkerung steuerbar oder automatisch?** Ein Regler gibt Kontrolle, aber
   auch Micromanagement-Druck.
-- **Wellen-Frequenz:** an Echtzeit gekoppelt oder an Fortschritt? Fortschritt
-  ist fairer für Idle-Spieler, Echtzeit dramatischer.
+- ~~**Wellen-Frequenz:** an Echtzeit gekoppelt oder an Fortschritt?~~
+  **Entschieden in M8: an den Fortschritt.** §7 gab die Antwort bereits vor
+  („Der Fortschritt erzeugt die Bedrohung. Keine künstlichen Trigger nötig"),
+  und es ist zugleich das idle-freundlichere: wer weggeht, während nichts
+  wächst, kommt nicht in eine Wand aus Wellen zurück.
 - **Kolonie-Ertrag:** linear pro Kolonie oder mit abnehmendem Grenzertrag?
   Linear kann spät explodieren.
 - **Story-Präsentation:** Log-Einträge, Dialogfenster oder ein Codex zum
@@ -764,7 +767,7 @@ und dauerhaften Kolonien.
 | **M5** ✅ | Bevölkerung: Hütten, Nahrung, Wasser, Berufe | Braucht Materialien, um überhaupt bezahlbar zu sein |
 | **M6** ✓ | Mehrere Planeten gleichzeitig, Rakete, Reisen — und der Reset auf Durchlauf-Ebene | Der Architektur-Umbau. Reset muss *mit*, weil „Planet abschließen = zurücksetzen" dann nicht mehr gilt |
 | **M7** ✓ | Planeten-Identität: Lava, Eis, Gas mit eigenen Ketten | Inhalt auf dem Gerüst von M6 |
-| **M8** | Die Anoxen (bisher M4) | |
+| **M8** ✓ | Die Anoxen (bisher M4) | |
 | **M9** | Politur (bisher M7) | |
 
 ### Stand nach M4
@@ -862,6 +865,33 @@ Verbindend: **keiner hat alles, was seine eigene Rakete braucht.** Pyra
 verlangt Titan (nur Vesta), Kryo verlangt Obsidian (nur Pyra), Nimbus
 verlangt von jedem etwas. Zurückfliegen ist dadurch kein Bonusweg, sondern
 der Weg.
+
+### Anlagen fallen aus, sie sterben nicht (M8)
+
+§8 spricht von zerstörten Gebäuden, §1.2 nennt **Angriffe** ausdrücklich als
+*temporären* Rückschlag. Das widerspricht sich, und §1.2 gewinnt — aus
+demselben Grund, aus dem Brände seit M3 nur drosseln: verlorene Käufe sind
+in einem Incremental der zuverlässigste Weg, jemanden zum Aufhören zu bringen.
+
+Sabotierte Anlagen stehen also still und laufen von selbst wieder an;
+Reparaturdepots beschleunigen das nur. Gemessen über eine Stunde ohne jede
+Verteidigung: Welle 1 → 8, bis zu 65 % der Anlagen aus, Produktion von 19.140
+auf 1.517 gefallen, ein Drittel der Bevölkerung tot — und zwischen den Wellen
+erholt sich alles sichtbar wieder. Der Fortschrittsbalken läuft rückwärts,
+ohne dass etwas endgültig verloren geht.
+
+### Die Konter-Matrix trägt
+
+Ohne sie wäre „mehr vom Billigsten" immer richtig und die Einheitentypen aus
+§7 bloße Dekoration. Gemessen auf Pyra über eine Stunde:
+
+| Verteidigung | Anlagen | Ausfall | Endproduktion |
+|---|---|---|---|
+| nur Oxidationstürme | 20 | 12 % | 12.544 |
+| gemischt (Turm/Drohne/Druck/Depot) | 31 | 0 % | 18.808 |
+
+Die gemischte Aufstellung gewinnt deutlich, obwohl sie nicht wesentlich mehr
+kostet. Genau das war die Absicht.
 
 ### Das Abblasventil
 

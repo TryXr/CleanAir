@@ -6,7 +6,8 @@ import { exportSave, importSave } from '../engine/save'
 import { deserializePlanet, planet, resetPlanet, serializePlanet } from '../state/planet.svelte'
 import { run } from '../state/run.svelte'
 import { atmosphereSystem, n2Percent } from '../systems/atmosphere'
-import { isAvailable, productionSystem } from '../systems/production'
+import { combatSystem } from '../systems/combat'
+import { currentO2Rate, isAvailable, productionSystem } from '../systems/production'
 import { buildRocket, travelTo } from '../systems/travel'
 
 /**
@@ -198,6 +199,36 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       abweichend.length === 0,
       `abweichend: ${abweichend.join(', ')}`,
     )
+
+    /* --- Anoxen ----------------------------------------------------------
+       Der wichtigste Punkt: Sabotage muss die Produktion wirklich senken,
+       und Anlagen dürfen dabei nie verschwinden (§1.2).
+    --------------------------------------------------------------------- */
+    freshRun()
+    travelTo('pyra')
+    planet.generators = { electrolysis: 100 }
+    const volleRate = currentO2Rate().toNumber()
+    planet.disabled = { electrolysis: 60 }
+    const gedrosselt = currentO2Rate().toNumber()
+    check(r, 'Lahmgelegte Anlagen produzieren nicht', gedrosselt < volleRate, `${volleRate} → ${gedrosselt}`)
+    check(r, 'Lahmlegen löscht keine Anlagen', (planet.generators.electrolysis ?? 0) === 100)
+
+    // Reparatur holt sie von selbst zurück, auch ohne Depot.
+    for (let i = 0; i < 600; i++) combatSystem(1)
+    check(
+      r,
+      'Anlagen laufen von selbst wieder an',
+      (planet.disabled.electrolysis ?? 0) < 60,
+      `noch ${planet.disabled.electrolysis ?? 0} aus`,
+    )
+
+    // Kein Angriff, wo keine Anoxen leben.
+    freshRun()
+    travelTo('vesta')
+    planet.threat = 0
+    planet.airO2 = new Decimal(1e9)
+    for (let i = 0; i < 2000; i++) combatSystem(1)
+    check(r, 'Planeten ohne Anoxen bleiben verschont', planet.waveNumber === 0)
 
     /* --- Atmosphäre bleibt endlich -------------------------------------- */
     freshRun()

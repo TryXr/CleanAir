@@ -115,8 +115,10 @@ function collectMultipliers(): Multipliers {
  * bei `scrub` der Anteil der Schadstoffe, der pro Sekunde verschwindet.
  */
 export function generatorRate(def: GeneratorDef): Decimal {
-  const count = generatorCount(def.id)
-  if (count === 0) return new Decimal(0)
+  // Lahmgelegte Anlagen zählen nicht mit. Ohne diese eine Zeile wäre die
+  // Sabotage der Anoxen (§7) reine Kosmetik — sie *ist* der Angriff.
+  const count = Math.max(0, generatorCount(def.id) - (planet.disabled[def.id] ?? 0))
+  if (count <= 0) return new Decimal(0)
 
   const m = collectMultipliers()
   // Forschungsboni gelten je Gasart; Abbau und Wald hängen bislang nur an

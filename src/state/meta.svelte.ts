@@ -43,6 +43,12 @@ export const meta = $state({
     bestPlanetSeconds: 0,
     /** Abgeschlossene Durchläufe (§16). */
     runs: 0,
+
+    /** Anoxen (§7). */
+    wavesSeen: 0,
+    wavesRepelled: 0,
+    abilitiesUsed: 0,
+    settlersLost: 0,
   },
 })
 
@@ -71,6 +77,10 @@ export function serializeMeta() {
       fires: meta.stats.fires,
       bestPlanetSeconds: meta.stats.bestPlanetSeconds,
       runs: meta.stats.runs,
+      wavesSeen: meta.stats.wavesSeen,
+      wavesRepelled: meta.stats.wavesRepelled,
+      abilitiesUsed: meta.stats.abilitiesUsed,
+      settlersLost: meta.stats.settlersLost,
     },
   }
 }
@@ -109,4 +119,8 @@ export function deserializeMeta(raw: unknown): void {
   meta.stats.fires = readInt(stats.fires, 0)
   meta.stats.bestPlanetSeconds = readNumber(stats.bestPlanetSeconds, 0)
   meta.stats.runs = readInt(stats.runs, 0)
+  meta.stats.wavesSeen = readInt(stats.wavesSeen, 0)
+  meta.stats.wavesRepelled = readInt(stats.wavesRepelled, 0)
+  meta.stats.abilitiesUsed = readInt(stats.abilitiesUsed, 0)
+  meta.stats.settlersLost = readNumber(stats.settlersLost, 0)
 }

@@ -10,6 +10,7 @@
   import { hasForest } from './systems/forest'
   import { hasAnyMaterial } from './state/run.svelte'
   import AtmospherePanel from './ui/AtmospherePanel.svelte'
+  import CombatPanel from './ui/CombatPanel.svelte'
   import DebugPanel from './ui/DebugPanel.svelte'
   import EventPanel from './ui/EventPanel.svelte'
   import ForestPanel from './ui/ForestPanel.svelte'
@@ -42,6 +43,7 @@
     meta.research.gt(0) || Object.keys(meta.researchNodes).length > 0 || planet.settlers.gt(0),
   )
   const showEvents = $derived(currentPlanetDef().hasEvents)
+  const showCombat = $derived(currentPlanetDef().hasAnoxen)
 
   const showForest = $derived(hasForest())
   // Lager zeigen, sobald es hier etwas zu holen gibt oder schon etwas drin ist.
@@ -140,6 +142,12 @@
     {#if showInventory}
       <Panel title="Lager" hint="gilt für alle Planeten">
         <InventoryPanel />
+      </Panel>
+    {/if}
+
+    {#if showCombat}
+      <Panel title="Anoxen" hint="dein Fortschritt ist ihr Gift">
+        <CombatPanel />
       </Panel>
     {/if}
 

@@ -124,6 +124,34 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.run = run
     return s
   },
+
+  /** M8: die Anoxen. Verteidigung, Wellen, lahmgelegte Anlagen. */
+  8: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    planet.defenses = {}
+    planet.disabled = {}
+    // Bedrohung beginnt bei null: wer auf einem alten Stand mitten auf Pyra
+    // steht, soll nicht in der ersten Sekunde von einer Welle überrascht
+    // werden, gegen die er noch nichts gebaut haben konnte.
+    planet.threat = 0
+    planet.waveNumber = 0
+    planet.wavePower = 0
+    planet.waveRemaining = 0
+    planet.cooldowns = {}
+    planet.shieldRemaining = 0
+    planet.evacuated = false
+    s.planet = planet
+
+    const meta = (s.meta ?? {}) as SaveShape
+    const stats = (meta.stats ?? {}) as SaveShape
+    stats.wavesSeen = 0
+    stats.wavesRepelled = 0
+    stats.abilitiesUsed = 0
+    stats.settlersLost = 0
+    meta.stats = stats
+    s.meta = meta
+    return s
+  },
 }
 
 export interface MigrationResult {

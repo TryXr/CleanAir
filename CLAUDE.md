@@ -9,10 +9,11 @@ M4 bis M6 sind ebenfalls fertig: Materialien mit globalem Lager und die
 Wald-Kette, dann Wohnraum, Nahrung, Wasser und Berufe — und zuletzt der
 Umbau auf dauerhafte Planeten.
 
-M7 ebenfalls: fünf Planeten mit eigenen Materialien, Ketten und Raketen.
+M7 und M8 ebenfalls: fünf Planeten mit eigenen Materialien, Ketten und
+Raketen — und die Anoxen mit Wellen, Verteidigung und drei Fähigkeiten.
 
 **Achtung: DESIGN.md §16 ist ein Kurswechsel und hat Vorrang vor §6 und §11.**
-Als Nächstes M8: die Anoxen.
+Als Nächstes M9: Politur (Achievements, Sound, Planeten-Visualisierung).
 
 **Anlagen laufen nie rückwärts abschaltbar.** Alles, was eine Menge dauerhaft
 *erhöht*, braucht ein Gegenstück — sonst ist Überschuss ein permanenter

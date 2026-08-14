@@ -7,6 +7,7 @@ import { applyOffline, registerSystem, runTicks, startLoop, stopLoop } from './e
 import { SAVE_VERSION, buildSave, exportSave, importSave, loadGame, saveNow } from './engine/save'
 import * as atmosphere from './systems/atmosphere'
 import * as events from './systems/events'
+import * as combat from './systems/combat'
 import * as forest from './systems/forest'
 import * as jobs from './systems/jobs'
 import * as population from './systems/population'
@@ -15,6 +16,7 @@ import * as production from './systems/production'
 import * as research from './systems/research'
 import * as travel from './systems/travel'
 import { atmosphereSystem, resetAtmosphereNotices } from './systems/atmosphere'
+import { combatSystem } from './systems/combat'
 import { eventsSystem } from './systems/events'
 import { populationSystem, resetPopulationNotices } from './systems/population'
 import { productionSystem } from './systems/production'
@@ -44,6 +46,9 @@ import { settings } from './state/settings.svelte'
    4. bevölkerung  — atmet weg, was eben entstanden ist.
    5. atmosphäre   — bewertet zuletzt den fertigen Zustand des Ticks und
                      entscheidet über Brände und den Stabilitäts-Timer.
+   6. anoxen       — ganz zuletzt: die Welle schlägt auf den fertigen Zustand
+                     ein. Andersherum würde eine Sabotage im selben Tick noch
+                     produzieren, den sie gerade lahmgelegt hat.
 -------------------------------------------------------------------------- */
 
 registerSystem('zeit', (dt) => {
@@ -55,6 +60,7 @@ registerSystem('ereignisse', eventsSystem)
 registerSystem('produktion', productionSystem)
 registerSystem('bevölkerung', populationSystem)
 registerSystem('atmosphäre', atmosphereSystem)
+registerSystem('anoxen', combatSystem)
 
 /* --- Start --------------------------------------------------------------- */
 
@@ -166,6 +172,7 @@ if (import.meta.env.DEV) {
       events,
       forest,
       jobs,
+      combat,
       travel,
       run,
       selftest,
