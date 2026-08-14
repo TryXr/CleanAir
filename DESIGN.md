@@ -768,7 +768,7 @@ und dauerhaften Kolonien.
 | **M6** ✓ | Mehrere Planeten gleichzeitig, Rakete, Reisen — und der Reset auf Durchlauf-Ebene | Der Architektur-Umbau. Reset muss *mit*, weil „Planet abschließen = zurücksetzen" dann nicht mehr gilt |
 | **M7** ✓ | Planeten-Identität: Lava, Eis, Gas mit eigenen Ketten | Inhalt auf dem Gerüst von M6 |
 | **M8** ✓ | Die Anoxen (bisher M4) | |
-| **M9** | Politur (bisher M7) — Achievements ✓, Rest offen | |
+| **M9** | Politur (bisher M7) — Achievements ✓, Planetenansicht ✓, Ton offen | |
 
 ### Stand nach M4
 
@@ -909,6 +909,22 @@ Die Boni laufen wie alles andere über eine zentrale Sammelstelle
 (`achievementEffects()`), nicht verstreut (§13). Nachgemessen mit allen 16
 freigeschaltet: Klick ×2, Produktion ×1,69, Baukosten ×0,83, Abwehrschaden
 120 → 165,6.
+
+### Die Planetenansicht zeigt den Spielstand (M9)
+
+§2 nannte die drehende Kugel optional. Sie ist es wert, weil sie das erste
+ist, das den Zustand zeigt, ohne dass man Zahlen liest: der Bewuchs folgt dem
+O₂-Anteil, der Dunst den Schadstoffen, die Lichter auf der Nachtseite der
+Bevölkerung, die glühenden Flecken der Brandstärke. Die Farben kommen aus
+`PlanetDef.palette` — ein neuer Planet wird weiterhin komplett in
+`data/planets.ts` beschrieben, ohne die UI anzufassen.
+
+Canvas statt Three.js: eine schattierte Kugel mit gedrehten Oberflächenpunkten
+braucht keine 3D-Bibliothek und keine zusätzliche Abhängigkeit.
+
+Die Drehung hängt an `requestAnimationFrame`, nicht am Tick — sie ist keine
+Spiellogik, wird nicht gespeichert, und im Tick würde sie beim
+Offline-Nachlauf durchdrehen.
 
 ### Das Abblasventil
 

@@ -23,6 +23,7 @@
   import MetaTree from './ui/MetaTree.svelte'
   import Panel from './ui/Panel.svelte'
   import PlanetMap from './ui/PlanetMap.svelte'
+  import PlanetView from './ui/PlanetView.svelte'
   import PopulationPanel from './ui/PopulationPanel.svelte'
   import PrestigePanel from './ui/PrestigePanel.svelte'
   import ResearchTree from './ui/ResearchTree.svelte'
@@ -90,6 +91,10 @@
 
 <main>
   <div class="column">
+    <Panel title={planet.name} hint={currentPlanetDef().intro.split('.')[0]}>
+      <PlanetView />
+    </Panel>
+
     <Panel title="Atmosphäre" hint={planet.name}>
       <AtmospherePanel />
     </Panel>

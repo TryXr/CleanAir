@@ -95,6 +95,22 @@ export interface PlanetDef {
    */
   growthFactor: number
 
+  /**
+   * Rein visuell (M9): Grundfarben der Planetenansicht.
+   *
+   * Steht hier und nicht in der Komponente, weil Planeten-Identität laut §16
+   * an einer Stelle zusammenbleiben soll — ein neuer Planet wird komplett in
+   * dieser Datei beschrieben, ohne die UI anzufassen.
+   */
+  palette: {
+    /** Gestein im Licht. */
+    rock: string
+    /** Atmosphärenschimmer am Rand. */
+    sky: string
+    /** Der Farbtupfer, der den Planeten kenntlich macht — Lava, Eis, Gas. */
+    accent: string
+  }
+
   /** Führt dieser Planet Bevölkerung ein? Aurora bewusst nicht. */
   allowsPopulation: boolean
   /** Ab diesem O₂-Anteil landen die ersten Siedler. */
@@ -138,6 +154,9 @@ export const AURORA: PlanetDef = {
    */
   materials: [],
   forestCapacity: 0,
+
+  /** Nackter Fels, kaum Himmel. */
+  palette: { rock: '#6f757c', sky: '#33495c', accent: '#8b9199' },
 
   growthFactor: 1,
   allowsPopulation: false,
@@ -187,6 +206,9 @@ export const VESTA: PlanetDef = {
   materials: ['holz', 'stein', 'titan'],
   /** Kalt, aber mit Wasser im Permafrost. Wald geht, üppig wird er nicht. */
   forestCapacity: 12000,
+
+  /** Kalter Staub, ein erster Hauch Blau. */
+  palette: { rock: '#7d6b57', sky: '#3f5f7a', accent: '#4f8a5a' },
 
   growthFactor: 1,
   allowsPopulation: true,
@@ -242,6 +264,9 @@ export const PYRA: PlanetDef = {
   hasAnoxen: true,
   anoxenPressure: 1,
 
+  /** Frisch erstarrte Kruste mit glühenden Rissen. */
+  palette: { rock: '#3c221c', sky: '#6b2a18', accent: '#ff6a2a' },
+
   materials: ['obsidian', 'schwefel'],
   /** Nichts wächst auf frischer Lava. */
   forestCapacity: 0,
@@ -272,6 +297,9 @@ export const KRYO: PlanetDef = {
   /** In der Kälte sind sie träge — seltener, aber zäher. */
   hasAnoxen: true,
   anoxenPressure: 0.75,
+
+  /** Weiß bis zum Horizont. */
+  palette: { rock: '#b9cbd8', sky: '#6f93ab', accent: '#dff1ff' },
 
   materials: ['eis', 'stein'],
   /** Zwergsträucher unter Folie. Mehr gibt die Kälte nicht her. */
@@ -321,6 +349,9 @@ export const NIMBUS: PlanetDef = {
   /** Der größte Druck des Durchlaufs — hier sitzt ihre Hochburg. */
   hasAnoxen: true,
   anoxenPressure: 1.4,
+
+  /** Gasbänder im Schatten des Riesen. */
+  palette: { rock: '#7c6f92', sky: '#6a5f8f', accent: '#c2a6e8' },
 
   materials: ['helium'],
   /** Kein fester Boden, kein Wald. */

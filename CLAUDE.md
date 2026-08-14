@@ -12,8 +12,8 @@ Umbau auf dauerhafte Planeten.
 M7 und M8 ebenfalls: fünf Planeten mit eigenen Materialien, Ketten und
 Raketen — und die Anoxen mit Wellen, Verteidigung und drei Fähigkeiten.
 
-M9 läuft: Achievements mit Effekt stehen, offen sind noch Sound, Animationen
-und die Planeten-Visualisierung.
+M9 läuft: Achievements mit Effekt und die drehende Planetenansicht stehen,
+offen ist noch der Ton.
 
 **Achtung: DESIGN.md §16 ist ein Kurswechsel und hat Vorrang vor §6 und §11.**
 
