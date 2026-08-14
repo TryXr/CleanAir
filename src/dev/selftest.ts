@@ -28,7 +28,7 @@ import { combatSystem } from '../systems/combat'
 import { buildRate, cancelSite, constructionSystem, orderGenerator } from '../systems/construction'
 import { craftBlocker, craftingSystem } from '../systems/crafting'
 import { assign, assignBuilder, unassign } from '../systems/labor'
-import { housingCapacity, populationSystem } from '../systems/population'
+import { housingCapacity, o2ConsumptionRate, populationSystem } from '../systems/population'
 import {
   clickGain,
   currentO2Rate,
@@ -645,6 +645,35 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       'Die Kette liefert im selben Tick bis zur letzten Stufe',
       materialAmount('platten').gt(0),
       `erz=${materialAmount('erz').toString()}, eisen=${materialAmount('eisen').toString()}`,
+    )
+
+    /* --- Hände wirken auf die Atmosphäre (M13, §17) -----------------------
+       Bis M12 bestand die O₂-Seite von Aurora ausschließlich aus Apparaten,
+       und Bevölkerung war für die Atmosphäre ein reiner Verlust. Das
+       Flechtenfeld dreht das um — aber nur, solange es auch besetzt ist.
+       Diese Prüfung hält beides fest: dass es ohne Hände nichts liefert, und
+       dass es mit Händen mehr liefert als der Atem der Leute kostet.
+    --------------------------------------------------------------------- */
+    freshRun()
+    planet.settlers = new Decimal(12)
+    planet.satiety = 1
+    planet.generators = { lichen: 2 }
+    const ohneHaende = currentO2Rate()
+    check(
+      r,
+      'Flechtenfeld ohne Zuweisung liefert nichts',
+      ohneHaende.lte(0),
+      `rate=${ohneHaende.toString()}`,
+    )
+
+    assign('lichen', 4)
+    const mitHaenden = currentO2Rate()
+    check(r, 'Mit Zuweisung liefert es O₂', mitHaenden.gt(0), `rate=${mitHaenden.toString()}`)
+    check(
+      r,
+      'Zugewiesene Hände bringen mehr O₂ als ihr Atem kostet',
+      mitHaenden.gt(o2ConsumptionRate()),
+      `feld=${mitHaenden.toString()}, atem=${o2ConsumptionRate().toString()}`,
     )
 
     /* --- Die Rakete kostet kein O₂ mehr (M12, §17) ----------------------- */

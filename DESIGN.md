@@ -1085,7 +1085,7 @@ Jeder Pfeil braucht Hände. Ohne zugewiesene Bewohner steht die ganze Kette.
 | **M10** ✓ | Aurora startet mit 10 Bewohnern und endlichen Rationen. Zuweisung an Anlagen, Sättigung regelt die Arbeitsleistung, Abriss als Weg zurück. | Kleinstmöglicher vollständiger Loop, an dem sich das Modell beweisen muss |
 | **M11** ✓ | Bauen kostet Hände und Zeit: Bauplatz, Bauarbeiter, Fertigstellung. Lagerhallen mit echter Kapazitätsgrenze, Wohnhäuser. | Braucht den Arbeitskraft-Begriff aus M10 |
 | **M12** ✓ | Verarbeitungsketten mit Zwischengütern und Rezepten. Rakete aus Metallplatten statt aus O₂. | Braucht Gebäude und Lager aus M11 |
-| **M13** | Aurora als Mars zu Ende, dann Vesta bis Nimbus auf die neue Wirtschaft umstellen und vollständig neu balancieren. | Aufräumen, wenn das Modell steht |
+| **M13** ½ | Aurora als Mars zu Ende ✓ (Flechtenfeld als Hand-Hebel), dann Vesta bis Nimbus auf die neue Wirtschaft umstellen und vollständig neu balancieren. | Aufräumen, wenn das Modell steht |
 
 ### Was dabei zerbricht
 
@@ -1229,26 +1229,59 @@ mit ihr, die Rakete steht bei 20,0 min. Wer das Verhältnis verfehlt (8 Minen
 auf 2 Schmelzen), wartet 27,9 min auf die Rakete und sieht Erz bei 998 an der
 Grenze stehen — die Fehlinvestition kostet acht Minuten und ist sichtbar.
 
+### Entschieden in M13, erste Hälfte
+
+**Menschen zahlen sich auf Aurora jetzt aus.** Das war die härteste offene
+Frage des Kurswechsels: gemessen war der Planet *mit* gebautem Wohnraum
+langsamer als ohne (24,6 gegen 22,3 min). Die ganze O₂-Seite bestand aus
+Apparaten, die keine Hände brauchen — also kostete jeder zusätzliche Mensch
+Atem und O₂ und brachte für die Atmosphäre nichts.
+
+Von den beiden Wegen, die §17 vorschlug, ist es die **O₂-Anlage mit Plätzen**
+geworden, nicht der Wald: ein Wald wird einmal gepflanzt und atmet danach
+ohne jede Hand weiter, ist also kein *laufender* Hebel. Das Flechtenfeld ist
+einer.
+
+Kein Widerspruch zur M10-Trennung „Maschine gegen Handarbeit": Elektrolyse,
+Photolyse und Prozessor bleiben Apparate. Daneben steht jetzt eine Anlage, die
+nur durch Hände läuft — die O₂-Seite ist damit kein Entweder-oder mehr,
+sondern eine Entscheidung darüber, wohin freie Leute gehen.
+
+> **Die knappe Ressource muss die gemeinte sein.** Der erste Anlauf gab dem
+> Feld eine normale Kostenkurve (1,13) und Rate 8. Am Rand war es damit pro
+> ausgegebenem O₂ nur ein Drittel so gut wie ein Prozessor — die Grenze war
+> weiter das O₂, nicht die Hände, und das Vorzeichen drehte sich nicht
+> (23,7 gegen 21,1 min). Erst eine flache Kurve (1,08) und Rate 80 machen
+> Hände zur Grenze. Gemessen über einen Sweep von 8 bis 80, nicht geraten.
+
+Ebenfalls geprüft und verworfen: billigerer Wohnraum. Aurora deckelt bei 60
+Bewohnern, jedes Modul darüber ist verschwendetes O₂ — die Wohnkurve zu
+senken machte den Planeten durchweg *langsamer*.
+
+Gemessen nach der Änderung: 18,6 min ohne Wohnraum, **16,9 min mit** — 1,7 min
+Vorsprung statt 2,3 min Verlust. Der Vollausbau mit Kolonie, Eisenkette und
+Rakete liegt bei 23,8 min, die Rakete steht bei 20,1 min. Beides im Fenster
+aus §13.
+
 ### Offene Fragen dieses Kurswechsels
 
-- **Was wird aus dem Klick-Knopf?** Wenn O₂ keine Währung mehr ist, ist
-  „O₂ freisetzen" ohne Ziel. Auf Aurora ist die Frage seit M12 dringend: die
-  Rakete kostet dort kein O₂ mehr, der Knopf finanziert also nur noch
-  Anlagenkäufe. Naheliegend: Handarbeit an einer konkreten Anlage, die auch
-  ohne zugewiesenen Bewohner ein wenig liefert.
+- **Was wird aus dem Klick-Knopf?** Weniger dringend als gedacht: O₂ ist auf
+  Aurora zwar nicht mehr der Preis der *Rakete*, bezahlt aber weiterhin jede
+  Anlage. „O₂ freisetzen" hat damit ein Ziel, solange Gebäude O₂ kosten — die
+  Frage stellt sich erst wieder, wenn auch das fällt.
+- **Wohnkuppel, Hydroponik und Eisschmelze erscheinen auf Aurora, obwohl sie
+  Stein und Holz kosten, die es dort nicht gibt.** Das ist *kein* Fehler: das
+  Lager gilt für den ganzen Durchlauf, mitgebrachtes Material macht sie
+  baubar, und die fehlenden Kosten stehen rot an der Schaltfläche. Beim
+  allerersten Besuch sind sie trotzdem drei Zeilen ohne Funktion — eine
+  Anzeigefrage, keine Regelfrage.
 - **Haben Bewohner Namen?** Bei Dutzenden wäre es möglich und stärkt §1.4
   („Zahlen erzählen eine Geschichte"), kostet aber UI.
-- **Auf Aurora zahlen sich Menschen noch nicht aus.** Gemessen ist der Planet
-  *mit* gebautem Wohnraum langsamer als ohne (25,1 gegen 23,4 min): die
-  O₂-Seite besteht dort aus Maschinen, die keine Hände brauchen, also kostet
-  jeder zusätzliche Mensch Atem und O₂ und bringt nur Bautempo. Das ist die
-  direkte Folge der M10-Entscheidung „Maschine gegen Handarbeit" und gehört
-  in den Balancing-Pass von M13 — entweder über den Wald als Hand-Hebel oder
-  über eine O₂-Anlage mit Plätzen.
-
-  M12 entschärft das, löst es aber nicht: die Kette gibt Händen zum ersten Mal
-  ein Ziel, das nicht Versorgung ist, und macht Bevölkerung damit zur
-  Voraussetzung für die Rakete. Für die *Atmosphäre* bleibt sie ein
-  Nettoverlust.
 - **Der Arbeitskraft-Multiplikator** (`1 + √siedler / 40`) ist bei zwölf
-  Bewohnern praktisch wirkungslos und gehört ersetzt.
+  Bewohnern praktisch wirkungslos und gehört ersetzt. Seit M13 ist er
+  zusätzlich *falsch*: Hände wirken jetzt über Plätze, ein zweiter globaler
+  Bonus auf dieselbe Sache ist genau die Doppelung, die CLAUDE.md verbietet.
+  Ersatzlos streichen geht aber erst mit der zweiten Hälfte von M13 — auf
+  Vesta steht er bei 24 000 Siedlern auf Faktor 4,9, und ihn vorher zu
+  entfernen würde die alten Planeten unspielbar machen, bevor sie
+  umgestellt sind.

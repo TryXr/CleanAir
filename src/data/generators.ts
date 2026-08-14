@@ -197,6 +197,60 @@ export const GENERATORS: readonly GeneratorDef[] = [
     revealAt: 0,
     workSlots: 1,
   },
+  /* --- Der Hand-Hebel auf die Atmosphäre (M13, §17) ---------------------
+     Die offene Frage aus §17: auf Aurora zahlten sich Menschen nicht aus.
+     Gemessen war der Planet *mit* Wohnraum langsamer als ohne (24,6 gegen
+     22,3 min) — die ganze O₂-Seite bestand aus Apparaten, die keine Hände
+     brauchen, also kostete jeder zusätzliche Mensch Atem und brachte für die
+     Atmosphäre nichts.
+
+     Das Flechtenfeld ist die Antwort und bewusst **kein** Widerspruch zur
+     M10-Trennung „Maschine gegen Handarbeit": Elektrolyse, Photolyse und
+     Prozessor bleiben Apparate und laufen weiter von selbst. Daneben steht
+     jetzt eine Anlage, die *nur* durch Hände läuft — damit ist die O₂-Seite
+     nicht länger entweder-oder, sondern eine Entscheidung darüber, wo
+     freie Leute hingehen.
+
+     Pro ausgegebenem O₂ liefert sie ungefähr so viel wie ein Prozessor. Der
+     Unterschied ist der Preis in Menschen: wer keine übrig hat, baut
+     Apparate; wer welche übrig hat, bekommt sie hier fast geschenkt — ein
+     Mensch atmet 0,03 O₂/s weg und erzeugt hier ein Vielfaches davon.
+
+     Vorerst nur auf Aurora. §17 sagt „erst Aurora, dann der Rest": die
+     übrigen Planeten bekommen ihren Hand-Hebel, wenn sie in der zweiten
+     Hälfte von M13 auf die neue Wirtschaft umgestellt werden.
+  ---------------------------------------------------------------------- */
+  {
+    id: 'lichen',
+    name: 'Flechtenfeld',
+    description:
+      'Von Hand auf den nackten Fels gesetzt und feucht gehalten. Es sieht nach nichts aus und ist der erste Ort, an dem Aurora selbst atmet.',
+    output: { kind: 'gas', gas: 'o2' },
+    baseCost: 500,
+    /**
+     * **Flach, und das ist der ganze Trick.** Die knappe Ressource dieser
+     * Anlage sollen Hände sein, nicht O₂ — also darf die O₂-Kurve nicht die
+     * Grenze setzen. Der erste Anlauf stand auf 1,13 und war am Rand pro
+     * ausgegebenem O₂ nur ein Drittel so gut wie ein Prozessor; Menschen
+     * blieben damit ein Verlustgeschäft (gemessen 23,7 gegen 21,1 min).
+     */
+    costGrowth: 1.08,
+    /**
+     * Gemessen statt geschätzt, über einen Sweep von 8 bis 80: erst hier
+     * dreht sich das Vorzeichen deutlich. Wohnraum bringt jetzt 1,7 min
+     * Vorsprung statt 2,3 min Verlust, und der Vollausbau mit Kette und
+     * Kolonie liegt bei 23,8 min — im Fenster aus §13.
+     *
+     * Die Apparate werden dadurch nicht überflüssig: mit den zehn
+     * Mitgebrachten lassen sich knapp fünf Felder besetzen, der Rest der
+     * Atmosphäre kommt weiter aus Photolyse und Prozessor.
+     */
+    baseRate: 80,
+    buildWork: 18,
+    revealAt: 100,
+    workSlots: 2,
+    planets: ['aurora'],
+  },
   {
     id: 'photolysis',
     name: 'Photolyse-Farm',

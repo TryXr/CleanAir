@@ -26,6 +26,15 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M13 läuft, erste Hälfte fertig: **Hände wirken jetzt auf die Atmosphäre.**
+Das Flechtenfeld ist eine O₂-Anlage mit Plätzen und nur auf Aurora. Es hebt
+die M10-Trennung „Maschine gegen Handarbeit" nicht auf — die Apparate laufen
+weiter von selbst —, sondern stellt eine Anlage daneben, die *nur* durch
+Hände läuft. Seine Kostenkurve ist bewusst flach (1,08): die knappe Ressource
+soll die gemeinte sein, also Hände und nicht O₂. Offen ist die zweite Hälfte,
+Vesta bis Nimbus auf die neue Wirtschaft umzustellen — **erst danach** darf
+`workforceMultiplier()` fallen, sonst brechen die alten Planeten weg.
+
 M12 ist fertig: **Verarbeitung ist eine zweite Sorte Stillstand.** Eine Anlage
 mit `output.kind === 'craft'` verbraucht Material und liefert anderes — sie
 steht nicht nur still, wenn niemand daran arbeitet, sondern auch ohne
@@ -157,7 +166,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 86 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 89 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -170,7 +179,9 @@ dass Bestelltes den Preis mitzieht, dass ein Abbruch exakt erstattet und dass
 das Lager wirklich überläuft statt still weiterzuwachsen. Seit M12 zusätzlich,
 dass eine Verarbeitung ohne Eingang nichts liefert, dass das Rezeptverhältnis
 exakt stimmt, dass ein volles Ausgangslager keinen Eingang mehr frisst und
-dass die Kette im selben Tick bis zur letzten Stufe durchläuft.
+dass die Kette im selben Tick bis zur letzten Stufe durchläuft. Seit M13, dass
+eine O₂-Anlage mit Plätzen unbesetzt nichts liefert und besetzt mehr bringt,
+als der Atem der Zugewiesenen kostet.
 
 Der Test sichert den Zustand vorher und stellt ihn danach wieder her — und
 sperrt seit M11 zusätzlich das Speichern, solange er läuft. Vorher schrieb
