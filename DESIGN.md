@@ -1044,6 +1044,12 @@ spielbar — das ist der Preis dafür, das Modell klein zu erproben.
 
 ### Aurora wird der Mars
 
+**Maßstab:** `baseAtmosphere` fiel von 12,15 M auf 4 M. Der alte Wert war auf
+unbegrenzte Arbeitskraft ausgelegt; gemessen stand der O₂-Anteil nach 90
+Minuten bei 0,00 %. Simuliert mit zugewiesener Handarbeit: 4·10⁵ → 11,5 min,
+1,5·10⁶ → 15,2 min, 4·10⁶ → 21,1 min — Zielfenster §13 sind 15–25 min.
+
+
 Kein leerer Fels mehr, sondern eine Landung: **zehn Menschen, endliche Wasser-
 und Essensrationen**, und die Aufgabe, vor dem Aufbrauchen eigene Produktion
 zu haben. Aus dem Klickspiel wird ein Überlebensproblem mit klarem ersten
@@ -1058,7 +1064,7 @@ Arbeitskraft künftig steht.
 | Begriff | Bedeutung |
 |---|---|
 | **Bewohner** | Zählbar, zuweisbar, versorgt oder nicht. Ohne Zuweisung untätig. |
-| **Arbeitsplatz** | Ein Gebäude hat n Plätze. Unbesetzt produziert es **nichts**. |
+| **Arbeitsplatz** | Nur **Handarbeit** hat Plätze. Unbesetzt produziert sie **nichts**. |
 | **Rezept** | Ein Verarbeitungsgebäude verbraucht Eingang und liefert Ausgang. |
 | **Bauplatz** | Ein Gebäude entsteht nicht sofort: es braucht Material *und* einen zugewiesenen Bauarbeiter *und* Zeit. |
 | **Lager** | Endlich. Lagerhallen heben die Grenze — ohne sie verfällt Überschuss. |
@@ -1076,7 +1082,7 @@ Jeder Pfeil braucht Hände. Ohne zugewiesene Bewohner steht die ganze Kette.
 
 | | Inhalt | Warum diese Reihenfolge |
 |---|---|---|
-| **M10** ✓ | Aurora startet mit 10 Bewohnern und endlichen Rationen. Berufe *produzieren* statt zu multiplizieren. Sättigung regelt die Arbeitsleistung. | Kleinstmöglicher vollständiger Loop, an dem sich das Modell beweisen muss |
+| **M10** ✓ | Aurora startet mit 10 Bewohnern und endlichen Rationen. Zuweisung an Anlagen, Sättigung regelt die Arbeitsleistung, Abriss als Weg zurück. | Kleinstmöglicher vollständiger Loop, an dem sich das Modell beweisen muss |
 | **M11** | Bauen kostet Hände und Zeit: Bauplatz, Bauarbeiter, Fertigstellung. Lagerhallen mit echter Kapazitätsgrenze, Wohnhäuser. | Braucht den Arbeitskraft-Begriff aus M10 |
 | **M12** | Verarbeitungsketten mit Zwischengütern und Rezepten. Rakete aus Metallplatten statt aus O₂. | Braucht Gebäude und Lager aus M11 |
 | **M13** | Aurora als Mars zu Ende, dann Vesta bis Nimbus auf die neue Wirtschaft umstellen und vollständig neu balancieren. | Aufräumen, wenn das Modell steht |
@@ -1087,21 +1093,63 @@ Ehrlich benannt, damit es niemanden überrascht:
 
 - **Das Balancing von M4 bis M8 ist danach Makulatur.** Jede Zahl war für
   „O₂ ist Währung" simuliert.
-- **Ein Teil der 44 Selbsttests** prüft Regeln, die es dann nicht mehr gibt.
+- **Ein Teil der Selbsttests** prüft Regeln, die es dann nicht mehr gibt.
+  In M10 traf das zwei Prüfungen — beide hätten danach grün gemeldet und
+  nichts mehr geprüft.
 - **Der Save bricht mehrfach** — je Meilenstein mindestens eine Migration.
 - Der Arbeitskraft-Multiplikator (`1 + √siedler / 40`) ist bei 50 Bewohnern
   sinnlos und wird ersetzt.
+
+### Entschieden in M10
+
+**Plätze hat nur Handarbeit, nicht jede Anlage.** Elektrolyse, Photolyse,
+Prozessor, Sublimator, Cracker, Wäscher, Ventil, Kondensator und Gasschöpfer
+sind chemische Apparate und laufen von selbst. Zugewiesen wird an Bergbau,
+Schmelze, Sägewerk, Forst und Landwirtschaft. Das hält die O₂-Seite frei von
+Verwaltung und macht Zuweisung zu einer Entscheidung statt zu einer
+Pflichtübung an jedem Gebäude.
+
+**Berufe sind ersatzlos gestrichen.** Sie waren Bonusgeber aus M5 und damit
+ein zweites System für dieselbe Sache. `data/jobs.ts`, `systems/jobs.ts` und
+das Panel sind gelöscht.
+
+**Zuwanderung passiert automatisch,** sobald Rationen und Wohnraum reichen —
+ohne Regler. Nachwuchs setzt Überschuss voraus: unter 70 % Sättigung wächst
+nichts.
+
+**Dafür lassen sich Anlagen abreißen.** Ohne Regler wäre Bevölkerung sonst
+eine Einbahnstraße. Abriss ist dasselbe Prinzip wie Wäscher für Schadstoffe
+und Ventil für N₂ — jede dauerhaft erhöhende Anlage braucht ein Gegenstück.
+Ohne Rückerstattung; verbaute Menschen kommen zurück.
+
+> **Falle, zweimal getroffen:** Wachsen und Schrumpfen dürfen **nicht** an
+> derselben Rate hängen. Die enthält den Sättigungsfaktor, und bei knappen
+> Vorräten ist er null — eine überfüllte Kolonie schrumpfte dann nicht, und
+> der Abriss war genau dann wirkungslos, wenn man ihn braucht. Nachgerechnet:
+> exakt 0,0 Änderung pro Sekunde.
+
+**Wohnraum entscheidet über das Überleben, nicht die Außenluft.** Vorher
+skalierte die Bewohnbarkeit die Kapazität, und bei 0 % O₂ war sie null — die
+zehn Mitgebrachten wären sofort gestorben. Eine Marskolonie lebt in
+versiegelten Kapseln; die Atmosphäre bestimmt nur noch, wie gut es sich
+*vermehrt*.
+
+**Versorgungsanlagen sind von der Sättigungsstrafe ausgenommen.** Sonst gibt
+es eine Sackgasse: Sättigung senkt die Arbeit, Arbeit erzeugt Nahrung. Sich
+selbst zu ernähren gibt man zuletzt auf.
+
+**Pro-Kopf-Verbrauch steht am Planeten**, nicht global — Aurora rechnet mit
+einem Dutzend Leuten, Vesta bis Nimbus noch mit Zehntausenden.
 
 ### Offene Fragen dieses Kurswechsels
 
 - **Was wird aus dem Klick-Knopf?** Wenn O₂ keine Währung mehr ist, ist
   „O₂ freisetzen" ohne Ziel. Naheliegend: Handarbeit an einer konkreten
   Anlage, die auch ohne zugewiesenen Bewohner ein wenig liefert.
-- **Wie entstehen neue Bewohner?** Vermutlich Wohnraum plus
-  Nahrungsüberschuss — Zuwanderung passt nicht mehr zu einer Landung mit
-  zehn Leuten.
 - **Haben Bewohner Namen?** Bei Dutzenden wäre es möglich und stärkt §1.4
   („Zahlen erzählen eine Geschichte"), kostet aber UI.
-- **Was wird aus den bestehenden Berufen** (Förster, Bergmann, Techniker)?
-  Sie sind heute Bonusgeber und müssten zu Arbeitsplätzen an konkreten
-  Gebäuden werden.
+- **Aurora hat noch keinen Wohnraum zum Bauen.** Die Wohnkuppel kostet Stein,
+  den Aurora nicht führt — die Kolonie bleibt dort bei den zwölf Plätzen der
+  Landekapseln. Ob sich das zu statisch anfühlt, muss ein Spieltest zeigen.
+- **Der Arbeitskraft-Multiplikator** (`1 + √siedler / 40`) ist bei zwölf
+  Bewohnern praktisch wirkungslos und gehört ersetzt.
