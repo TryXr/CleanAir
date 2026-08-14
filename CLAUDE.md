@@ -110,6 +110,27 @@ einschließt (DESIGN.md §4). Daraus folgt alles Weitere von selbst: N₂ senkt
 den O₂-Anteil, ohne O₂ zu verbrauchen. Nie einen Anteil direkt setzen —
 immer die Menge ändern und den Anteil ausrechnen lassen.
 
+## Selbsttest vor jedem Commit
+
+```js
+cleanair.selftest()      // 34 Prüfungen, Ausgabe in der Konsole
+```
+
+Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
+diesem Projekt jedes Mal mehrere Meilensteine unentdeckt überlebt hat:
+Save-Rundlauf, Reisen mit Ein- und Auslagern, Raketen-Sperren, Sackgassen,
+Vollständigkeit der Serialisierung, Regler-Verhalten des Ventils.
+
+Der Test sichert den Zustand vorher und stellt ihn danach wieder her, ist
+aber trotzdem nichts für einen echten Spielstand.
+
+**Neue Prüfung nur mit Gegenprobe.** Ein Test, der auf korrektem Code besteht,
+beweist nichts — den Fehler absichtlich einbauen, rot sehen, zurückbauen.
+Genau so sind die vorhandenen Prüfungen entstanden.
+
+Was er *nicht* kann: Spielgefühl. Ob Brände nerven, ob ein Fenster zu eng ist,
+ob sich ein Planet zäh statt langsam anfühlt — dafür gibt es nur Spielen.
+
 ## Balancing prüfen statt schätzen
 
 Zieldauern pro Planet stehen in DESIGN.md §13 und wurden bisher **simuliert,

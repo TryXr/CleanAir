@@ -24,6 +24,7 @@ import { GENERATORS } from './data/generators'
 import { JOBS } from './data/jobs'
 import { MATERIALS } from './data/materials'
 import { ROCKETS } from './data/rockets'
+import { selftest } from './dev/selftest'
 import { run } from './state/run.svelte'
 import { META_UPGRADES } from './data/metaUpgrades'
 import { RESEARCH } from './data/research'
@@ -167,6 +168,7 @@ if (import.meta.env.DEV) {
       jobs,
       travel,
       run,
+      selftest,
       // Für Save-Rundläufe im Test: exportieren, Zustand zerstören,
       // importieren und prüfen, ob wirklich alles zurückkommt.
       save: { exportSave, importSave, saveNow, buildSave, SAVE_VERSION },
