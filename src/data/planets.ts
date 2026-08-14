@@ -191,12 +191,21 @@ export const AURORA: PlanetDef = {
   anoxenPressure: 0,
 
   /**
-   * Aurora bleibt das reine O₂-Tutorial. Materialien wären hier das zweite
-   * System auf demselben Planeten, und genau davor schützt §11. Sie beginnen
-   * auf Vesta; wie sie sich später über die Planeten verteilen, entscheidet
-   * M7 mit der Planeten-Identität.
+   * Seit M12 führt Aurora die Eisenkette — und damit fällt das alte „reines
+   * O₂-Tutorial" endgültig weg.
+   *
+   * Das ist kein Verstoß gegen §11, sondern dessen Fortschreibung unter §17:
+   * Aurora ist nicht mehr der erste von fünf gleichartigen Planeten, sondern
+   * die **Blaupause**, an der sich das ganze Kolonie-Modell beweisen muss.
+   * Ein Planet, auf dem man nichts verarbeiten kann, kann das nicht zeigen —
+   * und die Rakete aus Metallplatten (§17, M12) braucht einen Ort, an dem
+   * Metallplatten entstehen.
+   *
+   * Erz kommt aus dem Boden, Eisen und Metallplatten entstehen erst hier.
+   * Für `isAvailable` ist der Unterschied egal: die Liste sagt, welche
+   * Stoffe dieser Planet führt, nicht wie sie zustande kommen.
    */
-  materials: [],
+  materials: ['erz', 'eisen', 'platten'],
   /**
    * Aurora bekommt den Wald — aber nur die *halbe* Kette.
    *

@@ -26,6 +26,7 @@ import { meta } from '../state/meta.svelte'
 import { achievementsSystem } from '../systems/achievements'
 import { combatSystem } from '../systems/combat'
 import { buildRate, cancelSite, constructionSystem, orderGenerator } from '../systems/construction'
+import { craftBlocker, craftingSystem } from '../systems/crafting'
 import { assign, assignBuilder, unassign } from '../systems/labor'
 import { housingCapacity, populationSystem } from '../systems/population'
 import {
@@ -561,6 +562,100 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     deserializeSettings(serializeSettings())
     check(r, 'Lautstärke wird auf 0…1 begrenzt', settings.soundVolume <= 1)
     settings.soundVolume = 0.35
+
+    /* --- Verarbeitung (M12) ----------------------------------------------
+       Die neue Fehlerklasse: eine Anlage, die etwas *verbraucht*. Drei Wege,
+       das falsch zu machen — produzieren ohne Eingang, das Verhältnis
+       verrutschen lassen, und Eingang fressen, obwohl der Ausgang keinen
+       Platz mehr hat. Alle drei sind absichtlich eingebaut und rot gesehen
+       worden, bevor sie hier stehen.
+    --------------------------------------------------------------------- */
+    freshRun()
+    planet.settlers = new Decimal(20)
+    planet.satiety = 1
+    planet.generators = { press: 1 }
+    assign('press', 2)
+
+    run.materials = {}
+    craftingSystem(10)
+    check(
+      r,
+      'Verarbeitung ohne Eingang liefert nichts',
+      materialAmount('platten').lte(0),
+      `platten=${materialAmount('platten').toString()}`,
+    )
+    check(r, 'Der Grund für den Stillstand wird benannt', craftBlocker(findGenerator('press')!) !== null)
+
+    // Gegenprobe zur Zeile davor: mit Eisen im Lager muss dieselbe Presse
+    // liefern. Ohne diese Prüfung wäre „liefert nichts" auch dann grün, wenn
+    // die Verarbeitung überhaupt nicht läuft.
+    run.materials = { eisen: new Decimal(100) }
+    craftingSystem(1)
+    const gewalzt = materialAmount('platten')
+    check(r, 'Mit Eingang läuft dieselbe Anlage an', gewalzt.gt(0), `platten=${gewalzt.toString()}`)
+
+    /*
+     * Erhaltung: das Rezept ist 2 Eisen → 1 Platte, also muss exakt das
+     * Doppelte des Ausgangs verschwunden sein. Ein Rundungsfehler hier wäre
+     * eine stille Materialquelle oder -senke.
+     */
+    const eisenWeg = new Decimal(100).sub(materialAmount('eisen'))
+    check(
+      r,
+      'Rezept verbraucht genau das Zweifache',
+      eisenWeg.sub(gewalzt.mul(2)).abs().lt(0.0001),
+      `eisen weg=${eisenWeg.toString()}, platten=${gewalzt.toString()}`,
+    )
+
+    /*
+     * Der eigentliche Fund: volles Ausgangslager darf keinen Eingang mehr
+     * verbrauchen. Andersherum verschwindet Eisen in einer Presse, deren
+     * Platten ohnehin verfallen — ein dauerhafter, unsichtbarer Verlust und
+     * damit derselbe Schaden, gegen den M11 die Lagergrenze *nur* den
+     * Nachschub stoppen ließ (§1.2).
+     */
+    run.materials = { eisen: new Decimal(100), platten: materialCapacity() }
+    craftingSystem(5)
+    check(
+      r,
+      'Volles Ausgangslager verbraucht keinen Eingang',
+      materialAmount('eisen').eq(100),
+      `eisen=${materialAmount('eisen').toString()}`,
+    )
+    check(r, 'Volles Lager wird als Grund gemeldet', craftBlocker(findGenerator('press')!) !== null)
+
+    /*
+     * Die Kette muss in *einem* Tick durchlaufen. Läuft die Verarbeitung vor
+     * der Förderung, hinkt jede Stufe einen Tick hinterher — bei drei
+     * Gliedern also drei. Genau deshalb steht `verarbeitung` in main.ts
+     * hinter `produktion`.
+     */
+    freshRun()
+    planet.settlers = new Decimal(30)
+    planet.satiety = 1
+    planet.generators = { oremine: 4, smelter: 2, press: 1 }
+    assign('oremine', 8)
+    assign('smelter', 4)
+    assign('press', 2)
+    run.materials = {}
+    productionSystem(1)
+    craftingSystem(1)
+    check(
+      r,
+      'Die Kette liefert im selben Tick bis zur letzten Stufe',
+      materialAmount('platten').gt(0),
+      `erz=${materialAmount('erz').toString()}, eisen=${materialAmount('eisen').toString()}`,
+    )
+
+    /* --- Die Rakete kostet kein O₂ mehr (M12, §17) ----------------------- */
+    freshRun()
+    planet.oxygen = new Decimal(1e9)
+    run.materials = {}
+    check(r, 'Rakete lässt sich nicht aus O₂ allein bauen', !buildRocket())
+
+    run.materials = { platten: new Decimal(400) }
+    planet.oxygen = new Decimal(0)
+    check(r, 'Rakete entsteht aus Metallplatten ohne jedes O₂', buildRocket())
 
     /* --- Atmosphäre bleibt endlich -------------------------------------- */
     freshRun()

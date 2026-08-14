@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { findMaterial } from '../data/materials'
+  import { craftBlocker, effectiveCraftRate } from '../systems/crafting'
   import { formatInt, formatRate } from '../engine/format'
   import {
     assign,
@@ -29,6 +31,8 @@
     if (out.kind === 'gas') return out.gas === 'n2' ? 'N₂' : 'O₂'
     if (out.kind === 'supply') return out.supply === 'food' ? 'Nahrung' : 'Wasser'
     if (out.kind === 'plant') return 'Bäume'
+    if (out.kind === 'material') return findMaterial(out.material)?.name ?? out.material
+    if (out.kind === 'craft') return findMaterial(out.material)?.name ?? out.material
     return ''
   }
 </script>
@@ -70,8 +74,16 @@
           <span class="rate num">
             {#if leer}
               steht still — niemand zugewiesen
+            {:else if def.output.kind === 'craft' && craftBlocker(def)}
+              <!-- Besetzt, aber ohne Nachschub. Ein anderer Stillstand als
+                   „niemand da" — und er wird auch nicht dadurch besser,
+                   dass man noch jemanden hinstellt. -->
+              stockt — {craftBlocker(def)}
             {:else}
-              {formatRate(generatorRate(def), einheit(def))}
+              {formatRate(
+                def.output.kind === 'craft' ? effectiveCraftRate(def) : generatorRate(def),
+                einheit(def),
+              )}
               · Leistung {Math.round(laborFactor(def) * 100)} %
             {/if}
           </span>

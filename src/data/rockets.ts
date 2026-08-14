@@ -29,10 +29,22 @@ export const ROCKETS: readonly RocketDef[] = [
     planetId: 'aurora',
     name: 'Landefähre',
     description:
-      'Kaum mehr als der Tank, mit dem du gekommen bist, umgebaut auf einen Sprung. Aurora gibt nichts her, woraus man etwas Besseres bauen könnte.',
-    // Aurora kennt keine Materialien (§11 — reines O₂-Tutorial), also kostet
-    // die erste Rakete nur das, was der Planet überhaupt hat.
-    oxygenCost: 250000,
+      'Kaum mehr als der Tank, mit dem du gekommen bist — aber diesmal mit einer Zelle, die ihr die Kolonie selbst gewalzt hat.',
+    /*
+     * **Die erste Rakete, die nichts mit O₂ zu tun hat** (§17, Entscheidung 1:
+     * „Du kannst eine Rakete nicht aus O₂ bauen").
+     *
+     * Bis M11 kostete sie 250 000 O₂ und sonst nichts, weil Aurora keine
+     * Materialien führte. Seit M12 gibt es die Eisenkette, und damit fällt
+     * der O₂-Preis ersatzlos weg statt nur kleiner zu werden. Ein Restbetrag
+     * wäre die halbherzige Variante: solange O₂ noch irgendwo Rechnungen
+     * bezahlt, bleibt es Währung.
+     *
+     * O₂ ist ab hier auf Aurora ausschließlich das Ziel — der Wert, den man
+     * hochbringt. Vesta bis Nimbus zahlen bis M13 weiter mit beidem.
+     */
+    oxygenCost: 0,
+    materialCost: { platten: 400 },
   },
   {
     planetId: 'vesta',

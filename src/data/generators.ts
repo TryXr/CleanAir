@@ -59,6 +59,20 @@ export type Output =
    * verfällt an der Grenze.
    */
   | { kind: 'storage' }
+  /**
+   * Ein Rezept (M12, §17): verbraucht Material und liefert anderes.
+   *
+   * Der Unterschied zu `material` ist die **Voraussetzung**. Eine Mine
+   * fördert, solange jemand daran steht; eine Schmelze braucht zusätzlich
+   * etwas zum Schmelzen. Damit gibt es eine zweite Sorte Stillstand neben dem
+   * unbesetzten Arbeitsplatz — und der Grund dafür ist nicht mehr die
+   * Kolonie, sondern die Kette davor.
+   *
+   * `baseRate` zählt in **Ausgang** pro Sekunde. Der Eingang ergibt sich
+   * daraus über `input`, und zwar anteilig: eine halb ausgelastete Presse
+   * verbraucht auch nur halb so viel Eisen.
+   */
+  | { kind: 'craft'; material: string; input: MaterialCost }
 
 export type SupplyKind = 'food' | 'water'
 
@@ -231,6 +245,70 @@ export const GENERATORS: readonly GeneratorDef[] = [
     revealAt: 60,
   },
 
+  /* --- Die Eisenkette (M12, §17) ----------------------------------------
+     Der erste Ort, an dem eine Anlage etwas verbraucht, das eine andere
+     herstellt:
+
+       Erz ──Schmelze──► Eisen ──Presse──► Metallplatten ──► Rakete
+
+     Jedes Glied hat Plätze, denn jedes ist Handarbeit. Und jedes hat zwei
+     Arten stillzustehen: unbesetzt, oder ohne Nachschub. Die zweite ist neu
+     und der eigentliche Inhalt von M12 — sie kommt nicht aus der Kolonie,
+     sondern aus der Stufe davor.
+
+     Alle drei Stufen laufen mit **derselben** Rate, und das ist kein
+     Copy-Paste: das Verhältnis entsteht aus dem Rezept, nicht aus der
+     Geschwindigkeit. Weil zwei Eingang ein Ausgang ergeben, verarbeitet jede
+     Stufe die Hälfte dessen, was die Stufe davor liefert — zwei Minen
+     sättigen eine Schmelze, zwei Schmelzen eine Presse, und die volle Kette
+     ist 4 : 2 : 1.
+
+     Nachgerechnet, nachdem der erste Anlauf es falsch hatte: mit 0,5 / 0,25 /
+     0,12 verbrauchte eine Schmelze 0,5 Erz/s und damit genau *eine* Mine. In
+     der Simulation standen Erz und Eisen nach 90 Minuten beide am Lagerlimit,
+     während die Presse hungerte — die Kette hätte das Gegenteil dessen
+     gelehrt, was der Kommentar behauptete.
+  ---------------------------------------------------------------------- */
+  {
+    id: 'oremine',
+    name: 'Erzmine',
+    description:
+      'Ein Stollen in den roten Hang. Was herauskommt, ist wertlos, bis es durch den Ofen geht.',
+    output: { kind: 'material', material: 'erz' },
+    baseCost: 200,
+    costGrowth: 1.14,
+    baseRate: 0.5,
+    buildWork: 22,
+    revealAt: 150,
+    workSlots: 2,
+  },
+  {
+    id: 'smelter',
+    name: 'Schmelze',
+    description:
+      'Ein Ofen, der nie ausgehen darf. Zwei Körbe Erz werden ein Barren — der Rest geht als Schlacke weg.',
+    output: { kind: 'craft', material: 'eisen', input: { erz: 2 } },
+    baseCost: 600,
+    costGrowth: 1.15,
+    baseRate: 0.5,
+    buildWork: 35,
+    revealAt: 400,
+    workSlots: 2,
+  },
+  {
+    id: 'press',
+    name: 'Walzpresse',
+    description:
+      'Barren rein, Platten raus. Die Halle bebt im Takt, und man hört sie durch den ganzen Krater.',
+    output: { kind: 'craft', material: 'platten', input: { eisen: 2 } },
+    baseCost: 1400,
+    costGrowth: 1.15,
+    baseRate: 0.5,
+    buildWork: 50,
+    revealAt: 900,
+    workSlots: 2,
+  },
+
   /* --- Puffer -----------------------------------------------------------
      N₂ ist die einzige Antwort auf zu viel O₂: es verdünnt die Mischung,
      statt irgendetwas abzubauen. Deshalb muss es deutlich schneller laufen
@@ -310,8 +388,14 @@ export const GENERATORS: readonly GeneratorDef[] = [
     output: { kind: 'storage' },
     baseCost: 900,
     costGrowth: 1.12,
-    /** Aus dem, was am Ort liegt — der Steinbruch braucht selbst kein Material. */
-    materialCost: { stein: 10 },
+    /*
+     * Kostet seit M12 kein Material mehr. Vorher waren es 10 Stein, was
+     * genau so lange ging, wie die Halle nur auf Planeten mit Stein
+     * auftauchte. Seit Aurora eigene Materialien führt, erscheint sie auch
+     * dort — und wäre mit einer Steinforderung ein Knopf, den dieser Planet
+     * nie drücken kann. Regale aus dem, was am Ort liegt: dieselbe
+     * Begründung, aus der der Steinbruch selbst kein Material braucht.
+     */
     /** Platz je Halle und Material. Die Raketen brauchen bis zu 20 000. */
     baseRate: 2500,
     buildWork: 25,

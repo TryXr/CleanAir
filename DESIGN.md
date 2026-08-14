@@ -1084,7 +1084,7 @@ Jeder Pfeil braucht Hände. Ohne zugewiesene Bewohner steht die ganze Kette.
 |---|---|---|
 | **M10** ✓ | Aurora startet mit 10 Bewohnern und endlichen Rationen. Zuweisung an Anlagen, Sättigung regelt die Arbeitsleistung, Abriss als Weg zurück. | Kleinstmöglicher vollständiger Loop, an dem sich das Modell beweisen muss |
 | **M11** ✓ | Bauen kostet Hände und Zeit: Bauplatz, Bauarbeiter, Fertigstellung. Lagerhallen mit echter Kapazitätsgrenze, Wohnhäuser. | Braucht den Arbeitskraft-Begriff aus M10 |
-| **M12** | Verarbeitungsketten mit Zwischengütern und Rezepten. Rakete aus Metallplatten statt aus O₂. | Braucht Gebäude und Lager aus M11 |
+| **M12** ✓ | Verarbeitungsketten mit Zwischengütern und Rezepten. Rakete aus Metallplatten statt aus O₂. | Braucht Gebäude und Lager aus M11 |
 | **M13** | Aurora als Mars zu Ende, dann Vesta bis Nimbus auf die neue Wirtschaft umstellen und vollständig neu balancieren. | Aufräumen, wenn das Modell steht |
 
 ### Was dabei zerbricht
@@ -1191,11 +1191,51 @@ gegenüber den 21,1 min aus M10. Das ist der obere Rand des Fensters aus §13
 (15–25 min) — nachgestellt wurde nichts, weil der Unterschied zum Fenster
 sechs Sekunden beträgt und damit unter dem Rauschen einer Heuristik liegt.
 
+### Entschieden in M12
+
+**Aurora ist nicht mehr das reine O₂-Tutorial.** Die Eisenkette — Erzmine,
+Schmelze, Walzpresse — steht dort und nirgendwo sonst. Das widerspricht §11
+dem Buchstaben nach, folgt ihm aber dem Sinn nach: Aurora ist unter §17 keiner
+von fünf gleichartigen Planeten mehr, sondern die **Blaupause**, an der sich
+das Kolonie-Modell beweisen muss. Ein Planet ohne Verarbeitung kann das nicht
+zeigen, und die Rakete aus Metallplatten braucht einen Ort, an dem
+Metallplatten entstehen.
+
+**Die Rakete von Aurora kostet null O₂.** Nicht weniger — null. Ein Restbetrag
+wäre die halbherzige Variante gewesen: solange O₂ irgendwo Rechnungen bezahlt,
+bleibt es Währung. Vesta bis Nimbus zahlen bis M13 weiter mit beidem.
+
+**Ein Rezept hat zwei Arten stillzustehen.** Unbesetzt, und ohne Nachschub.
+Die zweite ist der eigentliche Inhalt von M12, denn ihr Grund liegt nicht in
+der Kolonie, sondern in der Stufe davor. Beide werden in der UI benannt statt
+nur als kleinere Zahl gezeigt.
+
+> **Volles Ausgangslager heißt stocken, nicht fressen.** Eine Presse bei
+> vollem Plattenregal darf kein Eisen mehr verbrauchen. Andersherum
+> verschwindet Material in einer Anlage, deren Ausgang ohnehin verfällt — ein
+> stiller, dauerhafter Verlust und damit derselbe Schaden, gegen den M11 die
+> Lagergrenze bewusst *nur* den Nachschub stoppen ließ (§1.2). Gemessen ohne
+> die Sperre: 1,33 Eisen pro fünf Sekunden ins Nichts.
+
+**Das Verhältnis der Kette entsteht aus dem Rezept, nicht aus der
+Geschwindigkeit.** Alle drei Stufen laufen mit derselben Rate; weil zwei
+Eingang ein Ausgang ergeben, verarbeitet jede Stufe die Hälfte der
+vorherigen. Die volle Kette ist 4 : 2 : 1. Der erste Anlauf hatte
+abgestufte Raten und damit exakt das Gegenteil gelehrt — Erz und Eisen
+standen nach 90 Minuten beide am Lagerlimit, während die Presse hungerte.
+
+Simuliert nach der Korrektur: Stabilität bei 24,7 min ohne Kette und 25,4 min
+mit ihr, die Rakete steht bei 20,0 min. Wer das Verhältnis verfehlt (8 Minen
+auf 2 Schmelzen), wartet 27,9 min auf die Rakete und sieht Erz bei 998 an der
+Grenze stehen — die Fehlinvestition kostet acht Minuten und ist sichtbar.
+
 ### Offene Fragen dieses Kurswechsels
 
 - **Was wird aus dem Klick-Knopf?** Wenn O₂ keine Währung mehr ist, ist
-  „O₂ freisetzen" ohne Ziel. Naheliegend: Handarbeit an einer konkreten
-  Anlage, die auch ohne zugewiesenen Bewohner ein wenig liefert.
+  „O₂ freisetzen" ohne Ziel. Auf Aurora ist die Frage seit M12 dringend: die
+  Rakete kostet dort kein O₂ mehr, der Knopf finanziert also nur noch
+  Anlagenkäufe. Naheliegend: Handarbeit an einer konkreten Anlage, die auch
+  ohne zugewiesenen Bewohner ein wenig liefert.
 - **Haben Bewohner Namen?** Bei Dutzenden wäre es möglich und stärkt §1.4
   („Zahlen erzählen eine Geschichte"), kostet aber UI.
 - **Auf Aurora zahlen sich Menschen noch nicht aus.** Gemessen ist der Planet
@@ -1205,5 +1245,10 @@ sechs Sekunden beträgt und damit unter dem Rauschen einer Heuristik liegt.
   direkte Folge der M10-Entscheidung „Maschine gegen Handarbeit" und gehört
   in den Balancing-Pass von M13 — entweder über den Wald als Hand-Hebel oder
   über eine O₂-Anlage mit Plätzen.
+
+  M12 entschärft das, löst es aber nicht: die Kette gibt Händen zum ersten Mal
+  ein Ziel, das nicht Versorgung ist, und macht Bevölkerung damit zur
+  Voraussetzung für die Rakete. Für die *Atmosphäre* bleibt sie ein
+  Nettoverlust.
 - **Der Arbeitskraft-Multiplikator** (`1 + √siedler / 40`) ist bei zwölf
   Bewohnern praktisch wirkungslos und gehört ersetzt.

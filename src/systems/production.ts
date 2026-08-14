@@ -61,7 +61,10 @@ interface Multipliers {
   /** Zusätzlich je nach Gasart — hier wirken Forschung und Techniker. */
   byGas: Record<GasKind, Decimal>
   /** Zusätzlich je nach Ausgabeart. */
-  byKind: Record<'plant' | 'fell' | 'material' | 'supply' | 'housing' | 'storage', Decimal>
+  byKind: Record<
+    'plant' | 'fell' | 'material' | 'supply' | 'housing' | 'storage' | 'craft',
+    Decimal
+  >
   perGenerator: Record<string, Decimal>
 }
 
@@ -95,6 +98,7 @@ function collectMultipliers(): Multipliers {
       // lassen.
       housing: new Decimal(1),
       storage: new Decimal(1),
+      craft: new Decimal(1),
     },
     perGenerator: {},
   }
@@ -335,6 +339,15 @@ export function isAvailable(def: GeneratorDef): boolean {
       // Eine Lagerhalle, wo nichts gefördert wird, wäre eine Zeile ohne
       // Zweck. Das Lager selbst gilt trotzdem für den ganzen Durchlauf.
       return planetDef.materials.length > 0
+    case 'craft':
+      /*
+       * Dieselbe Regel wie beim Abbau, und aus demselben Grund: `materials`
+       * sagt, welche Stoffe ein Planet *führt* — seit M12 schließt das die
+       * ein, die dort erst entstehen. Am Ausgang festzumachen und nicht am
+       * Eingang ist die richtige Richtung: sonst stünde auf jedem Planeten
+       * mit Erz auch eine Presse, ohne dass es dort je Metallplatten gäbe.
+       */
+      return planetDef.materials.includes(out.material)
   }
 }
 

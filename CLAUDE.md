@@ -26,6 +26,19 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M12 ist fertig: **Verarbeitung ist eine zweite Sorte Stillstand.** Eine Anlage
+mit `output.kind === 'craft'` verbraucht Material und liefert anderes — sie
+steht nicht nur still, wenn niemand daran arbeitet, sondern auch ohne
+Nachschub. Beides gehört benannt, nicht als kleinere Zahl gezeigt. Die Logik
+sitzt in systems/crafting.ts und läuft als eigenes System **hinter**
+`produktion`, damit die Kette im selben Tick durchläuft. Die Rakete von Aurora
+kostet seit M12 **null O₂** und 400 Metallplatten.
+
+> **Volles Ausgangslager heißt stocken, nicht fressen.** Beide Grenzen —
+> Eingang im Lager und Platz für den Ausgang — müssen *vor* dem Abbuchen
+> gerechnet werden. Andersherum verschwindet Eisen in einer Presse, deren
+> Platten ohnehin verfallen. Gemessen: 1,33 Eisen pro fünf Sekunden ins Nichts.
+
 M11 ist fertig: **Bezahlen legt eine Baustelle an, keine Anlage.** Wer eine
 Anlage direkt in `planet.generators` schreibt, hebelt den Meilenstein aus —
 der Weg führt über `orderGenerator()` in systems/construction.ts, und fertig
@@ -144,7 +157,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 77 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 86 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -154,7 +167,10 @@ Vollständigkeit der Serialisierung, Regler-Verhalten des Ventils, Sabotage der
 Anoxen, Achievement-Boni, Ton, die Trennung Maschine/Handarbeit, der Abriss
 als Weg zurück — und seit M11, dass eine Bestellung *nicht* sofort dasteht,
 dass Bestelltes den Preis mitzieht, dass ein Abbruch exakt erstattet und dass
-das Lager wirklich überläuft statt still weiterzuwachsen.
+das Lager wirklich überläuft statt still weiterzuwachsen. Seit M12 zusätzlich,
+dass eine Verarbeitung ohne Eingang nichts liefert, dass das Rezeptverhältnis
+exakt stimmt, dass ein volles Ausgangslager keinen Eingang mehr frisst und
+dass die Kette im selben Tick bis zur letzten Stufe durchläuft.
 
 Der Test sichert den Zustand vorher und stellt ihn danach wieder her — und
 sperrt seit M11 zusätzlich das Speichern, solange er läuft. Vorher schrieb

@@ -17,9 +17,49 @@ export interface MaterialDef {
   description: string
   /** Kurzzeichen für enge Anzeigen. */
   short: string
+  /**
+   * Einzahl, falls `name` ein Plural ist.
+   *
+   * Nur die Metallplatten brauchen das — alle übrigen Materialien sind
+   * Stoffnamen und stehen im Singular. „1 Metallplatten" im Rezept war der
+   * einzige Grammatikfehler in der Oberfläche, und ein Feld ist ehrlicher als
+   * eine Regel, die dem Deutschen die Endung abschneidet.
+   */
+  singular?: string
 }
 
+/* --- Die Eisenkette (M12, §17) --------------------------------------------
+   Die ersten Materialien, die **nicht** aus dem Boden kommen. Erz wird
+   gefördert, alles danach entsteht in einer Anlage aus dem vorherigen Glied:
+
+     Erz ──Schmelze──► Eisen ──Presse──► Metallplatten ──► Rakete
+
+   Damit bekommt das Lager seine eigentliche Aufgabe: es ist nicht mehr nur
+   ein Zähler, sondern der Puffer *zwischen* zwei Stufen. Wer die Presse
+   schneller besetzt als die Schmelze, sieht Eisen leerlaufen; wer sie gar
+   nicht besetzt, sieht Eisen an die Lagergrenze stoßen.
+--------------------------------------------------------------------------- */
+
 export const MATERIALS: readonly MaterialDef[] = [
+  {
+    id: 'erz',
+    name: 'Eisenerz',
+    description: 'Rostroter Bruch aus dem Tagebau. In dieser Form nutzlos — aber alles beginnt damit.',
+    short: 'Er',
+  },
+  {
+    id: 'eisen',
+    name: 'Eisen',
+    description: 'Aus dem Ofen, noch warm. Der erste Stoff auf Aurora, den niemand mitgebracht hat.',
+    short: 'Fe',
+  },
+  {
+    id: 'platten',
+    name: 'Metallplatten',
+    description: 'Gewalzt, geschnitten, gestapelt. Woraus eine Rakete tatsächlich besteht.',
+    short: 'Pl',
+    singular: 'Metallplatte',
+  },
   {
     id: 'holz',
     name: 'Holz',

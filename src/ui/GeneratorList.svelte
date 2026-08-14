@@ -10,6 +10,7 @@
     maxAffordable,
   } from '../systems/production'
   import { buildRate, orderGenerator } from '../systems/construction'
+  import { craftBlocker, effectiveCraftRate } from '../systems/crafting'
   import { generatorCount, pendingUnits, planet } from '../state/planet.svelte'
   import { canAffordMaterials } from '../state/run.svelte'
   import { session, type BuyAmount } from '../state/session.svelte'
@@ -29,6 +30,7 @@
     { key: 'plant', title: 'Wald', hint: 'Bäume atmen für dich' },
     { key: 'fell', title: 'Holzernte', hint: 'kostet Atmosphäre' },
     { key: 'material', title: 'Abbau', hint: 'füllt das globale Lager' },
+    { key: 'craft', title: 'Verarbeitung', hint: 'braucht Nachschub von der Stufe davor' },
     { key: 'housing', title: 'Wohnraum', hint: 'ohne Betten kommt niemand' },
     { key: 'storage', title: 'Lager', hint: 'hebt die Grenze des Regals' },
   ]
@@ -45,6 +47,17 @@
     const rate = buildRate()
     if (rate <= 0) return 'Bauzeit unbestimmt'
     return `${formatTime((def.buildWork * Math.max(1, amount)) / rate)} Bauzeit`
+  }
+
+  /** „2 Eisenerz → 1 Eisen" — das Rezept einer Verarbeitungsanlage (M12). */
+  function recipeLabel(def: GeneratorDef): string {
+    if (def.output.kind !== 'craft') return ''
+    const ein = Object.entries(def.output.input)
+      .map(([id, per]) => `${formatInt(per)} ${findMaterial(id)?.name ?? id}`)
+      .join(' + ')
+    // Der Ausgang ist immer genau eins, also die Einzahl.
+    const m = findMaterial(def.output.material)
+    return `${ein} → 1 ${m?.singular ?? m?.name ?? def.output.material}`
   }
 
   /** „40 Stein, 25 Holz" — für die Kaufschaltfläche. */
@@ -116,6 +129,17 @@
       const name = out.supply === 'food' ? 'Nahrung' : 'Wasser'
       return rate ? formatRate(rate, name) : `${format(def.baseRate)} ${name}/s pro Stück`
     }
+    if (out.kind === 'craft') {
+      /*
+       * Bewusst die *wirksame* Rate, nicht die theoretische: eine Presse ohne
+       * Eisen zeigt sonst fröhlich 0,36 Platten/s an, während nichts
+       * passiert. Der Grund dafür steht in der Zeile darunter (craftBlocker).
+       */
+      const name = findMaterial(out.material)?.name ?? out.material
+      return rate
+        ? formatRate(effectiveCraftRate(def), name)
+        : `${format(def.baseRate)} ${name}/s pro Stück`
+    }
     const name = findMaterial(out.material)?.name ?? out.material
     return rate ? formatRate(rate, name) : `${format(def.baseRate)} ${name}/s pro Stück`
   }
@@ -164,6 +188,16 @@
           </div>
           <p class="desc">{def.description}</p>
           <span class="rate num">{rateLabel(def)}</span>
+          <!-- Das Rezept steht auch ohne gebautes Stück da: es ist die
+               Information, nach der man entscheidet, ob man die Stufe davor
+               überhaupt schon hat. -->
+          {#if def.output.kind === 'craft'}
+            <span class="recipe num">{recipeLabel(def)}</span>
+            {@const stockt = count > 0 ? craftBlocker(def) : null}
+            {#if stockt}
+              <span class="stalled num">steht still — {stockt}</span>
+            {/if}
+          {/if}
         </div>
 
         <!-- Abreißen (§17): das Gegenstück zur automatischen Zuwanderung.
@@ -294,6 +328,20 @@
   .rate {
     font-size: 12px;
     color: var(--text-dim);
+  }
+
+  .recipe {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .stalled {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--warn);
   }
 
   .buy {

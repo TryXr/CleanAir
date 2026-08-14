@@ -19,6 +19,7 @@ import * as atmosphere from './systems/atmosphere'
 import * as events from './systems/events'
 import * as combat from './systems/combat'
 import * as construction from './systems/construction'
+import * as crafting from './systems/crafting'
 import * as forest from './systems/forest'
 import * as labor from './systems/labor'
 import * as storage from './systems/storage'
@@ -31,6 +32,7 @@ import { atmosphereSystem, resetAtmosphereNotices } from './systems/atmosphere'
 import { achievementsSystem } from './systems/achievements'
 import { combatSystem } from './systems/combat'
 import { constructionSystem } from './systems/construction'
+import { craftingSystem } from './systems/crafting'
 import { eventsSystem } from './systems/events'
 import { populationSystem, resetPopulationNotices } from './systems/population'
 import { productionSystem } from './systems/production'
@@ -58,6 +60,9 @@ import { settings } from './state/settings.svelte'
    1. zeit         — Uhren zuerst, alles andere rechnet gegen sie.
    2. ereignisse   — legen ihre Faktoren an, bevor jemand sie liest.
    3. produktion   — Zufluss vor Verbrauch, damit ein Tick nie ins Negative kippt.
+   3b. verarbeitung — direkt danach: die Kette greift auf das zu, was eben
+                     gefördert wurde. Andersherum hinge jede Stufe einen Tick
+                     hinterher, eine dreigliedrige Kette also drei.
    4. bau          — nach der Produktion: eine Anlage, die in diesem Tick
                      fertig wird, liefert erst im nächsten. Andersherum
                      produzierte sie, bevor sie stand.
@@ -76,6 +81,7 @@ registerSystem('zeit', (dt) => {
 
 registerSystem('ereignisse', eventsSystem)
 registerSystem('produktion', productionSystem)
+registerSystem('verarbeitung', craftingSystem)
 registerSystem('bau', constructionSystem)
 registerSystem('bevölkerung', populationSystem)
 registerSystem('atmosphäre', atmosphereSystem)
@@ -194,6 +200,7 @@ if (import.meta.env.DEV) {
       stopPersistence,
       resetPlanet,
       production,
+      crafting,
       atmosphere,
       population,
       prestige,
