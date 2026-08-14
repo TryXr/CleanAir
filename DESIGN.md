@@ -28,6 +28,7 @@
 14. [Meilensteine](#14-meilensteine)
 15. [Offene Fragen](#15-offene-fragen)
 16. [Kurswechsel: Materialien, Planeten, Rakete](#16-kurswechsel-materialien-planeten-rakete)
+17. [Kurswechsel II: Die Kolonie](#17-kurswechsel-ii-die-kolonie)
 
 ---
 
@@ -166,6 +167,11 @@ muss.
 ---
 
 ## 5. Bevölkerung
+
+> **Überarbeitet in [§17](#17-kurswechsel-ii-die-kolonie).** Bevölkerung ist
+> nicht länger ein Multiplikator mit Atemkosten, sondern die Arbeitskraft, ohne
+> die nichts läuft. Sie tauchen auch nicht mehr ab einem O₂-Wert auf: auf
+> Aurora landet man mit zehn Leuten und Rationen.
 
 Sobald die Atmosphäre atembar ist, siedeln Menschen. Bevölkerung ist die
 zentrale **persistente** Ressource — sie überlebt jeden Planetenwechsel.
@@ -993,3 +999,109 @@ Planet unabschließbar.
 - **Der Reset ist nicht an einen abgeschlossenen Planeten gebunden.** Er wird
   frei, sobald er mindestens einen Kern abwirft — wann es zäh genug ist,
   entscheidet der Spieler.
+
+---
+
+## 17. Kurswechsel II: Die Kolonie
+
+Entschieden nach M9. **Diese Sektion hat Vorrang vor §5, §13 und §16**, wo
+sie ihnen widerspricht.
+
+Der Auslöser: Bevölkerung ist bisher ein Multiplikator mit Atemkosten. Sie
+soll die **zentrale** Rolle spielen — Menschen, die bauen, arbeiten und
+versorgt werden wollen, nicht eine Zahl, die eine andere Zahl größer macht.
+Vorbild ist Kittens Game: nichts läuft von selbst, alles läuft durch Hände.
+
+### Vier Entscheidungen
+
+**1. O₂ ist keine Währung mehr.** Es ist nur noch der Wert, den man hochbringt
+— das Ziel, nicht das Zahlungsmittel. Bezahlt wird mit Material und
+Arbeitskraft. „Du kannst eine Rakete nicht aus O₂ bauen" gilt für jedes
+Gebäude, nicht nur für die Rakete.
+
+**2. Bevölkerung in Dutzenden, nicht Zehntausenden.** Einzelne Zuweisung
+funktioniert nur, wenn der einzelne Mensch zählt. Vestas 24 000 und Nimbus'
+60 000 fallen um ein bis drei Größenordnungen.
+
+**3. Versorgung ist ein Regler auf die Arbeitskraft, kein Todesurteil.**
+
+```
+sättigung 1,0  →  volle Arbeitsleistung
+sättigung 0,5  →  halbe Arbeitsleistung
+sättigung 0,0  →  niemand arbeitet — aber niemand stirbt
+```
+
+Das ist der elegantere Weg als eine Hungertod-Mechanik: Der Druck ist eine
+Kurve statt einer Klippe, und **offline verliert man automatisch nur
+Produktion, nie Menschen**. Leitlinie §1.3 ist damit ohne Sonderregel im Code
+erfüllt statt durch eine Ausnahme. Die bisherige `STARVE_RATE` in
+population.ts entfällt ersatzlos.
+
+**4. Erst Aurora, dann der Rest.** Aurora wird die Blaupause. Vesta bis
+Nimbus laufen vorerst nach dem alten Modell weiter und werden in M13
+nachgezogen. Zwischenzeitlich ist das Spiel inkonsistent, aber jederzeit
+spielbar — das ist der Preis dafür, das Modell klein zu erproben.
+
+### Aurora wird der Mars
+
+Kein leerer Fels mehr, sondern eine Landung: **zehn Menschen, endliche Wasser-
+und Essensrationen**, und die Aufgabe, vor dem Aufbrauchen eigene Produktion
+zu haben. Aus dem Klickspiel wird ein Überlebensproblem mit klarem ersten
+Ziel. Mit genug Terraforming wird daraus eine zweite Erde.
+
+Beim Abflug nimmt die Rakete **einen Teil der Bevölkerung mit** — der Rest
+bleibt als Kolonie. Damit ist die Rakete auch eine Entscheidung darüber, wo
+Arbeitskraft künftig steht.
+
+### Das neue Modell
+
+| Begriff | Bedeutung |
+|---|---|
+| **Bewohner** | Zählbar, zuweisbar, versorgt oder nicht. Ohne Zuweisung untätig. |
+| **Arbeitsplatz** | Ein Gebäude hat n Plätze. Unbesetzt produziert es **nichts**. |
+| **Rezept** | Ein Verarbeitungsgebäude verbraucht Eingang und liefert Ausgang. |
+| **Bauplatz** | Ein Gebäude entsteht nicht sofort: es braucht Material *und* einen zugewiesenen Bauarbeiter *und* Zeit. |
+| **Lager** | Endlich. Lagerhallen heben die Grenze — ohne sie verfällt Überschuss. |
+
+Die Kette bis zur Rakete ist beispielhaft:
+
+```
+Eisenerz  ──Mine──►  Erz  ──Schmelze──►  Eisen  ──Presse──►  Metallplatten  ──►  Rakete
+             (Arbeiter)      (Arbeiter)         (Arbeiter)
+```
+
+Jeder Pfeil braucht Hände. Ohne zugewiesene Bewohner steht die ganze Kette.
+
+### Meilensteine
+
+| | Inhalt | Warum diese Reihenfolge |
+|---|---|---|
+| **M10** | Aurora startet mit 10 Bewohnern und endlichen Rationen. Berufe *produzieren* statt zu multiplizieren. Sättigung regelt die Arbeitsleistung. | Kleinstmöglicher vollständiger Loop, an dem sich das Modell beweisen muss |
+| **M11** | Bauen kostet Hände und Zeit: Bauplatz, Bauarbeiter, Fertigstellung. Lagerhallen mit echter Kapazitätsgrenze, Wohnhäuser. | Braucht den Arbeitskraft-Begriff aus M10 |
+| **M12** | Verarbeitungsketten mit Zwischengütern und Rezepten. Rakete aus Metallplatten statt aus O₂. | Braucht Gebäude und Lager aus M11 |
+| **M13** | Aurora als Mars zu Ende, dann Vesta bis Nimbus auf die neue Wirtschaft umstellen und vollständig neu balancieren. | Aufräumen, wenn das Modell steht |
+
+### Was dabei zerbricht
+
+Ehrlich benannt, damit es niemanden überrascht:
+
+- **Das Balancing von M4 bis M8 ist danach Makulatur.** Jede Zahl war für
+  „O₂ ist Währung" simuliert.
+- **Ein Teil der 44 Selbsttests** prüft Regeln, die es dann nicht mehr gibt.
+- **Der Save bricht mehrfach** — je Meilenstein mindestens eine Migration.
+- Der Arbeitskraft-Multiplikator (`1 + √siedler / 40`) ist bei 50 Bewohnern
+  sinnlos und wird ersetzt.
+
+### Offene Fragen dieses Kurswechsels
+
+- **Was wird aus dem Klick-Knopf?** Wenn O₂ keine Währung mehr ist, ist
+  „O₂ freisetzen" ohne Ziel. Naheliegend: Handarbeit an einer konkreten
+  Anlage, die auch ohne zugewiesenen Bewohner ein wenig liefert.
+- **Wie entstehen neue Bewohner?** Vermutlich Wohnraum plus
+  Nahrungsüberschuss — Zuwanderung passt nicht mehr zu einer Landung mit
+  zehn Leuten.
+- **Haben Bewohner Namen?** Bei Dutzenden wäre es möglich und stärkt §1.4
+  („Zahlen erzählen eine Geschichte"), kostet aber UI.
+- **Was wird aus den bestehenden Berufen** (Förster, Bergmann, Techniker)?
+  Sie sind heute Bonusgeber und müssten zu Arbeitsplätzen an konkreten
+  Gebäuden werden.

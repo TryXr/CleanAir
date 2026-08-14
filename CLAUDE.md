@@ -17,6 +17,14 @@ synthetisierte Ton.
 
 **Achtung: DESIGN.md §16 ist ein Kurswechsel und hat Vorrang vor §6 und §11.**
 
+**Achtung: DESIGN.md §17 ist der nächste Kurswechsel und hat Vorrang vor §5,
+§13 und §16.** Ab M10 ist O₂ **keine Währung mehr**, sondern nur noch der
+Wert, den man hochbringt — bezahlt wird mit Material und Arbeitskraft.
+Bevölkerung zählt in Dutzenden statt Zehntausenden, Berufe *produzieren*
+statt zu multiplizieren, und Versorgung regelt die Arbeitsleistung, statt
+Menschen sterben zu lassen. Vor jeder Arbeit an Kosten, Bevölkerung oder
+Berufen dort nachlesen.
+
 **Boni gehören in eine Sammelstelle, nie in die Formel.** Es gibt inzwischen
 fünf Quellen — Meta-Baum, Forschung, Berufe, Ereignisse, Achievements. Jede
 hat ihr eigenes `*Effects()`-Modul, und `collectMultipliers()` in
