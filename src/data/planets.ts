@@ -153,7 +153,19 @@ export const AURORA: PlanetDef = {
    * M7 mit der Planeten-Identität.
    */
   materials: [],
-  forestCapacity: 0,
+  /**
+   * Aurora bekommt den Wald — aber nur die *halbe* Kette.
+   *
+   * Bäume pflanzen ist hier reiner Gewinn: sie atmen für dich, es gibt nichts
+   * abzuwägen. Das Sägewerk erscheint erst dort, wo Holz überhaupt ein
+   * Rohstoff ist (siehe isAvailable in production.ts) — also auf Vesta, und
+   * erst dort wird aus dem Wald eine Entscheidung. So bleibt §11 gewahrt:
+   * ein neuer Gedanke pro Planet statt zwei auf einmal.
+   *
+   * Klein gehalten, damit Aurora einen zweiten Akt bekommt und nicht ein
+   * anderes Spiel wird.
+   */
+  forestCapacity: 2500,
 
   /** Nackter Fels, kaum Himmel. */
   palette: { rock: '#6f757c', sky: '#33495c', accent: '#8b9199' },

@@ -45,6 +45,8 @@
   ------------------------------------------------------------------------ */
   const showPopulation = $derived(def.allowsPopulation)
   const showForest = $derived(hasForest())
+  /** Auf Aurora wächst der Wald nur — gefällt wird erst, wo Holz zählt. */
+  const fellt = $derived(def.materials.includes('holz'))
   const showInventory = $derived(def.materials.length > 0 || hasAnyMaterial())
   const showCombat = $derived(def.hasAnoxen)
   const showResearch = $derived(
@@ -73,6 +75,7 @@
     (
       [
         { id: 'planet', label: 'Planet', an: true },
+        { id: 'kolonie', label: 'Kolonie', an: showPopulation },
         { id: 'aufbau', label: 'Aufbau', an: true },
         { id: 'fortschritt', label: 'Fortschritt', an: showResearch || showAchievements || showMetaTree },
         { id: 'imperium', label: 'Imperium', an: showMap || showPrestige },
@@ -140,25 +143,25 @@
         <AtmospherePanel />
       </Panel>
 
-      {#if showPopulation}
-        <Panel title="Bevölkerung" hint="atmet mit">
-          <PopulationPanel />
-        </Panel>
-
-        <Panel title="Versorgung" hint="bleibt auf dem Planeten">
-          <SupplyPanel />
-        </Panel>
-
-        <Panel title="Berufe" hint="verteilte Arbeitskraft">
-          <JobPanel />
-        </Panel>
-      {/if}
-
       {#if showForest}
-        <Panel title="Wald" hint="Holz kostet Atmosphäre">
+        <Panel title="Wald" hint={fellt ? 'Holz kostet Atmosphäre' : 'jeder Baum atmet mit'}>
           <ForestPanel />
         </Panel>
       {/if}
+    {/if}
+
+    {#if session.tab === 'kolonie'}
+      <Panel title="Bevölkerung" hint="atmet mit">
+        <PopulationPanel />
+      </Panel>
+
+      <Panel title="Versorgung" hint="bleibt auf dem Planeten">
+        <SupplyPanel />
+      </Panel>
+
+      <Panel title="Berufe" hint="verteilte Arbeitskraft">
+        <JobPanel />
+      </Panel>
     {/if}
 
     {#if session.tab === 'aufbau'}

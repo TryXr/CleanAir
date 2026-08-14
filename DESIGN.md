@@ -910,6 +910,26 @@ Die Boni laufen wie alles andere über eine zentrale Sammelstelle
 freigeschaltet: Klick ×2, Produktion ×1,69, Baukosten ×0,83, Abwehrschaden
 120 → 165,6.
 
+### Der Wald wird in zwei Hälften eingeführt
+
+Aurora war zu dünn: 22 Minuten Klicken und drei Generatoren. Es bekommt
+deshalb den Wald — aber nur die *halbe* Kette.
+
+| | Aurora | Vesta |
+|---|---|---|
+| Bäume pflanzen | ✓ | ✓ |
+| Bäume fällen | — | ✓ |
+| Was der Wald ist | reiner Gewinn | eine Abwägung |
+
+Damit bleibt §11 gewahrt: Aurora lernt „Bäume atmen für dich", Vesta lernt
+„Bauholz kostet Atmosphäre". Zwei Gedanken, zwei Planeten. Technisch hängt
+das Sägewerk daran, ob der Planet Holz überhaupt als Rohstoff führt — es ist
+also eine Datenaussage, keine Sonderregel im Code.
+
+Gemessen: Aurora ohne Wald 22,0 min, mit Wald 19,3 min bei 15,5 % Waldanteil
+an der Produktion. Beides im Zielfenster von §13, und der Wald ist ein
+Anreiz statt einer Pflicht.
+
 ### Reiter statt einer endlosen Spalte (M9)
 
 Nach M8 standen auf einem ausgebauten Planeten **vierzehn gleich gewichtete

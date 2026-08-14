@@ -297,8 +297,12 @@ export function isAvailable(def: GeneratorDef): boolean {
     case 'material':
       return planetDef.materials.includes(out.material)
     case 'plant':
-    case 'fell':
       return planetDef.forestCapacity > 0
+    case 'fell':
+      // Fällen setzt voraus, dass Holz hier überhaupt ein Rohstoff ist.
+      // Auf Aurora wächst der Wald, aber niemand schlägt ihn — dort ist er
+      // reiner Gewinn, und die Abwägung lernt man erst auf Vesta (§11).
+      return planetDef.forestCapacity > 0 && planetDef.materials.includes('holz')
     case 'supply':
     case 'housing':
       // Versorgung und Wohnraum gibt es nur, wo überhaupt jemand wohnt.

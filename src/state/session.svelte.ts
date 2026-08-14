@@ -19,4 +19,4 @@ export const session = $state({
   tab: 'planet' as TabId,
 })
 
-export type TabId = 'planet' | 'aufbau' | 'fortschritt' | 'imperium' | 'system'
+export type TabId = 'planet' | 'kolonie' | 'aufbau' | 'fortschritt' | 'imperium' | 'system'

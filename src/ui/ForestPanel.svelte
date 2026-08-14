@@ -2,7 +2,7 @@
   import { format, formatInt, formatRate } from '../engine/format'
   import { WOOD_PER_TREE, forestCapacity, forestFill, forestO2Rate, o2PerTree } from '../systems/forest'
   import { fellingRate, plantingRate } from '../systems/production'
-  import { planet } from '../state/planet.svelte'
+  import { currentPlanetDef, planet } from '../state/planet.svelte'
 
   const planting = $derived(plantingRate())
   const felling = $derived(fellingRate())
@@ -14,6 +14,8 @@
   const wood = $derived(planet.trees.gt(0) ? felling.mul(WOOD_PER_TREE) : felling.mul(0))
   const shrinking = $derived(net.lt(0))
   const full = $derived(planet.trees.gte(capacity) && capacity.gt(0))
+  /** Kennt dieser Planet Holz? Sonst gibt es hier auch kein Sägewerk. */
+  const fellbar = $derived(currentPlanetDef().materials.includes('holz'))
 </script>
 
 <div class="head">
@@ -59,6 +61,13 @@
   <p class="note">
     Wald und Sägewerk im Gleichgewicht. Holz kostet hier dauerhaft Atmosphäre — mehr Baumschulen
     verschieben die Rechnung.
+  </p>
+{:else if !fellbar}
+  <!-- Auf Aurora gibt es kein Sägewerk. Ein Hinweis darauf wäre ein
+       Versprechen, das dieser Planet nicht einlöst. -->
+  <p class="note">
+    Jeder Baum atmet für dich mit. Hier ist der Wald reiner Gewinn — anderswo wird er auch Baustoff
+    sein.
   </p>
 {:else}
   <p class="note">
