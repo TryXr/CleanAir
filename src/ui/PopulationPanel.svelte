@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { format, formatInt, formatRate } from '../engine/format'
+  import { formatInt, formatRate } from '../engine/format'
   import {
     habitability,
     isSuffocating,
@@ -7,14 +7,15 @@
     o2ConsumptionRate,
     populationCapacity,
   } from '../systems/population'
-  import { workforceMultiplier } from '../systems/production'
+  import { totalStaff, unassigned } from '../systems/labor'
   import { currentPlanetDef, planet } from '../state/planet.svelte'
 
   const def = $derived(currentPlanetDef())
   const capacity = $derived(populationCapacity())
   const consumption = $derived(o2ConsumptionRate())
   const net = $derived(netO2Rate())
-  const workforce = $derived(workforceMultiplier())
+  const zugewiesen = $derived(totalStaff())
+  const frei = $derived(unassigned())
   const suffocating = $derived(isSuffocating())
   const fill = $derived(capacity.lte(0) ? 0 : Math.min(1, planet.settlers.div(capacity).toNumber()))
 </script>
@@ -37,9 +38,16 @@
   </div>
 
   <dl class="stats">
+    <!-- Bis M12 stand hier ein globaler Multiplikator. Seit §17 wirkt
+         Arbeitskraft über Plätze — also zählt, wer wo steht, und vor allem,
+         wer gerade nirgends steht. -->
     <div>
-      <dt>Arbeitskraft</dt>
-      <dd class="num accent">×{format(workforce)}</dd>
+      <dt>Zugewiesen</dt>
+      <dd class="num accent">{formatInt(zugewiesen)}</dd>
+    </div>
+    <div>
+      <dt>Ohne Aufgabe</dt>
+      <dd class="num" class:accent={frei.gt(0)}>{formatInt(frei)}</dd>
     </div>
     <div>
       <dt>O₂-Verbrauch</dt>

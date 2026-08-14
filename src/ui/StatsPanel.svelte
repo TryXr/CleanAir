@@ -2,7 +2,8 @@
   import { format, formatInt, formatRate, formatTime } from '../engine/format'
   import { inertPercent, totalAtmosphere } from '../systems/atmosphere'
   import { netO2Rate, o2ConsumptionRate, researchRate } from '../systems/population'
-  import { currentN2Rate, currentO2Rate, workforceMultiplier } from '../systems/production'
+  import { currentN2Rate, currentO2Rate } from '../systems/production'
+  import { totalStaff } from '../systems/labor'
   import { pendingCores } from '../systems/prestige'
   import { meta } from '../state/meta.svelte'
   import { planet, usesNitrogen, usesPollution } from '../state/planet.svelte'
@@ -33,7 +34,12 @@
         {netO2Rate().lt(0) ? '' : '+'}{formatRate(netO2Rate())}
       </dd>
     </div>
-    <div><dt>Arbeitskraft</dt><dd class="num accent">×{format(workforceMultiplier())}</dd></div>
+    <!-- Kein globaler Multiplikator mehr (M13): Arbeitskraft ist, wer an
+         einer Anlage steht. -->
+    <div>
+      <dt>Zugewiesen</dt>
+      <dd class="num accent">{formatInt(totalStaff())} von {formatInt(planet.settlers)}</dd>
+    </div>
     <div><dt>Forschung</dt><dd class="num">+{formatRate(researchRate())}</dd></div>
   {/if}
   <div><dt>Gesamtatmosphäre</dt><dd class="num">{format(totalAtmosphere())}</dd></div>

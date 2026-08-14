@@ -256,15 +256,22 @@ export const VESTA: PlanetDef = {
     'Vesta ist größer und kälter als Aurora — und diesmal kommen Menschen mit. Sie atmen, was du produzierst.',
 
   /**
-   * Simuliert, nicht geschätzt (CLAUDE.md „Balancing prüfen statt schätzen").
+   * **Um mehr als das Dreitausendfache gefallen** — und das ist kein
+   * Vertipper, sondern Rechnung.
    *
-   * Vesta ist rund achtmal so groß wie Aurora: der Puffer will mitgefüllt
-   * werden, und das native Inertgas muss auf ein paar Prozent verdünnt sein,
-   * bevor O₂ und N₂ überhaupt gleichzeitig ins Fenster passen. Gemessene
-   * Abschlusszeiten liegen bei 34–40 Minuten je nach Spielstil —
-   * Zielfenster laut DESIGN.md §13 sind 30–45 min aktiv.
+   * Ein Planet mit N₂-Fenster braucht Gas im Umfang von rund **49×** seiner
+   * Grundatmosphäre: O₂ soll 19–23 % stellen, N₂ 74–80 %, für das native
+   * Inertgas bleiben also ein bis zwei Prozent. Aurora ohne Puffer braucht
+   * dagegen nur 0,24× — es hat kein Fenster nach oben und muss nichts
+   * gleichzeitig treffen.
+   *
+   * Der alte Wert stammt aus dem Modell mit 24 000 Siedlern und dem globalen
+   * Arbeitskraft-Multiplikator. Mit Dutzenden und ohne ihn lag Vesta nach
+   * 180 Minuten bei 7,6 % N₂ von nötigen 74.
+   *
+   * Simuliert: 30 000 → 41,9 min. Zielfenster laut §13 sind 30–45 min.
    */
-  baseAtmosphere: 100000000,
+  baseAtmosphere: 30000,
 
   /** Das klassische Fenster aus §4. */
   o2Window: { min: 19, max: 23 },
@@ -297,23 +304,37 @@ export const VESTA: PlanetDef = {
 
   growthFactor: 1,
   allowsPopulation: true,
+
+  /*
+   * Ab M13 rechnet auch Vesta in Dutzenden (§17, Entscheidung 2). Die alten
+   * 24 000 stammen aus der Zeit, in der Bevölkerung ein Multiplikator war —
+   * einzeln zuweisen lässt sich nur, was man zählen kann.
+   *
+   * Der Pro-Kopf-Verbrauch ist jetzt überall derselbe wie auf Aurora. Zwei
+   * Sätze Zahlen für dieselbe Sache waren die Übergangslösung aus §17
+   * („erst Aurora, dann der Rest") und fallen hiermit weg.
+   */
   startSettlers: 0,
-  foodPerCapita: 0.0012,
-  waterPerCapita: 0.0016,
-  o2PerCapita: 1.2,
+  foodPerCapita: 0.0104,
+  waterPerCapita: 0.0139,
+  o2PerCapita: 0.03,
   startFood: 0,
   startWater: 0,
-  baseHousing: 0,
   /**
-   * Früh genug, dass die Siedler den Aufbau noch mitprägen.
+   * Die Kapseln der Rakete, mit der man ankommt.
    *
-   * Seit M5 begrenzt Wohnraum das Wachstum ohnehin, also darf die Luft
-   * früher freigeben: mit 1,5 landeten die ersten erst nach 21 Minuten und
-   * Vesta lief auf 46 min hinaus, mit 0,5 sind es 18 Minuten und 37,8 min
-   * gesamt.
+   * Ohne sie ist die Ankunft ein Flaschenhals: Wohnraum will gebaut werden,
+   * und ohne Bewohner bauen nur die Bauautomaten aus M11. Gemessen standen
+   * nach 30 Minuten vier Module und vier Leute.
+   */
+  baseHousing: 8,
+  /**
+   * Früh genug, dass die Siedler den Aufbau mitprägen. Seit §17 entscheidet
+   * die Luft ohnehin nur über den *Nachwuchs*, nicht übers Überleben — die
+   * Kolonie lebt in Kapseln.
    */
   settleAt: 0.5,
-  popCapacity: 24000,
+  popCapacity: 120,
 }
 
 /* --- Planeten-Identität (DESIGN.md §16, M7) --------------------------------
@@ -334,8 +355,17 @@ export const PYRA: PlanetDef = {
   intro:
     'Pyra glüht. Der Boden ist frisch erstarrt, die Luft schmeckt nach Schwefel — und alles, was du hier baust, macht sie schlechter.',
 
-  /** Das Vierfache von Vesta. Simuliert: 49,6 min mit vollem Lager im Rücken. */
-  baseAtmosphere: 400000000,
+  /**
+   * Simuliert mit vollem Lager im Rücken: 70 000 → 82,7 min. Zielfenster
+   * laut §13 sind 1–2 h.
+   *
+   * „Mit vollem Lager" ist hier keine Bequemlichkeit, sondern Voraussetzung:
+   * Pyras Puffer hängt am Nitrat-Cracker, der Cracker an Titan, und Titan
+   * gibt es nur auf Vesta (§16). Ohne Fracht blieb der Planet in der
+   * Simulation bei 75,7 % N₂ stehen und war nicht abzuschließen — genau der
+   * Zwang zum Rückflug, den §16 gemeint hat.
+   */
+  baseAtmosphere: 70000,
   o2Window: { min: 19, max: 23 },
   n2Window: { min: 74, max: 80 },
   maxPollution: 1,
@@ -366,14 +396,15 @@ export const PYRA: PlanetDef = {
   growthFactor: 0.8,
   allowsPopulation: true,
   startSettlers: 0,
-  foodPerCapita: 0.0012,
-  waterPerCapita: 0.0016,
-  o2PerCapita: 1.2,
+  // Dutzende statt Zehntausende, Pro-Kopf-Werte wie überall seit M13.
+  foodPerCapita: 0.0104,
+  waterPerCapita: 0.0139,
+  o2PerCapita: 0.03,
   startFood: 0,
   startWater: 0,
-  baseHousing: 0,
+  baseHousing: 8,
   settleAt: 2,
-  popCapacity: 30000,
+  popCapacity: 180,
 }
 
 export const KRYO: PlanetDef = {
@@ -382,8 +413,17 @@ export const KRYO: PlanetDef = {
   intro:
     'Kryo ist still und weiß. Wasser gibt es im Überfluss, aber alles hier braucht seine Zeit — auch die Menschen.',
 
-  /** Zwölffaches Vesta. Simuliert: 65,3 min. */
-  baseAtmosphere: 1200000000,
+  /**
+   * Das Fünfzigfache von Vesta. Simuliert: 1,5 M → 138 min. Zielfenster laut
+   * §13 sind 2–4 h.
+   *
+   * Kryo verträgt einen so viel größeren Maßstab als Pyra, weil sein
+   * Hand-Hebel (Nitrateis) direkt auf der harten Seite sitzt und die Kolonie
+   * mit 240 Bewohnern die größte vor Nimbus ist. Der Widerstand des Planeten
+   * bleibt trotzdem die Zeit: `growthFactor` 0,45 heißt, dass diese 240
+   * Menschen sehr lange brauchen, bis sie da sind.
+   */
+  baseAtmosphere: 1500000,
   o2Window: { min: 19, max: 23 },
   n2Window: { min: 74, max: 80 },
   maxPollution: 1,
@@ -408,15 +448,15 @@ export const KRYO: PlanetDef = {
   growthFactor: 0.45,
   allowsPopulation: true,
   startSettlers: 0,
-  foodPerCapita: 0.0012,
-  waterPerCapita: 0.0016,
-  o2PerCapita: 1.2,
+  foodPerCapita: 0.0104,
+  waterPerCapita: 0.0139,
+  o2PerCapita: 0.03,
   startFood: 0,
   startWater: 0,
-  baseHousing: 0,
+  baseHousing: 8,
   /** In der Kälte wird es erst spät wohnlich. */
   settleAt: 6,
-  popCapacity: 40000,
+  popCapacity: 240,
 }
 
 export const NIMBUS: PlanetDef = {
@@ -426,24 +466,23 @@ export const NIMBUS: PlanetDef = {
     'Ein Mond im Schatten eines Gasriesen. Stickstoff kostet hier nichts — aber die Atmosphäre, die du füllen sollst, ist gewaltig.',
 
   /**
-   * Zehnmal Vesta, knapp unter Kryo. N₂ ist hier geschenkt, O₂ ist die
-   * Lebensarbeit — das ist die Aufgabe dieses Planeten.
+   * Das Doppelte von Kryo und der größte Maßstab des Durchlaufs. Simuliert:
+   * 3 M → 158 min. Zielfenster laut §13 sind 2–4 h.
    *
-   * **Nicht simulativ belegt.** Anders als bei den übrigen Planeten hat der
-   * Simulant hier keine brauchbare Zahl geliefert: weil der Gasschöpfer den
-   * Puffer fast umsonst füllt, pendelt ein gierig kaufender Bot zwischen
-   * „N₂ überfüllt" und „N₂ abgeblasen, O₂ über dem Fenster" und misst am
-   * Ende sich selbst statt den Planeten. Ein Mensch, der zusieht und
-   * gegensteuert, hat es hier leichter als die Heuristik. Die Zahl stammt
-   * daher aus dem Vergleich mit Kryo (1,2 Mrd. → 65 min) und gehört beim
-   * Spieltest überprüft.
+   * **Jetzt simulativ belegt** — bis M12 stand hier ausdrücklich, dass der
+   * Simulant keine brauchbare Zahl liefert: weil der Gasschöpfer den Puffer
+   * fast umsonst füllt, pendelte ein gierig kaufender Bot zwischen „N₂
+   * überfüllt" und „N₂ abgeblasen, O₂ über dem Fenster" und maß am Ende sich
+   * selbst. Behoben hat das nicht der Planet, sondern der Simulant: er baut
+   * seither bis knapp *über* die Untergrenze des Fensters statt bis an den
+   * oberen Rand. Am Rand pendelt jeder Wert, und der Stabilitäts-Timer setzt
+   * bei jedem Ausschlag zurück.
    *
-   * Vorsicht bei der Intuition: `baseAtmosphere` ist im kleinen Bereich ein
-   * schwacher Regler, oberhalb von etwa einer Milliarde aber ein sehr
-   * steiler — zwischen 1,2 und 6 Mrd. liegt der Unterschied zwischen
-   * „65 Minuten" und „in vier Stunden nicht zu schaffen".
+   * Nimbus behält seine Aufgabe: der Puffer ist geschenkt, der Sauerstoff ist
+   * die Lebensarbeit. Er ist der einzige Planet, dessen Hand-Hebel auf der
+   * O₂-Seite sitzt.
    */
-  baseAtmosphere: 1000000000,
+  baseAtmosphere: 3000000,
   o2Window: { min: 19, max: 23 },
   n2Window: { min: 74, max: 80 },
   maxPollution: 1,
@@ -466,14 +505,15 @@ export const NIMBUS: PlanetDef = {
   growthFactor: 0.9,
   allowsPopulation: true,
   startSettlers: 0,
-  foodPerCapita: 0.0012,
-  waterPerCapita: 0.0016,
-  o2PerCapita: 1.2,
+  foodPerCapita: 0.0104,
+  waterPerCapita: 0.0139,
+  o2PerCapita: 0.03,
   startFood: 0,
   startWater: 0,
-  baseHousing: 0,
+  baseHousing: 8,
   settleAt: 3,
-  popCapacity: 60000,
+  /** Die größte Kolonie des Durchlaufs — und sie wird gebraucht. */
+  popCapacity: 360,
 }
 
 /** Reihenfolge = Fortschritt. Die Rakete eines Planeten öffnet den nächsten. */

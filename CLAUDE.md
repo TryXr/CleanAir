@@ -26,14 +26,27 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
-M13 läuft, erste Hälfte fertig: **Hände wirken jetzt auf die Atmosphäre.**
-Das Flechtenfeld ist eine O₂-Anlage mit Plätzen und nur auf Aurora. Es hebt
-die M10-Trennung „Maschine gegen Handarbeit" nicht auf — die Apparate laufen
-weiter von selbst —, sondern stellt eine Anlage daneben, die *nur* durch
-Hände läuft. Seine Kostenkurve ist bewusst flach (1,08): die knappe Ressource
-soll die gemeinte sein, also Hände und nicht O₂. Offen ist die zweite Hälfte,
-Vesta bis Nimbus auf die neue Wirtschaft umzustellen — **erst danach** darf
-`workforceMultiplier()` fallen, sonst brechen die alten Planeten weg.
+M13 ist fertig: **Jeder Planet hat einen Hand-Hebel an seiner eigenen
+Engstelle.** Eine O₂-Anlage mit Plätzen hebt die M10-Trennung „Maschine gegen
+Handarbeit" nicht auf — die Apparate laufen weiter von selbst —, sondern
+stellt eine Anlage daneben, die *nur* durch Hände läuft. Kostenkurven bewusst
+flach (1,08): die knappe Ressource soll die gemeinte sein, also Hände und
+nicht O₂.
+
+> **Der Hebel gehört an die Engstelle, nicht überall an dieselbe Stelle.**
+> Zweimal falsch gemacht: Vesta und Kryo bekamen zuerst O₂-Hebel und wurden
+> dadurch *unlösbar*. Auf einem Planeten mit Puffer ist das N₂-Fenster
+> (74–80 %) viermal so groß wie das O₂-Fenster (19–23 %), und **zu viel O₂
+> lässt sich nicht abbauen, nur verdünnen** (§4). N₂ ist damit fast überall
+> die harte Seite *und* das einzige Gegenmittel. Nur Nimbus, wo der
+> Gasschöpfer den Puffer verschenkt, hat seinen Hebel auf der O₂-Seite — und
+> dort musste die Rate von 1600 auf 600, weil ein O₂-Hebel sich überschießen
+> kann und ein N₂-Hebel nicht.
+
+`workforceMultiplier()` ist damit ersatzlos gestrichen: Bevölkerung wirkt über
+Plätze, ein zweiter globaler Bonus auf dieselbe Sache wäre die verstreute
+Rechnung, die weiter unten verboten ist. Bevölkerung zählt jetzt auf **allen**
+Planeten in Dutzenden (120 bis 360), Pro-Kopf-Verbrauch ist überall gleich.
 
 M12 ist fertig: **Verarbeitung ist eine zweite Sorte Stillstand.** Eine Anlage
 mit `output.kind === 'craft'` verbraucht Material und liefert anderes — sie

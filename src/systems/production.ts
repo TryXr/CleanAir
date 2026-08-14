@@ -40,19 +40,20 @@ import { researchEffects } from './research'
 /** Klick-Ertrag vor allen Multiplikatoren. */
 const BASE_CLICK = 1
 
-/**
- * Teiler der Arbeitskraft-Kurve. Wurzelförmig, damit Bevölkerung spürbar
- * hilft, ohne die Produktion zu übernehmen — sie soll ein Verstärker sein,
- * kein Ersatz für Generatoren.
+/*
+ * `workforceMultiplier()` gibt es seit M13 nicht mehr.
+ *
+ * Bis M12 multiplizierte `1 + √siedler / 40` jede Anlage — ein globaler Bonus
+ * allein dafür, dass Menschen dastanden. Unter §17 ist das doppelt falsch:
+ * Bevölkerung wirkt jetzt über **Plätze**, und ein zweiter Bonus auf dieselbe
+ * Sache ist genau die verstreute Rechnung, die CLAUDE.md verbietet.
+ *
+ * Bei einem Dutzend Bewohnern war er ohnehin wirkungslos (Faktor 1,09), bei
+ * Vestas altem Maßstab von 24 000 dagegen ein stiller Faktor 4,9 — er
+ * verfälschte jede Messung am Hand-Hebel vorbei. Ersatzlos gestrichen statt
+ * umgerechnet: wer Arbeitskraft sehen will, sieht sie an der Besetzung der
+ * Anlage (systems/labor.ts).
  */
-const WORKFORCE_SCALE = 40
-
-/** Produktionsbonus durch Siedler: 1 + √siedler / scale. */
-export function workforceMultiplier(): Decimal {
-  if (planet.settlers.lte(0)) return new Decimal(1)
-  const scale = metaEffects().workforce * researchEffects().workforce
-  return planet.settlers.sqrt().div(WORKFORCE_SCALE).mul(scale).add(1)
-}
 
 interface Multipliers {
   click: Decimal
@@ -79,7 +80,6 @@ function collectMultipliers(): Multipliers {
     global: mEffects.globalProduction
       .mul(rEffects.globalProduction)
       .mul(aEffects.globalProduction)
-      .mul(workforceMultiplier())
       .mul(events.production)
       .mul(fireThrottle()),
     byGas: {

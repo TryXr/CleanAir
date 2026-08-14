@@ -1085,7 +1085,7 @@ Jeder Pfeil braucht Hände. Ohne zugewiesene Bewohner steht die ganze Kette.
 | **M10** ✓ | Aurora startet mit 10 Bewohnern und endlichen Rationen. Zuweisung an Anlagen, Sättigung regelt die Arbeitsleistung, Abriss als Weg zurück. | Kleinstmöglicher vollständiger Loop, an dem sich das Modell beweisen muss |
 | **M11** ✓ | Bauen kostet Hände und Zeit: Bauplatz, Bauarbeiter, Fertigstellung. Lagerhallen mit echter Kapazitätsgrenze, Wohnhäuser. | Braucht den Arbeitskraft-Begriff aus M10 |
 | **M12** ✓ | Verarbeitungsketten mit Zwischengütern und Rezepten. Rakete aus Metallplatten statt aus O₂. | Braucht Gebäude und Lager aus M11 |
-| **M13** ½ | Aurora als Mars zu Ende ✓ (Flechtenfeld als Hand-Hebel), dann Vesta bis Nimbus auf die neue Wirtschaft umstellen und vollständig neu balancieren. | Aufräumen, wenn das Modell steht |
+| **M13** ✓ | Aurora als Mars zu Ende (Flechtenfeld), dann Vesta bis Nimbus auf die neue Wirtschaft umgestellt und vollständig neu balanciert. | Aufräumen, wenn das Modell steht |
 
 ### Was dabei zerbricht
 
@@ -1262,6 +1262,61 @@ Gemessen nach der Änderung: 18,6 min ohne Wohnraum, **16,9 min mit** — 1,7 mi
 Vorsprung statt 2,3 min Verlust. Der Vollausbau mit Kolonie, Eisenkette und
 Rakete liegt bei 23,8 min, die Rakete steht bei 20,1 min. Beides im Fenster
 aus §13.
+
+### Entschieden in M13, zweite Hälfte
+
+**Alle Planeten rechnen jetzt in Dutzenden** — Vesta 120, Pyra 180, Kryo 240,
+Nimbus 360, Pro-Kopf-Verbrauch überall wie auf Aurora. Damit fällt die
+Übergangslösung aus §17 („der Verbrauch steht am Planeten, weil die alten noch
+mit Zehntausenden rechnen") ersatzlos weg.
+
+**`workforceMultiplier()` ist gestrichen.** Bevölkerung wirkt über Plätze; ein
+globaler Bonus daneben war ein zweites System für dieselbe Sache.
+
+**Jeder Planet hat einen Hand-Hebel — an seiner eigenen Engstelle:**
+
+| Planet | Hebel | Seite | warum dort |
+|---|---|---|---|
+| Aurora | Flechtenfeld | O₂ | kein Puffer, O₂ ist alles |
+| Vesta | Nitratgrube | N₂ | Vestas Problem ist der Puffer (§16) |
+| Pyra | Aschewäsche | Schadstoffe | die eigene Industrie erstickt einen |
+| Kryo | Nitrateis | N₂ | dieselbe harte Seite wie Vesta |
+| Nimbus | Schwebefarm | O₂ | Gasschöpfer verschenkt den Puffer |
+
+> **Zweimal derselbe Fehler, bevor die Regel klar war.** Vesta und Kryo
+> bekamen zuerst O₂-Hebel — und wurden dadurch *unlösbar*, nicht leichter.
+> Auf einem Planeten mit Puffer ist das N₂-Fenster (74–80 %) viermal so groß
+> wie das O₂-Fenster (19–23 %), und zu viel O₂ lässt sich **nicht abbauen,
+> nur verdünnen** (§4). Wer die O₂-Seite verstärkt, schiebt den Anteil über
+> die Obergrenze, und von dort führt kein Weg zurück: gemessen stand Kryo nach
+> fünf Stunden bei O₂ 23,0 % und N₂ 76,7 % fest. Aus demselben Grund musste
+> Nimbus' Schwebefarm von 1600 auf 600 — ein O₂-Hebel kann sich
+> überschießen, ein N₂-Hebel nicht.
+
+**Der Maßstab fällt drastisch, und das ist Rechnung statt Gefühl.** Ein Planet
+mit N₂-Fenster braucht Gas im Umfang von rund **49× seiner Grundatmosphäre**
+(O₂ 21 % + N₂ 77 % lassen dem Inertgas ein bis zwei Prozent), Aurora ohne
+Fenster nach oben nur 0,24×. Mit Dutzenden statt Zehntausenden und ohne den
+Multiplikator lag Vesta mit dem alten Wert nach 180 Minuten bei 7,6 % N₂ von
+nötigen 74.
+
+| Planet | vorher | nachher | simuliert | Ziel §13 |
+|---|---|---|---|---|
+| Vesta | 100 M | 30 k | 41,9 min | 30–45 min |
+| Pyra | 400 M | 70 k | 82,7 min | 1–2 h |
+| Kryo | 1,2 Mrd. | 1,5 M | ~130 min | 2–4 h |
+| Nimbus | 1 Mrd. | 3 M | ~128 min | 2–4 h |
+
+Nimbus ist damit **erstmals simulativ belegt**. Behoben hat das nicht der
+Planet, sondern der Simulant: er baut seither bis knapp *über* die Untergrenze
+des Fensters statt an den oberen Rand. Am Rand pendelt jeder Wert, und der
+Stabilitäts-Timer setzt bei jedem Ausschlag zurück — was vorher wie ein
+unbalancierbarer Planet aussah, war eine schlechte Heuristik.
+
+Nebenbei bestätigt: **Pyra ist ohne Fracht von Vesta nicht lösbar.** Sein
+Puffer hängt am Cracker, der Cracker an Titan, und Titan gibt es nur auf
+Vesta. Ohne mitgebrachtes Material blieb der Planet bei 75,7 % N₂ stehen —
+genau der Zwang zum Rückflug, den §16 gemeint hat.
 
 ### Offene Fragen dieses Kurswechsels
 

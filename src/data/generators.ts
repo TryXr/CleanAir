@@ -411,6 +411,102 @@ export const GENERATORS: readonly GeneratorDef[] = [
     revealAt: 1500,
   },
 
+  /* --- Hand-Hebel je Planet (M13, §17) ----------------------------------
+     Jeder Planet bekommt eine Anlage, die *nur* durch Hände läuft — sonst
+     bleibt Bevölkerung dort, was sie auf Aurora vor M13 war: ein Verbraucher
+     ohne Gegenwert. Die Apparate laufen daneben unverändert weiter, die
+     M10-Trennung bleibt also unangetastet.
+
+     **Der Hebel sitzt an der Engstelle des Planeten, nicht überall an
+     derselben Stelle.** Das war die Lehre aus zwei Fehlversuchen:
+
+       1. Vesta bekam zuerst einen O₂-Hebel. Gemessen stand die Atmosphäre
+          danach bei 27 % O₂ gegen 49 % N₂ — der Hebel verschärfte genau die
+          Schieflage, die er beheben sollte.
+       2. Kryo bekam denselben O₂-Hebel und blieb bei O₂ 23 % hängen, dem
+          oberen Fensterrand, während N₂ nicht nachkam. Der Planet war nach
+          fünf Stunden nicht abzuschließen.
+
+     Der Grund ist strukturell: auf einem Planeten mit Puffer ist das
+     N₂-Fenster (74–80 %) viermal so groß wie das O₂-Fenster (19–23 %), und
+     überschüssiges O₂ lässt sich **nicht abbauen, nur verdünnen** (§4). N₂
+     ist damit fast überall die harte Seite *und* das einzige Gegenmittel.
+     Ausnahme ist Nimbus, wo der Gasschöpfer den Puffer verschenkt — dort und
+     nur dort ist O₂ die Lebensaufgabe.
+  ---------------------------------------------------------------------- */
+  {
+    id: 'nitratepit',
+    name: 'Nitratgrube',
+    description:
+      'Salpeterkrusten aus dem aufgetauten Boden geklaubt und über dem Feuer ausgetrieben. Stumpfe Arbeit, und ohne sie steht Vesta still.',
+    output: { kind: 'gas', gas: 'n2' },
+    baseCost: 900,
+    /** Flach wie beim Flechtenfeld: die Grenze sollen Hände sein, nicht O₂. */
+    costGrowth: 1.08,
+    baseRate: 300,
+    buildWork: 26,
+    revealAt: 300,
+    workSlots: 3,
+    planets: ['vesta'],
+  },
+  {
+    id: 'ashwash',
+    name: 'Aschewäsche',
+    description:
+      'Becken voll Mineralschlamm, in denen der Flugstaub gebunden wird. Man steht bis zu den Knien darin und rührt.',
+    // Pyras Engstelle ist der eigene Dreck (§16), nicht das Gas.
+    output: { kind: 'gas', gas: 'scrub' },
+    baseCost: 1800,
+    costGrowth: 1.08,
+    baseRate: 0.006,
+    buildWork: 28,
+    revealAt: 900,
+    workSlots: 3,
+    planets: ['pyra'],
+  },
+  {
+    id: 'nitrateice',
+    name: 'Nitrateis',
+    description:
+      'Uraltes Stickstoffeis, Block für Block herausgesägt und in Zelten aufgetaut. Auf Kryo ist Geduld die eigentliche Anlage.',
+    output: { kind: 'gas', gas: 'n2' },
+    baseCost: 1200,
+    costGrowth: 1.08,
+    baseRate: 400,
+    buildWork: 30,
+    revealAt: 600,
+    workSlots: 3,
+    planets: ['kryo'],
+  },
+  {
+    id: 'raftfarm',
+    name: 'Schwebefarm',
+    description:
+      'Algenmatten auf Ballontraversen, die im Aufwind hängen. Jede will vertäut, gewendet und abgeerntet werden.',
+    /*
+     * Der einzige O₂-Hebel unter den vieren — und das ist Nimbus' Identität:
+     * der Gasschöpfer macht den Puffer fast umsonst, also ist hier der
+     * Sauerstoff die Lebensaufgabe (§16).
+     */
+    output: { kind: 'gas', gas: 'o2' },
+    baseCost: 2500,
+    costGrowth: 1.08,
+    /**
+     * Gemessen von 1600 heruntergenommen.
+     *
+     * Ein O₂-Hebel kann sich **überschießen**, ein N₂-Hebel nicht: zu viel
+     * Puffer lässt sich abblasen (§4), zu viel Sauerstoff nicht. Mit 1600
+     * schob eine Kolonie von 360 Leuten den Anteil über die 23-Prozent-Grenze,
+     * und von dort führte kein Weg zurück — der Planet war nach fünf Stunden
+     * nicht abzuschließen. Mit 600 landet Nimbus bei 116 min.
+     */
+    baseRate: 600,
+    buildWork: 35,
+    revealAt: 1500,
+    workSlots: 4,
+    planets: ['nimbus'],
+  },
+
   {
     id: 'vent',
     name: 'Abblasventil',
