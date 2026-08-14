@@ -8,6 +8,7 @@ import { eventEffects } from './eventEffects'
 import { enforceJobLimit } from './jobs'
 import { metaEffects } from './metaEffects'
 import { currentO2Rate } from './production'
+import { achievementEffects } from './achievements'
 import { researchEffects } from './research'
 
 /**
@@ -89,7 +90,10 @@ export function housingCapacity(): Decimal {
   for (const def of GENERATORS) {
     if (def.output.kind === 'housing') beds += generatorCount(def.id) * def.baseRate
   }
-  return new Decimal(beds).mul(researchEffects().popCapacity).mul(metaEffects().popCapacity)
+  return new Decimal(beds)
+    .mul(researchEffects().popCapacity)
+    .mul(metaEffects().popCapacity)
+    .mul(achievementEffects().popCapacity)
 }
 
 /**
@@ -101,7 +105,8 @@ export function housingCapacity(): Decimal {
  */
 export function populationCapacity(): Decimal {
   const def = currentPlanetDef()
-  const factor = metaEffects().popCapacity * researchEffects().popCapacity
+  const factor =
+    metaEffects().popCapacity * researchEffects().popCapacity * achievementEffects().popCapacity
   const byPlanet = new Decimal(def.popCapacity).mul(habitability()).mul(factor)
   return Decimal.min(byPlanet, housingCapacity())
 }
@@ -136,7 +141,10 @@ export function o2ConsumptionRate(): Decimal {
 
 /** Forschung pro Sekunde. */
 export function researchRate(): Decimal {
-  return planet.settlers.mul(RESEARCH_PER_SETTLER).mul(researchEffects().researchYield)
+  return planet.settlers
+    .mul(RESEARCH_PER_SETTLER)
+    .mul(researchEffects().researchYield)
+    .mul(achievementEffects().researchYield)
 }
 
 /** Was netto in der Luft ankommt. Negativ heißt: die Atmosphäre schrumpft. */

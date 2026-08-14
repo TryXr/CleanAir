@@ -9,6 +9,7 @@ import { meta } from '../state/meta.svelte'
 import { currentPlanetDef, generatorCount, planet } from '../state/planet.svelte'
 import { canAffordMaterials, spendMaterials } from '../state/run.svelte'
 import { effectiveO2Window, o2Percent } from './atmosphere'
+import { achievementEffects } from './achievements'
 import { freePopulation } from './jobs'
 
 /**
@@ -119,7 +120,7 @@ export function defensePower(waveNumber = planet.waveNumber): Decimal {
     for (const enemy of ENEMIES) wirkung += anteile[enemy.id] * def.effectiveness[enemy.id]
     total = total.add(new Decimal(def.damage).mul(count).mul(wirkung))
   }
-  return total
+  return total.mul(achievementEffects().defenseDamage)
 }
 
 // --- Fähigkeiten ----------------------------------------------------------

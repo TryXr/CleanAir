@@ -6,8 +6,10 @@ import { exportSave, importSave } from '../engine/save'
 import { deserializePlanet, planet, resetPlanet, serializePlanet } from '../state/planet.svelte'
 import { run } from '../state/run.svelte'
 import { atmosphereSystem, n2Percent } from '../systems/atmosphere'
+import { meta } from '../state/meta.svelte'
+import { achievementsSystem } from '../systems/achievements'
 import { combatSystem } from '../systems/combat'
-import { currentO2Rate, isAvailable, productionSystem } from '../systems/production'
+import { clickGain, currentO2Rate, isAvailable, productionSystem } from '../systems/production'
 import { buildRocket, travelTo } from '../systems/travel'
 
 /**
@@ -229,6 +231,32 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     planet.airO2 = new Decimal(1e9)
     for (let i = 0; i < 2000; i++) combatSystem(1)
     check(r, 'Planeten ohne Anoxen bleiben verschont', planet.waveNumber === 0)
+
+    /* --- Achievements ----------------------------------------------------
+       Sie müssen sich auslösen *und* wirken. Ein Erfolg ohne Effekt wäre
+       genau die Vitrine, die §10 nicht will.
+    --------------------------------------------------------------------- */
+    freshRun()
+    meta.achievements = []
+    meta.stats.totalClicks = 5000
+    const vorherKlick = clickGain().toNumber()
+    achievementsSystem(1)
+    check(r, 'Achievement löst bei erfüllter Bedingung aus', meta.achievements.includes('handwork'))
+    const nachherKlick = clickGain().toNumber()
+    check(
+      r,
+      'Achievement-Bonus wirkt wirklich',
+      nachherKlick > vorherKlick,
+      `Klick ${vorherKlick} → ${nachherKlick}`,
+    )
+
+    // Und nicht doppelt: ein zweiter Durchlauf darf nichts hinzufügen.
+    const anzahl = meta.achievements.length
+    achievementsSystem(1)
+    check(r, 'Achievements lösen nicht doppelt aus', meta.achievements.length === anzahl)
+
+    meta.stats.totalClicks = 0
+    meta.achievements = []
 
     /* --- Atmosphäre bleibt endlich -------------------------------------- */
     freshRun()

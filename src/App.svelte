@@ -10,6 +10,7 @@
   import { hasForest } from './systems/forest'
   import { hasAnyMaterial } from './state/run.svelte'
   import AtmospherePanel from './ui/AtmospherePanel.svelte'
+  import AchievementGrid from './ui/AchievementGrid.svelte'
   import CombatPanel from './ui/CombatPanel.svelte'
   import DebugPanel from './ui/DebugPanel.svelte'
   import EventPanel from './ui/EventPanel.svelte'
@@ -44,6 +45,8 @@
   )
   const showEvents = $derived(currentPlanetDef().hasEvents)
   const showCombat = $derived(currentPlanetDef().hasAnoxen)
+  // Erst zeigen, wenn der erste Erfolg da ist — vorher wäre es eine Wunschliste.
+  const showAchievements = $derived(meta.achievements.length > 0)
 
   const showForest = $derived(hasForest())
   // Lager zeigen, sobald es hier etwas zu holen gibt oder schon etwas drin ist.
@@ -122,6 +125,12 @@
     {#if showResearch}
       <Panel title="Forschung" hint="bleibt für immer">
         <ResearchTree />
+      </Panel>
+    {/if}
+
+    {#if showAchievements}
+      <Panel title="Erfolge" hint="jeder mit Bonus">
+        <AchievementGrid />
       </Panel>
     {/if}
 

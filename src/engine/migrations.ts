@@ -152,6 +152,21 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.meta = meta
     return s
   },
+
+  /**
+   * M9: Achievements mit Effekt.
+   *
+   * Bewusst leer statt rückwirkend vergeben: die Prüfung läuft im Tick und
+   * schaltet beim ersten Laden alles frei, was der Spieler ohnehin längst
+   * erfüllt hat. Rückwirkendes Eintragen hier würde dieselbe Arbeit doppelt
+   * machen — und stillschweigend, ohne die Meldung im Log.
+   */
+  9: (s) => {
+    const meta = (s.meta ?? {}) as SaveShape
+    meta.achievements = []
+    s.meta = meta
+    return s
+  },
 }
 
 export interface MigrationResult {

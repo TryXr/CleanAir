@@ -10,6 +10,7 @@ import { UPGRADES, findUpgrade } from '../data/upgrades'
 import { currentPlanetDef, generatorCount, hasUpgrade, planet } from '../state/planet.svelte'
 import { meta } from '../state/meta.svelte'
 import { addMaterial, affordableCount, canAffordMaterials, spendMaterials } from '../state/run.svelte'
+import { achievementEffects } from './achievements'
 import { fireThrottle, n2Percent } from './atmosphere'
 import { eventEffects } from './eventEffects'
 import { WOOD_PER_TREE, forestO2Rate, forestRoom } from './forest'
@@ -62,10 +63,12 @@ function collectMultipliers(): Multipliers {
   const events = eventEffects()
 
   const jEffects = jobEffects()
+  const aEffects = achievementEffects()
   const m: Multipliers = {
-    click: mEffects.clickPower.mul(rEffects.clickPower).mul(BASE_CLICK),
+    click: mEffects.clickPower.mul(rEffects.clickPower).mul(aEffects.clickPower).mul(BASE_CLICK),
     global: mEffects.globalProduction
       .mul(rEffects.globalProduction)
+      .mul(aEffects.globalProduction)
       .mul(workforceMultiplier())
       .mul(events.production)
       .mul(fireThrottle()),
@@ -231,6 +234,7 @@ function firstUnitCost(def: GeneratorDef): Decimal {
   return new Decimal(def.baseCost)
     .mul(Decimal.pow(def.costGrowth, owned))
     .mul(researchEffects().buildCost)
+    .mul(achievementEffects().buildCost)
 }
 
 /**
@@ -264,6 +268,7 @@ export function upgradeCost(id: string): Decimal {
   const def = findUpgrade(id)
   if (!def) return new Decimal(0)
   return new Decimal(def.cost).mul(researchEffects().buildCost)
+    .mul(achievementEffects().buildCost)
 }
 
 // --- Käufe ----------------------------------------------------------------

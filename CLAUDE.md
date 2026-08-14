@@ -12,8 +12,16 @@ Umbau auf dauerhafte Planeten.
 M7 und M8 ebenfalls: fünf Planeten mit eigenen Materialien, Ketten und
 Raketen — und die Anoxen mit Wellen, Verteidigung und drei Fähigkeiten.
 
+M9 läuft: Achievements mit Effekt stehen, offen sind noch Sound, Animationen
+und die Planeten-Visualisierung.
+
 **Achtung: DESIGN.md §16 ist ein Kurswechsel und hat Vorrang vor §6 und §11.**
-Als Nächstes M9: Politur (Achievements, Sound, Planeten-Visualisierung).
+
+**Boni gehören in eine Sammelstelle, nie in die Formel.** Es gibt inzwischen
+fünf Quellen — Meta-Baum, Forschung, Berufe, Ereignisse, Achievements. Jede
+hat ihr eigenes `*Effects()`-Modul, und `collectMultipliers()` in
+production.ts multipliziert sie aus. Wer einen Bonus direkt in eine Rechnung
+schreibt, macht ihn unauffindbar.
 
 **Anlagen laufen nie rückwärts abschaltbar.** Alles, was eine Menge dauerhaft
 *erhöht*, braucht ein Gegenstück — sonst ist Überschuss ein permanenter

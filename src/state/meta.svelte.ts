@@ -1,4 +1,5 @@
 import Decimal from 'break_infinity.js'
+import { ACHIEVEMENTS } from '../data/achievements'
 import { META_UPGRADES } from '../data/metaUpgrades'
 import { RESEARCH } from '../data/research'
 import { readDecimal, readInt, readNumber, writeDecimal } from '../engine/serialize'
@@ -20,6 +21,8 @@ export const meta = $state({
   metaUpgrades: [] as string[],
   /** Forschungsknoten -> erreichte Stufe. Der Tech-Baum aus §10. */
   researchNodes: {} as Record<string, number>,
+  /** ids freigeschalteter Achievements. Jedes trägt einen dauerhaften Bonus (§10). */
+  achievements: [] as string[],
 
   planetsCompleted: 0,
   /** Gesamte gespielte Zeit in Sekunden, inkl. angerechneter Offline-Zeit. */
@@ -66,6 +69,7 @@ export function serializeMeta() {
     research: writeDecimal(meta.research),
     metaUpgrades: [...meta.metaUpgrades],
     researchNodes: { ...meta.researchNodes },
+    achievements: [...meta.achievements],
     planetsCompleted: meta.planetsCompleted,
     totalPlaytime: meta.totalPlaytime,
     firstStarted: meta.firstStarted,
@@ -106,6 +110,11 @@ export function deserializeMeta(raw: unknown): void {
     if (level > 0) nodes[def.id] = Math.min(level, def.maxLevel)
   }
   meta.researchNodes = nodes
+
+  // Wieder nur bekannte ids: ein umbenanntes Achievement soll keinen
+  // Geister-Bonus aus einem alten Save mitschleppen.
+  const savedAchievements = Array.isArray(s.achievements) ? s.achievements : []
+  meta.achievements = ACHIEVEMENTS.filter((a) => savedAchievements.includes(a.id)).map((a) => a.id)
 
   meta.planetsCompleted = readInt(s.planetsCompleted, 0)
   meta.totalPlaytime = readNumber(s.totalPlaytime, 0)
