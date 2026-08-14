@@ -1,6 +1,7 @@
 import Decimal from 'break_infinity.js'
 import { PLANETS, findPlanet, planetForIndex, type PlanetDef } from '../data/planets'
 import { rocketFor } from '../data/rockets'
+import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { deserializePlanet, planet, resetPlanet, serializePlanet } from '../state/planet.svelte'
 import { canAffordMaterials, isUnlocked, run, spendMaterials, unlockPlanet } from '../state/run.svelte'
@@ -54,6 +55,7 @@ export function buildRocket(): boolean {
   planet.oxygen = planet.oxygen.sub(def.oxygenCost)
   spendMaterials(def.materialCost)
   planet.rocketBuilt = true
+  play('rocket')
 
   const next = nextPlanetAfter(planet.id)
   if (next) {
@@ -100,6 +102,7 @@ export function travelTo(id: string): boolean {
 
   resetPopulationNotices()
   resetAtmosphereNotices()
+  play('travel')
   return true
 }
 

@@ -768,7 +768,7 @@ und dauerhaften Kolonien.
 | **M6** ✓ | Mehrere Planeten gleichzeitig, Rakete, Reisen — und der Reset auf Durchlauf-Ebene | Der Architektur-Umbau. Reset muss *mit*, weil „Planet abschließen = zurücksetzen" dann nicht mehr gilt |
 | **M7** ✓ | Planeten-Identität: Lava, Eis, Gas mit eigenen Ketten | Inhalt auf dem Gerüst von M6 |
 | **M8** ✓ | Die Anoxen (bisher M4) | |
-| **M9** | Politur (bisher M7) — Achievements ✓, Planetenansicht ✓, Ton offen | |
+| **M9** ✓ | Politur (bisher M7) — Achievements, Planetenansicht, Ton | |
 
 ### Stand nach M4
 

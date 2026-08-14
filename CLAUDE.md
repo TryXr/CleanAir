@@ -12,8 +12,8 @@ Umbau auf dauerhafte Planeten.
 M7 und M8 ebenfalls: fünf Planeten mit eigenen Materialien, Ketten und
 Raketen — und die Anoxen mit Wellen, Verteidigung und drei Fähigkeiten.
 
-M9 läuft: Achievements mit Effekt und die drehende Planetenansicht stehen,
-offen ist noch der Ton.
+M9 ist fertig: Achievements mit Effekt, die drehende Planetenansicht und der
+synthetisierte Ton.
 
 **Achtung: DESIGN.md §16 ist ein Kurswechsel und hat Vorrang vor §6 und §11.**
 
@@ -122,13 +122,14 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 34 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 44 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
 diesem Projekt jedes Mal mehrere Meilensteine unentdeckt überlebt hat:
 Save-Rundlauf, Reisen mit Ein- und Auslagern, Raketen-Sperren, Sackgassen,
-Vollständigkeit der Serialisierung, Regler-Verhalten des Ventils.
+Vollständigkeit der Serialisierung, Regler-Verhalten des Ventils, Sabotage der
+Anoxen, Achievement-Boni und Ton.
 
 Der Test sichert den Zustand vorher und stellt ihn danach wieder her, ist
 aber trotzdem nichts für einen echten Spielstand.

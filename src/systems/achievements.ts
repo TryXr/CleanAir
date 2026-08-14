@@ -1,5 +1,6 @@
 import Decimal from 'break_infinity.js'
 import { ACHIEVEMENTS, type Condition } from '../data/achievements'
+import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { planet } from '../state/planet.svelte'
@@ -159,6 +160,7 @@ export function achievementsSystem(_dt: number): void {
 
     meta.achievements = [...meta.achievements, def.id]
     addLog(`${def.name} — ${def.reward}.`, 'good')
+    play('achievement')
   }
 }
 

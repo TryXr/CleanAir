@@ -208,6 +208,19 @@
           <div><dt>Tickrate</dt><dd class="num">{TICK_RATE} Hz</dd></div>
           <div><dt>Ticks</dt><dd class="num">{ticks.toLocaleString('de-DE')}</dd></div>
           <div><dt>Save-Version</dt><dd class="num">{SAVE_VERSION}</dd></div>
+          <div>
+            <dt>Lautstärke</dt>
+            <dd class="num">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={Math.round(settings.soundVolume * 100)}
+                oninput={(e) => (settings.soundVolume = e.currentTarget.valueAsNumber / 100)}
+              />
+            </dd>
+          </div>
           <div><dt>Autosave</dt><dd class="num">{settings.autosaveSeconds} s</dd></div>
           <div>
             <dt>Offline</dt>

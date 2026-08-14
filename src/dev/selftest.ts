@@ -2,7 +2,10 @@ import Decimal from 'break_infinity.js'
 import { GENERATORS } from '../data/generators'
 import { AURORA, PLANETS } from '../data/planets'
 import { ROCKETS } from '../data/rockets'
+import { findSound } from '../data/sounds'
+import { play } from '../engine/audio'
 import { exportSave, importSave } from '../engine/save'
+import { deserializeSettings, serializeSettings, settings } from '../state/settings.svelte'
 import { deserializePlanet, planet, resetPlanet, serializePlanet } from '../state/planet.svelte'
 import { run } from '../state/run.svelte'
 import { atmosphereSystem, n2Percent } from '../systems/atmosphere'
@@ -257,6 +260,34 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
 
     meta.stats.totalClicks = 0
     meta.achievements = []
+
+    /* --- Ton --------------------------------------------------------------
+       Getestet wird nicht, wie es klingt, sondern dass es nichts kaputt macht:
+       kein Absturz ohne Audiokontext, jede id vorhanden, Lautstärke begrenzt.
+    --------------------------------------------------------------------- */
+    const soundIds = [
+      'click', 'buy', 'upgrade', 'research', 'achievement',
+      'complete', 'travel', 'rocket', 'wave', 'ability', 'fire',
+    ] as const
+    const fehlende = soundIds.filter((id) => !findSound(id))
+    check(r, 'Alle benutzten Klänge sind definiert', fehlende.length === 0, fehlende.join(', '))
+
+    let krachte = false
+    try {
+      // Ohne freigeschalteten Kontext darf play() einfach nichts tun.
+      for (const id of soundIds) play(id)
+      settings.soundEnabled = false
+      for (const id of soundIds) play(id)
+      settings.soundEnabled = true
+    } catch {
+      krachte = true
+    }
+    check(r, 'Ton ohne Audiokontext stürzt nicht ab', !krachte)
+
+    settings.soundVolume = 5
+    deserializeSettings(serializeSettings())
+    check(r, 'Lautstärke wird auf 0…1 begrenzt', settings.soundVolume <= 1)
+    settings.soundVolume = 0.35
 
     /* --- Atmosphäre bleibt endlich -------------------------------------- */
     freshRun()

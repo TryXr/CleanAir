@@ -3,6 +3,7 @@
   import { meta } from '../state/meta.svelte'
   import { planet } from '../state/planet.svelte'
   import { session } from '../state/session.svelte'
+  import { settings } from '../state/settings.svelte'
 
   const saveLabel = $derived(
     session.saveFailed
@@ -44,7 +45,20 @@
     </div>
   </div>
 
-  <div class="save" class:failed={session.saveFailed}>{saveLabel}</div>
+  <div class="right">
+    <!-- Der Stummschalter gehört dorthin, wo man ihn im Reflex sucht: sichtbar,
+         ein Klick, ohne ein Menü zu öffnen. Ein Idle-Spiel läuft stundenlang. -->
+    <button
+      class="sound"
+      class:off={!settings.soundEnabled}
+      onclick={() => (settings.soundEnabled = !settings.soundEnabled)}
+      title={settings.soundEnabled ? 'Ton ausschalten' : 'Ton einschalten'}
+      aria-pressed={settings.soundEnabled}
+    >
+      {settings.soundEnabled ? 'Ton an' : 'Ton aus'}
+    </button>
+    <div class="save" class:failed={session.saveFailed}>{saveLabel}</div>
+  </div>
 </header>
 
 <style>
@@ -112,6 +126,26 @@
 
   .accent .value {
     color: var(--o2);
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .sound {
+    padding: 3px 10px;
+    font-size: 11px;
+    border-radius: 99px;
+    color: var(--o2);
+    border-color: var(--o2-dim);
+    white-space: nowrap;
+  }
+
+  .sound.off {
+    color: var(--muted);
+    border-color: var(--line);
   }
 
   .save {

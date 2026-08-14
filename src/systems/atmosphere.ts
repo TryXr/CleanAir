@@ -1,5 +1,6 @@
 import Decimal from 'break_infinity.js'
 import type { Window } from '../data/planets'
+import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { currentPlanetDef, planet } from '../state/planet.svelte'
@@ -235,6 +236,7 @@ export function atmosphereSystem(dt: number): void {
   const burning = intensity > FIRE_NOTICE
   if (burning && !wasBurning) {
     meta.stats.fires += 1
+    play('fire')
     addLog(
       'Der O₂-Anteil liegt über dem Fenster — es brennt. Mehr N₂ verdünnt die Luft und erstickt die Brände.',
       'bad',
@@ -267,6 +269,7 @@ export function atmosphereSystem(dt: number): void {
   // Rastet ein: ein späterer Einbruch nimmt den Abschluss nicht wieder weg.
   // Rückschläge sind temporär, nie permanent (§1.2).
   planet.completed = true
+  play('complete')
   const best = meta.stats.bestPlanetSeconds
   if (best === 0 || planet.elapsed < best) meta.stats.bestPlanetSeconds = planet.elapsed
   addLog(

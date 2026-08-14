@@ -167,6 +167,15 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.meta = meta
     return s
   },
+
+  /** M9: Ton. */
+  10: (s) => {
+    const settings = (s.settings ?? {}) as SaveShape
+    settings.soundEnabled = true
+    settings.soundVolume = 0.35
+    s.settings = settings
+    return s
+  },
 }
 
 export interface MigrationResult {

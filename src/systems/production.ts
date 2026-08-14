@@ -10,6 +10,7 @@ import { UPGRADES, findUpgrade } from '../data/upgrades'
 import { currentPlanetDef, generatorCount, hasUpgrade, planet } from '../state/planet.svelte'
 import { meta } from '../state/meta.svelte'
 import { addMaterial, affordableCount, canAffordMaterials, spendMaterials } from '../state/run.svelte'
+import { play } from '../engine/audio'
 import { achievementEffects } from './achievements'
 import { fireThrottle, n2Percent } from './atmosphere'
 import { eventEffects } from './eventEffects'
@@ -323,6 +324,7 @@ export function buyGenerator(id: string, amount: number): boolean {
   // Die Leute ziehen ein und stehen nie wieder zur Verfügung.
   if (people > 0) planet.bound = planet.bound.add(people)
   planet.generators[id] = generatorCount(id) + amount
+  play('buy')
   return true
 }
 
@@ -335,6 +337,7 @@ export function buyUpgrade(id: string): boolean {
 
   planet.oxygen = planet.oxygen.sub(cost)
   planet.upgrades = [...planet.upgrades, id]
+  play('upgrade')
   return true
 }
 
@@ -343,6 +346,7 @@ export function buyUpgrade(id: string): boolean {
 /** Der Klick-Button. Die einzige Aktion, die es in Minute eins gibt. */
 export function releaseOxygen(): void {
   addOxygen(clickGain())
+  play('click')
   planet.clicks++
   meta.stats.totalClicks += 1
 }

@@ -3,6 +3,7 @@ import { ABILITIES, findAbility } from '../data/abilities'
 import { DEFENSES, REPAIR_BASE, REPAIR_PER_DEPOT, findDefense } from '../data/defenses'
 import { ENEMIES, type EnemyKind } from '../data/enemies'
 import { GENERATORS } from '../data/generators'
+import { play } from '../engine/audio'
 import { isCatchUp } from '../engine/loop'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
@@ -167,6 +168,7 @@ export function useAbility(id: string): boolean {
 
   planet.cooldowns = { ...planet.cooldowns, [id]: def.cooldown }
   meta.stats.abilitiesUsed += 1
+  play('ability')
   return true
 }
 
@@ -225,6 +227,7 @@ function startWave(): void {
   planet.waveRemaining = WAVE_DURATION
   planet.evacuated = false
   meta.stats.wavesSeen += 1
+  play('wave')
   addLog(
     `Welle ${planet.waveNumber}: die Anoxen steigen aus dem Boden. Dein Sauerstoff ist ihr Gift — und sie wissen, woher er kommt.`,
     'bad',

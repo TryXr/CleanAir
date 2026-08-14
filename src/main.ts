@@ -4,6 +4,7 @@ import App from './App.svelte'
 
 import { format, formatTime } from './engine/format'
 import { applyOffline, registerSystem, runTicks, startLoop, stopLoop } from './engine/loop'
+import { isAudioReady, play as playSound, unlockAudio } from './engine/audio'
 import { SAVE_VERSION, buildSave, exportSave, importSave, loadGame, saveNow } from './engine/save'
 import * as achievements from './systems/achievements'
 import * as atmosphere from './systems/atmosphere'
@@ -115,6 +116,12 @@ if (loaded.status === 'loaded') creditAbsence(loaded.awayMs)
 
 startLoop()
 
+// Browser lassen keinen Ton zu, bevor der Spieler etwas angefasst hat.
+// Der erste Klick auf „O₂ freisetzen" ist damit von selbst die Vorstellung.
+for (const ereignis of ['pointerdown', 'keydown'] as const) {
+  window.addEventListener(ereignis, () => unlockAudio(), { once: true })
+}
+
 /* --- Persistenz ---------------------------------------------------------- */
 
 // Autosave über einen eigenen Timer statt über den Tick: sonst würde der
@@ -181,6 +188,7 @@ if (import.meta.env.DEV) {
       travel,
       run,
       selftest,
+      audio: { unlockAudio, play: playSound, isAudioReady },
       // Für Save-Rundläufe im Test: exportieren, Zustand zerstören,
       // importieren und prüfen, ob wirklich alles zurückkommt.
       save: { exportSave, importSave, saveNow, buildSave, SAVE_VERSION },
