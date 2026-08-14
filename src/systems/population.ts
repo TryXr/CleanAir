@@ -233,6 +233,7 @@ export function populationSystem(dt: number): void {
   // Bevölkerung schrumpft von selbst — kein Sonderfall nötig.
   const rate =
     BASE_GROWTH *
+    def.growthFactor *
     metaEffects().growthRate *
     researchEffects().growthRate *
     eventEffects().growth *

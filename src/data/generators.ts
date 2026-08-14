@@ -19,6 +19,16 @@ export type GasKind =
   | 'n2'
   /** Baut Schadstoffe ab — Anteil pro Sekunde statt absoluter Menge. */
   | 'scrub'
+  /**
+   * Bläst N₂ ab. Ebenfalls anteilig.
+   *
+   * Ohne dieses Gegenstück ist zu viel Puffer ein *permanenter* Schaden: N₂
+   * verdünnt den O₂-Anteil, und wer zu viel davon erzeugt hat, konnte ihn nie
+   * wieder loswerden. Auf Nimbus mit seinem offenen Gashahn ruinierte das den
+   * Planeten binnen Minuten. Leitlinie §1.2 verlangt aber, dass Rückschläge
+   * temporär bleiben — also gibt es ein Ventil.
+   */
+  | 'vent'
 
 /**
  * Was eine Anlage herstellt.
@@ -83,6 +93,15 @@ export interface GeneratorDef {
   baseRate: number
   /** Ab wie viel jemals freigesetztem O₂ der Generator sichtbar wird. */
   revealAt: number
+
+  /**
+   * Ausdrückliche Planetenbindung. Fehlt sie, ergibt sich die Verfügbarkeit
+   * aus `output` (N₂-Anlagen nur mit Puffer, Abbau nur beim passenden
+   * Vorkommen). Nötig für Anlagen, die ein Planet *allein* hat, obwohl ihre
+   * Ausgabe anderswo genauso existiert — der Gasschöpfer wäre sonst auf
+   * jedem Planeten mit N₂-Fenster zu haben und Nimbus verlöre sein Wahrzeichen.
+   */
+  planets?: readonly string[]
 }
 
 export const GENERATORS: readonly GeneratorDef[] = [
@@ -159,6 +178,18 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 2000,
     costGrowth: 1.15,
     baseRate: 0.0018,
+    revealAt: 1500,
+  },
+
+  {
+    id: 'vent',
+    name: 'Abblasventil',
+    description:
+      'Lässt Stickstoff kontrolliert in den Weltraum ab. Unelegant, aber die einzige Art, einen zu vollen Puffer wieder loszuwerden.',
+    output: { kind: 'gas', gas: 'vent' },
+    baseCost: 2600,
+    costGrowth: 1.15,
+    baseRate: 0.0016,
     revealAt: 1500,
   },
 
@@ -265,6 +296,74 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseRate: 0.12,
     populationCost: 8,
     revealAt: 6000,
+  },
+
+  /* --- Pyra: Dreck statt Wald ------------------------------------------- */
+  {
+    id: 'obsidianpit',
+    name: 'Obsidianbruch',
+    description: 'Man schlägt die Glaskruste ab, solange sie warm ist. Später wird sie zu hart.',
+    output: { kind: 'material', material: 'obsidian' },
+    baseCost: 2200,
+    costGrowth: 1.13,
+    baseRate: 0.3,
+    populationCost: 3,
+    revealAt: 1400,
+  },
+  {
+    id: 'sulfurvent',
+    name: 'Schwefelschlot',
+    description: 'Eine Haube über der Fumarole. Der Ertrag ist gut, der Geruch bleibt in der Kleidung.',
+    output: { kind: 'material', material: 'schwefel' },
+    baseCost: 5000,
+    costGrowth: 1.14,
+    materialCost: { obsidian: 15 },
+    baseRate: 0.22,
+    populationCost: 4,
+    revealAt: 3500,
+  },
+
+  /* --- Kryo: Wasser im Überfluss ---------------------------------------- */
+  {
+    id: 'icecutter',
+    name: 'Eisschneider',
+    description: 'Sägt Blöcke aus dem Panzer. Auf Kryo liegt der Rohstoff einfach herum.',
+    output: { kind: 'material', material: 'eis' },
+    baseCost: 1800,
+    costGrowth: 1.12,
+    baseRate: 0.55,
+    populationCost: 2,
+    revealAt: 1100,
+  },
+
+  /* --- Nimbus: Gas kostet nichts ---------------------------------------- */
+  {
+    id: 'heliumtap',
+    name: 'Heliumzapfer',
+    description: 'Ein Rüssel in die Hochatmosphäre. Der Gasriese merkt nichts davon.',
+    output: { kind: 'material', material: 'helium' },
+    baseCost: 9000,
+    costGrowth: 1.14,
+    baseRate: 0.18,
+    populationCost: 5,
+    revealAt: 5000,
+  },
+  {
+    id: 'gasscoop',
+    name: 'Gasschöpfer',
+    description:
+      'Schöpft Stickstoff direkt aus dem Riesen nebenan. Was anderswo die halbe Arbeit ist, ist hier ein offener Hahn.',
+    // Das Wahrzeichen von Nimbus. Nur nützt der Überfluss wenig, wenn die
+    // Atmosphäre zwanzigmal so groß ist wie anderswo — der Planet gibt dir
+    // die eine Hälfte geschenkt und macht die andere zur Lebensaufgabe.
+    output: { kind: 'gas', gas: 'n2' },
+    baseCost: 6000,
+    costGrowth: 1.11,
+    materialCost: { helium: 4 },
+    baseRate: 3200,
+    populationCost: 6,
+    revealAt: 2500,
+    planets: ['nimbus'],
   },
 ]
 

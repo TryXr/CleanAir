@@ -24,6 +24,7 @@
     { key: 'o2', title: 'Sauerstoff', hint: 'füllt Vorrat und Luft' },
     { key: 'n2', title: 'Puffer', hint: 'verdünnt die Mischung' },
     { key: 'scrub', title: 'Reinigung', hint: 'baut Schadstoffe ab' },
+    { key: 'vent', title: 'Abblasen', hint: 'senkt den N₂-Puffer' },
     { key: 'plant', title: 'Wald', hint: 'Bäume atmen für dich' },
     { key: 'fell', title: 'Holzernte', hint: 'kostet Atmosphäre' },
     { key: 'material', title: 'Abbau', hint: 'füllt das globale Lager' },
@@ -66,9 +67,10 @@
     const suffix = count > 0 ? '' : ' pro Stück'
     const rate = count > 0 ? generatorRate(def) : null
 
-    if (out.kind === 'gas' && out.gas === 'scrub') {
+    if (out.kind === 'gas' && (out.gas === 'scrub' || out.gas === 'vent')) {
       const value = rate ? rate.mul(100) : def.baseRate * 100
-      return `${format(value, 3)} % der Schadstoffe/s${suffix}`
+      const was = out.gas === 'scrub' ? 'der Schadstoffe' : 'des N₂-Puffers'
+      return `${format(value, 3)} % ${was}/s${suffix}`
     }
     if (out.kind === 'gas') {
       const unit = out.gas === 'n2' ? 'N₂' : 'O₂'

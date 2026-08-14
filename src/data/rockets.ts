@@ -42,6 +42,37 @@ export const ROCKETS: readonly RocketDef[] = [
     oxygenCost: 4000000,
     materialCost: { titan: 3500, holz: 9000, stein: 14000 },
   },
+
+  /*
+   * Ab hier verlangt jede Rakete etwas, das ihr Planet **nicht** hat. Das ist
+   * kein Schikane-Design, sondern der Punkt des ganzen Kurswechsels: ohne
+   * Rückflug kommt man nicht weiter, und dadurch sind alte Planeten keine
+   * abgehakten Punkte, sondern Lager und Werkstatt.
+   */
+  {
+    planetId: 'pyra',
+    name: 'Schlackenwerfer',
+    description:
+      'Aus Obsidian und Schwefel gebaut, aber die Zelle hält nur mit Titan. Das wächst auf Pyra nicht — das holst du von Vesta.',
+    oxygenCost: 9000000,
+    materialCost: { obsidian: 12000, schwefel: 6000, titan: 5000 },
+  },
+  {
+    planetId: 'kryo',
+    name: 'Gletscherlanze',
+    description:
+      'Eis als Treibstoff, Obsidian als Hitzeschild. Kryo liefert das eine, Pyra das andere.',
+    oxygenCost: 16000000,
+    materialCost: { eis: 20000, obsidian: 9000, stein: 18000 },
+  },
+  {
+    planetId: 'nimbus',
+    name: 'Sammlerschiff',
+    description:
+      'Das letzte Schiff dieses Durchlaufs. Es trägt etwas von jedem Planeten, auf dem du warst.',
+    oxygenCost: 40000000,
+    materialCost: { helium: 15000, titan: 12000, obsidian: 10000, eis: 10000 },
+  },
 ]
 
 export function rocketFor(planetId: string): RocketDef | undefined {

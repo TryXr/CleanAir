@@ -38,6 +38,30 @@ export const MATERIALS: readonly MaterialDef[] = [
     description: 'Leicht und zäh. Vesta liegt voll davon — anderswo muss man es mitbringen.',
     short: 'Ti',
   },
+  {
+    id: 'obsidian',
+    name: 'Obsidian',
+    description: 'Erstarrte Lava, scharfkantig und hitzefest. Nur dort, wo es einmal gebrannt hat.',
+    short: 'Ob',
+  },
+  {
+    id: 'schwefel',
+    name: 'Schwefel',
+    description: 'Gelbe Krusten am Kraterrand. Riecht nach Pyra und bleibt an allem haften.',
+    short: 'Sw',
+  },
+  {
+    id: 'eis',
+    name: 'Eis',
+    description: 'Uraltes Wassereis. Auf Kryo liegt es meterdick, überall sonst ist es Fracht.',
+    short: 'Ei',
+  },
+  {
+    id: 'helium',
+    name: 'Helium',
+    description: 'Aus der Hochatmosphäre abgezapft. Wiegt nichts und ist überall knapp außer hier.',
+    short: 'He',
+  },
 ]
 
 export function findMaterial(id: string): MaterialDef | undefined {

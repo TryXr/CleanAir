@@ -23,6 +23,7 @@ import { EVENTS } from './data/events'
 import { GENERATORS } from './data/generators'
 import { JOBS } from './data/jobs'
 import { MATERIALS } from './data/materials'
+import { ROCKETS } from './data/rockets'
 import { run } from './state/run.svelte'
 import { META_UPGRADES } from './data/metaUpgrades'
 import { RESEARCH } from './data/research'
@@ -173,6 +174,7 @@ if (import.meta.env.DEV) {
         GENERATORS,
         UPGRADES,
         META_UPGRADES,
+        ROCKETS,
         RESEARCH,
         EVENTS,
         MATERIALS,

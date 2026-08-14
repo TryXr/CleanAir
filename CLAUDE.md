@@ -9,9 +9,16 @@ M4 bis M6 sind ebenfalls fertig: Materialien mit globalem Lager und die
 Wald-Kette, dann Wohnraum, Nahrung, Wasser und Berufe — und zuletzt der
 Umbau auf dauerhafte Planeten.
 
+M7 ebenfalls: fünf Planeten mit eigenen Materialien, Ketten und Raketen.
+
 **Achtung: DESIGN.md §16 ist ein Kurswechsel und hat Vorrang vor §6 und §11.**
-Als Nächstes M7: Planeten-Identität (Lava, Eis, Gas mit eigenen Ketten).
-Die Anoxen rücken auf M8.
+Als Nächstes M8: die Anoxen.
+
+**Anlagen laufen nie rückwärts abschaltbar.** Alles, was eine Menge dauerhaft
+*erhöht*, braucht ein Gegenstück — sonst ist Überschuss ein permanenter
+Schaden und verstößt gegen §1.2. Wäscher für Schadstoffe, Abblasventil für
+N₂. Beide arbeiten anteilig, und das Ventil nur oberhalb des Fensters: ein
+stur laufender Regler erzeugt denselben Schaden spiegelverkehrt.
 
 ## Drei Lebensdauern, nicht zwei
 

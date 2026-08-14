@@ -10,7 +10,7 @@ import { UPGRADES, findUpgrade } from '../data/upgrades'
 import { currentPlanetDef, generatorCount, hasUpgrade, planet } from '../state/planet.svelte'
 import { meta } from '../state/meta.svelte'
 import { addMaterial, affordableCount, canAffordMaterials, spendMaterials } from '../state/run.svelte'
-import { fireThrottle } from './atmosphere'
+import { fireThrottle, n2Percent } from './atmosphere'
 import { eventEffects } from './eventEffects'
 import { WOOD_PER_TREE, forestO2Rate, forestRoom } from './forest'
 import { freePopulation, jobEffects } from './jobs'
@@ -73,6 +73,7 @@ function collectMultipliers(): Multipliers {
       o2: rEffects.o2Yield.mul(jEffects.gas),
       n2: rEffects.n2Yield.mul(jEffects.gas),
       scrub: rEffects.scrubYield.mul(jEffects.gas),
+      vent: new Decimal(jEffects.gas),
     },
     byKind: {
       plant: new Decimal(jEffects.planting),
@@ -211,6 +212,11 @@ export function currentScrubRate(): Decimal {
   return rateForGas('scrub')
 }
 
+/** Anteil des N₂-Puffers, der pro Sekunde abgeblasen wird. */
+export function currentVentRate(): Decimal {
+  return rateForGas('vent')
+}
+
 export function clickGain(): Decimal {
   return collectMultipliers().click
 }
@@ -269,10 +275,15 @@ export function upgradeCost(id: string): Decimal {
  */
 export function isAvailable(def: GeneratorDef): boolean {
   const planetDef = currentPlanetDef()
+  // Eine ausdrückliche Bindung schlägt jede Ableitung aus der Ausgabe.
+  if (def.planets && !def.planets.includes(planetDef.id)) return false
+
   const out = def.output
   switch (out.kind) {
     case 'gas':
-      if (out.gas === 'n2') return planetDef.n2Window !== undefined
+      // Das Ventil gehört überall dorthin, wo es einen Puffer gibt — sonst
+      // wäre zu viel N₂ ein Schaden ohne Ausweg.
+      if (out.gas === 'n2' || out.gas === 'vent') return planetDef.n2Window !== undefined
       if (out.gas === 'scrub') return planetDef.maxPollution !== undefined
       return true
     case 'material':
@@ -400,5 +411,20 @@ export function productionSystem(dt: number): void {
   if (planet.pollution.gt(0)) {
     const scrubbed = currentScrubRate().mul(dt).toNumber()
     if (scrubbed > 0) planet.pollution = planet.pollution.mul(Math.max(0, 1 - scrubbed))
+  }
+
+  /*
+   * Abblasen — und zwar nur oberhalb des Fensters.
+   *
+   * Ein Ventil, das stur läuft, erzeugt exakt dasselbe Problem in die andere
+   * Richtung: es zieht den Puffer auf null, das O₂ wird nicht mehr verdünnt
+   * und steht plötzlich über dem Fenster. Gemessen: N₂ 0 %, O₂ 26,8 %, Planet
+   * unabschließbar. Als Regler statt als Abfluss kann es nur retten, nie
+   * schaden — es schließt von selbst, sobald der Puffer wieder im Ziel ist.
+   */
+  const n2Max = def.n2Window?.max
+  if (n2Max !== undefined && planet.airN2.gt(0) && n2Percent() > n2Max) {
+    const vented = currentVentRate().mul(dt).toNumber()
+    if (vented > 0) planet.airN2 = planet.airN2.mul(Math.max(0, 1 - vented))
   }
 }

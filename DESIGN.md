@@ -763,7 +763,7 @@ und dauerhaften Kolonien.
 | **M4** ✅ | Materialien + globales Inventar, erste Bauketten (Wald) | Löst das eigentliche Problem sofort und passt noch in die heutige Architektur |
 | **M5** ✅ | Bevölkerung: Hütten, Nahrung, Wasser, Berufe | Braucht Materialien, um überhaupt bezahlbar zu sein |
 | **M6** ✓ | Mehrere Planeten gleichzeitig, Rakete, Reisen — und der Reset auf Durchlauf-Ebene | Der Architektur-Umbau. Reset muss *mit*, weil „Planet abschließen = zurücksetzen" dann nicht mehr gilt |
-| **M7** | Planeten-Identität: Lava, Eis, Gas mit eigenen Ketten | Inhalt auf dem Gerüst von M6 |
+| **M7** ✓ | Planeten-Identität: Lava, Eis, Gas mit eigenen Ketten | Inhalt auf dem Gerüst von M6 |
 | **M8** | Die Anoxen (bisher M4) | |
 | **M9** | Politur (bisher M7) | |
 
@@ -845,6 +845,34 @@ Spielen am ehesten unfair wirken wird.
 - **Was passiert mit `meta.population` beim Reset?** Bevölkerung ist bisher
   „überlebt für immer". Unter dem neuen Modell gehört sie vermutlich zum
   Durchlauf und wird mit zurückgesetzt.
+
+### Die fünf Planeten (M7)
+
+Jeder stellt ein *anderes* Problem, nicht dasselbe mit anderen Zahlen:
+
+| Planet | Problem | Materialien | Besonderheit |
+|---|---|---|---|
+| **Aurora** | Tutorial | — | nur O₂, kein Fenster nach oben |
+| **Vesta** | Puffer und Dreck | Holz, Stein, Titan | einziger Wald mit Ertrag |
+| **Pyra** | Die eigene Industrie erstickt einen | Obsidian, Schwefel | viermal so schmutzig, kein Wald |
+| **Kryo** | Zeit | Eis, Stein | Wachstum 0,45 — alles dauert |
+| **Nimbus** | Größe | Helium | N₂ per Gasschöpfer fast umsonst |
+
+Verbindend: **keiner hat alles, was seine eigene Rakete braucht.** Pyra
+verlangt Titan (nur Vesta), Kryo verlangt Obsidian (nur Pyra), Nimbus
+verlangt von jedem etwas. Zurückfliegen ist dadurch kein Bonusweg, sondern
+der Weg.
+
+### Das Abblasventil
+
+Aus M7 gelernt: N₂ war **nicht entfernbar**. Wer zu viel Puffer erzeugt
+hatte, verdünnte seinen O₂-Anteil dauerhaft — auf Nimbus mit seinem offenen
+Gashahn binnen Minuten. Das verstößt gegen §1.2 („Rückschläge sind temporär").
+
+Das Ventil ist deshalb ein **Regler, kein Abfluss**: es öffnet nur oberhalb
+des Fensters und schließt von selbst. Ein stur laufendes Ventil erzeugte im
+Test exakt dasselbe Problem spiegelverkehrt — N₂ auf 0, O₂ auf 26,8 %,
+Planet unabschließbar.
 
 ### Entschieden in M6
 
