@@ -31,6 +31,18 @@
     { key: 'fell', title: 'Holzernte', hint: 'kostet Atmosphäre' },
     { key: 'material', title: 'Abbau', hint: 'füllt das globale Lager' },
     { key: 'craft', title: 'Verarbeitung', hint: 'braucht Nachschub von der Stufe davor' },
+    /*
+     * `supply` hat hier **acht Meilensteine lang gefehlt** — seit die
+     * Versorgungsanlagen in M5 dazukamen. Ohne Eintrag filtert `groups` sie
+     * lautlos aus der Liste: Kondensator und Keimkammer waren über die
+     * Oberfläche schlicht nicht baubar, obwohl beide `revealAt: 0` haben.
+     *
+     * Auf Aurora heißt das, dass die Rationen nach zwölf Minuten leer sind
+     * und der Spieler nichts dagegen tun kann. Kein Selbsttest konnte das
+     * sehen: alle Prüfungen und alle Balancing-Läufe rufen orderGenerator()
+     * direkt auf und gehen an der Liste vorbei. Gefunden beim Spielen.
+     */
+    { key: 'supply', title: 'Versorgung', hint: 'Nahrung und Wasser für die Kolonie' },
     { key: 'housing', title: 'Wohnraum', hint: 'ohne Betten kommt niemand' },
     { key: 'storage', title: 'Lager', hint: 'hebt die Grenze des Regals' },
   ]
