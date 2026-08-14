@@ -281,6 +281,7 @@
   canvas {
     display: block;
     width: 100%;
-    height: 220px;
+    /* Flach genug, dass Atmosphäre und Klick-Knopf ohne Scrollen darunter passen. */
+    height: 150px;
   }
 </style>

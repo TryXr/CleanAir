@@ -3,14 +3,15 @@
   import { SAVE_VERSION, exportSave, importSave, saveNow, wipeSave } from './engine/save'
   import { addLog } from './state/log.svelte'
   import { meta } from './state/meta.svelte'
-  import { planet } from './state/planet.svelte'
-  import { settings } from './state/settings.svelte'
-  import { currentPlanetDef } from './state/planet.svelte'
-  import { pendingCores } from './systems/prestige'
-  import { hasForest } from './systems/forest'
+  import { currentPlanetDef, planet } from './state/planet.svelte'
   import { hasAnyMaterial } from './state/run.svelte'
-  import AtmospherePanel from './ui/AtmospherePanel.svelte'
+  import { session, type TabId } from './state/session.svelte'
+  import { settings } from './state/settings.svelte'
+  import { activeEvents } from './systems/eventEffects'
+  import { hasForest } from './systems/forest'
+  import { pendingCores } from './systems/prestige'
   import AchievementGrid from './ui/AchievementGrid.svelte'
+  import AtmospherePanel from './ui/AtmospherePanel.svelte'
   import CombatPanel from './ui/CombatPanel.svelte'
   import DebugPanel from './ui/DebugPanel.svelte'
   import EventPanel from './ui/EventPanel.svelte'
@@ -18,9 +19,9 @@
   import GeneratorList from './ui/GeneratorList.svelte'
   import InventoryPanel from './ui/InventoryPanel.svelte'
   import JobPanel from './ui/JobPanel.svelte'
-  import SupplyPanel from './ui/SupplyPanel.svelte'
   import LogPanel from './ui/LogPanel.svelte'
   import MetaTree from './ui/MetaTree.svelte'
+  import NextStep from './ui/NextStep.svelte'
   import Panel from './ui/Panel.svelte'
   import PlanetMap from './ui/PlanetMap.svelte'
   import PlanetView from './ui/PlanetView.svelte'
@@ -28,33 +29,62 @@
   import PrestigePanel from './ui/PrestigePanel.svelte'
   import ResearchTree from './ui/ResearchTree.svelte'
   import StatsPanel from './ui/StatsPanel.svelte'
+  import SupplyPanel from './ui/SupplyPanel.svelte'
   import TopBar from './ui/TopBar.svelte'
   import UpgradeGrid from './ui/UpgradeGrid.svelte'
 
   let transfer = $state('')
 
   const ticks = $derived(Math.round(meta.totalPlaytime * TICK_RATE))
+  const def = $derived(currentPlanetDef())
 
-  // Schrittweise Enthüllung: kein Panel zeigen, bevor es etwas zu entscheiden gibt.
-  const showPopulation = $derived(currentPlanetDef().allowsPopulation)
-  const showPrestige = $derived(
-    planet.completed || meta.stats.runs > 0 || pendingCores().gte(1),
-  )
-  const showMetaTree = $derived(meta.genesisCores.gt(0) || meta.metaUpgrades.length > 0)
+  /* --- Schrittweise Enthüllung ---------------------------------------------
+     Ein Panel erscheint erst, wenn es etwas zu entscheiden gibt. Vorher ist
+     es für einen neuen Spieler nur eine weitere Kiste, die er verstehen zu
+     müssen glaubt.
+  ------------------------------------------------------------------------ */
+  const showPopulation = $derived(def.allowsPopulation)
+  const showForest = $derived(hasForest())
+  const showInventory = $derived(def.materials.length > 0 || hasAnyMaterial())
+  const showCombat = $derived(def.hasAnoxen)
   const showResearch = $derived(
     meta.research.gt(0) || Object.keys(meta.researchNodes).length > 0 || planet.settlers.gt(0),
   )
-  const showEvents = $derived(currentPlanetDef().hasEvents)
-  const showCombat = $derived(currentPlanetDef().hasAnoxen)
-  // Erst zeigen, wenn der erste Erfolg da ist — vorher wäre es eine Wunschliste.
   const showAchievements = $derived(meta.achievements.length > 0)
+  const showMetaTree = $derived(meta.genesisCores.gt(0) || meta.metaUpgrades.length > 0)
+  const showPrestige = $derived(planet.completed || meta.stats.runs > 0 || pendingCores().gte(1))
+  // Die Sternenkarte lohnt erst, wenn es überhaupt ein Ziel gibt.
+  const showMap = $derived(planet.rocketBuilt || meta.stats.runs > 0 || planet.completed)
 
-  const showForest = $derived(hasForest())
-  // Lager zeigen, sobald es hier etwas zu holen gibt oder schon etwas drin ist.
-  const showInventory = $derived(currentPlanetDef().materials.length > 0 || hasAnyMaterial())
-
-  /** Debug-Werkzeuge gibt es nur im Dev-Build, nie im ausgelieferten Spiel. */
   const isDev = import.meta.env.DEV
+
+  /** Nur laufende Ereignisse verdienen einen Platz in der Seitenspalte. */
+  const laufendeEreignisse = $derived(activeEvents())
+
+  /**
+   * Reiter statt einer endlosen Spalte.
+   *
+   * Vorher standen bis zu vierzehn gleich gewichtete Panels untereinander —
+   * man konnte Atmosphäre und Anlagen nicht gleichzeitig sehen und musste
+   * zum Klicken scrollen. Ein Reiter zeigt jetzt genau einen Zusammenhang.
+   * Leere Reiter erscheinen gar nicht erst.
+   */
+  const tabs = $derived(
+    (
+      [
+        { id: 'planet', label: 'Planet', an: true },
+        { id: 'aufbau', label: 'Aufbau', an: true },
+        { id: 'fortschritt', label: 'Fortschritt', an: showResearch || showAchievements || showMetaTree },
+        { id: 'imperium', label: 'Imperium', an: showMap || showPrestige },
+        { id: 'system', label: 'System', an: true },
+      ] as const
+    ).filter((t) => t.an),
+  )
+
+  // Verschwindet der aktive Reiter (etwa nach einem Reset), nicht ins Leere fallen.
+  $effect(() => {
+    if (!tabs.some((t) => t.id === session.tab)) session.tab = 'planet'
+  })
 
   function onSave(): void {
     const ok = saveNow()
@@ -89,125 +119,133 @@
 
 <TopBar />
 
+<nav class="tabs">
+  {#each tabs as t (t.id)}
+    <button class:active={session.tab === t.id} onclick={() => (session.tab = t.id as TabId)}>
+      {t.label}
+    </button>
+  {/each}
+</nav>
+
 <main>
   <div class="column">
-    <Panel title={planet.name} hint={currentPlanetDef().intro.split('.')[0]}>
-      <PlanetView />
-    </Panel>
+    <NextStep />
 
-    <Panel title="Atmosphäre" hint={planet.name}>
-      <AtmospherePanel />
-    </Panel>
-
-    {#if showPopulation}
-      <Panel title="Bevölkerung" hint="atmet mit">
-        <PopulationPanel />
+    {#if session.tab === 'planet'}
+      <Panel title={planet.name} hint={def.intro.split('.')[0]}>
+        <PlanetView />
       </Panel>
 
-      <Panel title="Versorgung" hint="bleibt auf dem Planeten">
-        <SupplyPanel />
+      <Panel title="Atmosphäre" hint="das eigentliche Ziel">
+        <AtmospherePanel />
       </Panel>
 
-      <Panel title="Berufe" hint="verteilte Arbeitskraft">
-        <JobPanel />
-      </Panel>
+      {#if showPopulation}
+        <Panel title="Bevölkerung" hint="atmet mit">
+          <PopulationPanel />
+        </Panel>
+
+        <Panel title="Versorgung" hint="bleibt auf dem Planeten">
+          <SupplyPanel />
+        </Panel>
+
+        <Panel title="Berufe" hint="verteilte Arbeitskraft">
+          <JobPanel />
+        </Panel>
+      {/if}
+
+      {#if showForest}
+        <Panel title="Wald" hint="Holz kostet Atmosphäre">
+          <ForestPanel />
+        </Panel>
+      {/if}
     {/if}
 
-    {#if showForest}
-      <Panel title="Wald" hint="Holz kostet Atmosphäre">
-        <ForestPanel />
+    {#if session.tab === 'aufbau'}
+      <Panel title="Anlagen">
+        <GeneratorList />
       </Panel>
+
+      <Panel title="Verbesserungen">
+        <UpgradeGrid />
+      </Panel>
+
+      {#if showCombat}
+        <Panel title="Verteidigung" hint="zwischen den Wellen bauen">
+          <CombatPanel zeige="bau" />
+        </Panel>
+      {/if}
+
+      {#if showInventory}
+        <Panel title="Lager" hint="gilt für alle Planeten">
+          <InventoryPanel />
+        </Panel>
+      {/if}
     {/if}
 
-    <Panel title="Anlagen">
-      <GeneratorList />
-    </Panel>
+    {#if session.tab === 'fortschritt'}
+      {#if showResearch}
+        <Panel title="Forschung" hint="bleibt für immer">
+          <ResearchTree />
+        </Panel>
+      {/if}
 
-    <Panel title="Verbesserungen">
-      <UpgradeGrid />
-    </Panel>
+      {#if showAchievements}
+        <Panel title="Erfolge" hint="jeder mit Bonus">
+          <AchievementGrid />
+        </Panel>
+      {/if}
 
-    {#if showResearch}
-      <Panel title="Forschung" hint="bleibt für immer">
-        <ResearchTree />
-      </Panel>
+      {#if showMetaTree}
+        <Panel title="Meta-Baum" hint="bleibt für immer">
+          <MetaTree />
+        </Panel>
+      {/if}
     {/if}
 
-    {#if showAchievements}
-      <Panel title="Erfolge" hint="jeder mit Bonus">
-        <AchievementGrid />
-      </Panel>
+    {#if session.tab === 'imperium'}
+      {#if showMap}
+        <Panel title="Sternenkarte" hint="Planeten bleiben bestehen">
+          <PlanetMap />
+        </Panel>
+      {/if}
+
+      {#if showPrestige}
+        <Panel title="Durchlauf" hint="Reset gegen Kerne">
+          <PrestigePanel />
+        </Panel>
+      {/if}
     {/if}
 
-    {#if showMetaTree}
-      <Panel title="Meta-Baum" hint="bleibt für immer">
-        <MetaTree />
+    {#if session.tab === 'system'}
+      <Panel title="Statistik">
+        <StatsPanel />
       </Panel>
-    {/if}
-  </div>
 
-  <div class="column side">
-    {#if isDev}
-      <Panel title="Debug" hint="nur im Dev-Build">
-        <DebugPanel />
-      </Panel>
-    {/if}
+      <Panel title="Spielstand">
+        <div class="actions">
+          <button class="primary" onclick={onSave}>Speichern</button>
+          <button onclick={onExport}>Export</button>
+          <button onclick={onImport} disabled={!transfer.trim()}>Import</button>
+          <button class="danger" onclick={onWipe}>Löschen</button>
+        </div>
+        <textarea
+          bind:value={transfer}
+          spellcheck="false"
+          placeholder="Export erscheint hier — oder Save-Text zum Importieren einfügen."
+        ></textarea>
 
-    {#if showInventory}
-      <Panel title="Lager" hint="gilt für alle Planeten">
-        <InventoryPanel />
-      </Panel>
-    {/if}
-
-    {#if showCombat}
-      <Panel title="Anoxen" hint="dein Fortschritt ist ihr Gift">
-        <CombatPanel />
-      </Panel>
-    {/if}
-
-    {#if showEvents}
-      <Panel title="Lage" hint="Zwischenfälle">
-        <EventPanel />
-      </Panel>
-    {/if}
-
-    <Panel title="Sternenkarte" hint="Planeten bleiben bestehen">
-      <PlanetMap />
-    </Panel>
-
-    {#if showPrestige}
-      <Panel title="Durchlauf" hint="Reset gegen Kerne">
-        <PrestigePanel />
-      </Panel>
-    {/if}
-
-    <Panel title="Statistik">
-      <StatsPanel />
-    </Panel>
-
-    <Panel title="Ereignisse">
-      <LogPanel />
-    </Panel>
-
-    <Panel title="Spielstand">
-      <div class="actions">
-        <button class="primary" onclick={onSave}>Speichern</button>
-        <button onclick={onExport}>Export</button>
-        <button onclick={onImport} disabled={!transfer.trim()}>Import</button>
-        <button class="danger" onclick={onWipe}>Löschen</button>
-      </div>
-      <textarea
-        bind:value={transfer}
-        spellcheck="false"
-        placeholder="Export erscheint hier — oder Save-Text zum Importieren einfügen."
-      ></textarea>
-
-      <details>
-        <summary>Systemstatus</summary>
         <dl class="stats">
           <div><dt>Tickrate</dt><dd class="num">{TICK_RATE} Hz</dd></div>
           <div><dt>Ticks</dt><dd class="num">{ticks.toLocaleString('de-DE')}</dd></div>
           <div><dt>Save-Version</dt><dd class="num">{SAVE_VERSION}</dd></div>
+          <div><dt>Autosave</dt><dd class="num">{settings.autosaveSeconds} s</dd></div>
+          <div>
+            <dt>Offline</dt>
+            <dd class="num">
+              {Math.round(settings.offlineEfficiency * 100)} % / {settings.offlineMaxHours} h
+            </dd>
+          </div>
           <div>
             <dt>Lautstärke</dt>
             <dd class="num">
@@ -221,27 +259,75 @@
               />
             </dd>
           </div>
-          <div><dt>Autosave</dt><dd class="num">{settings.autosaveSeconds} s</dd></div>
-          <div>
-            <dt>Offline</dt>
-            <dd class="num">
-              {Math.round(settings.offlineEfficiency * 100)} % / {settings.offlineMaxHours} h
-            </dd>
-          </div>
         </dl>
-      </details>
+      </Panel>
+
+      {#if isDev}
+        <Panel title="Debug" hint="nur im Dev-Build">
+          <DebugPanel />
+        </Panel>
+      {/if}
+    {/if}
+  </div>
+
+  <!-- Die Seitenspalte trägt nur, was unabhängig vom Reiter gilt: was gerade
+       passiert, und was man deshalb sofort beantworten können muss. -->
+  <div class="column side">
+    {#if showCombat}
+      <Panel title="Anoxen" hint="dein Fortschritt ist ihr Gift">
+        <CombatPanel zeige="lage" />
+      </Panel>
+    {/if}
+
+    {#if laufendeEreignisse.length > 0}
+      <Panel title="Zwischenfall">
+        <EventPanel />
+      </Panel>
+    {/if}
+
+    <Panel title="Ereignisse">
+      <LogPanel />
     </Panel>
   </div>
 </main>
 
 <style>
+  .tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: var(--gap) 20px 0;
+  }
+
+  .tabs button {
+    padding: 7px 16px;
+    font-size: 13px;
+    border-radius: 8px 8px 0 0;
+    border-bottom-color: transparent;
+    color: var(--muted);
+    background: transparent;
+  }
+
+  .tabs button:hover:not(.active) {
+    color: var(--text-dim);
+  }
+
+  .tabs button.active {
+    color: var(--o2);
+    background: var(--panel);
+    border-color: var(--line-soft);
+    border-bottom-color: var(--panel);
+  }
+
   main {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-columns: minmax(0, 1fr) 320px;
     gap: var(--gap);
     max-width: 1180px;
     margin: 0 auto;
-    padding: var(--gap) 20px 60px;
+    padding: 6px 20px 60px;
     align-items: start;
   }
 
@@ -264,27 +350,16 @@
     font-size: 13px;
   }
 
-  details {
-    margin-top: 14px;
-  }
-
-  summary {
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    cursor: pointer;
-  }
-
   .stats {
     display: grid;
     gap: 6px;
-    margin: 12px 0 0;
+    margin: 14px 0 0;
   }
 
   .stats div {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 12px;
     border-bottom: 1px dotted var(--line-soft);
     padding-bottom: 5px;

@@ -11,4 +11,12 @@ export const session = $state({
 
   /** Kaufmenge für Generatoren — gilt für alle Reihen gemeinsam. */
   buyAmount: 1 as BuyAmount,
+
+  /**
+   * Sichtbarer Reiter. Bewusst nicht gespeichert: nach dem Neuladen soll man
+   * dort landen, wo das Spiel passiert, nicht in der Statistik von gestern.
+   */
+  tab: 'planet' as TabId,
 })
+
+export type TabId = 'planet' | 'aufbau' | 'fortschritt' | 'imperium' | 'system'

@@ -44,6 +44,32 @@
   </div>
 </div>
 
+<!-- Vorrat, Rate und der Knopf stehen bewusst *vor* den Balken: die
+     Hauptaktion des Spiels darf nicht unter dem Sichtbereich liegen, und ein
+     neuer Spieler soll nicht an drei Diagrammen vorbeiscrollen müssen, um zu
+     verstehen, was er tun kann. -->
+<div class="stock">
+  <div>
+    <span class="label">Vorrat</span>
+    <span class="value num">{format(planet.oxygen)}</span>
+  </div>
+  <div>
+    <span class="label">O₂-Produktion</span>
+    <span class="value num">{formatRate(rate)}</span>
+  </div>
+  {#if usesNitrogen()}
+    <div>
+      <span class="label">N₂-Produktion</span>
+      <span class="value num">{formatRate(n2Rate)}</span>
+    </div>
+  {/if}
+</div>
+
+<button class="release primary" onclick={releaseOxygen}>
+  <span>O₂ freisetzen</span>
+  <span class="gain num">+{format(gain)}</span>
+</button>
+
 {#if isMixture}
   <div class="windows">
     {#each status as s (s.key)}
@@ -98,28 +124,6 @@
     Sauerstoff aus der Luft. Mehr N₂ verdünnt die Mischung und erstickt ihn.
   </p>
 {/if}
-
-<div class="stock">
-  <div>
-    <span class="label">Vorrat</span>
-    <span class="value num">{format(planet.oxygen)}</span>
-  </div>
-  <div>
-    <span class="label">O₂-Produktion</span>
-    <span class="value num">{formatRate(rate)}</span>
-  </div>
-  {#if usesNitrogen()}
-    <div>
-      <span class="label">N₂-Produktion</span>
-      <span class="value num">{formatRate(n2Rate)}</span>
-    </div>
-  {/if}
-</div>
-
-<button class="release primary" onclick={releaseOxygen}>
-  <span>O₂ freisetzen</span>
-  <span class="gain num">+{format(gain)}</span>
-</button>
 
 <style>
   .head {

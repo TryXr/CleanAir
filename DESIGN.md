@@ -910,6 +910,30 @@ Die Boni laufen wie alles andere über eine zentrale Sammelstelle
 freigeschaltet: Klick ×2, Produktion ×1,69, Baukosten ×0,83, Abwehrschaden
 120 → 165,6.
 
+### Reiter statt einer endlosen Spalte (M9)
+
+Nach M8 standen auf einem ausgebauten Planeten **vierzehn gleich gewichtete
+Panels** untereinander. Man konnte Atmosphäre und Anlagen nicht gleichzeitig
+sehen, musste zum Klicken scrollen, und der Klick-Knopf sah aus wie das
+Export-Feld. Für einen neuen Spieler war das eine Wand.
+
+Drei Eingriffe, in dieser Reihenfolge wirksam:
+
+1. **Fünf Reiter** — Planet, Aufbau, Fortschritt, Imperium, System. Ein Reiter
+   zeigt einen Zusammenhang. Leere Reiter erscheinen gar nicht: beim
+   Erstkontakt auf Aurora sind es drei.
+2. **Die Hauptaktion nach oben.** Vorrat, Rate und der Freisetzen-Knopf stehen
+   jetzt *vor* den Fensterbalken. Die wichtigste Handlung des Spiels darf
+   nicht unter dem Sichtbereich liegen.
+3. **Ein Satz „was jetzt".** Aus dem Zustand abgeleitet, nie aus einem Skript —
+   er kann also nicht falsch stehenbleiben. Der häufigste Abbruchgrund in
+   Incrementals ist nicht Schwierigkeit, sondern Ratlosigkeit.
+
+Die Seitenspalte trägt nur noch, was unabhängig vom Reiter gilt und sofort
+beantwortet werden muss: laufende Wellen, laufende Zwischenfälle, das Log.
+Der Verteidigungs-Einkauf ist dafür in den Aufbau-Reiter gewandert — akut
+reagieren und in Ruhe bauen sind zwei verschiedene Situationen.
+
 ### Die Planetenansicht zeigt den Spielstand (M9)
 
 §2 nannte die drehende Kugel optional. Sie ist es wert, weil sie das erste

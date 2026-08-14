@@ -13,6 +13,16 @@
   } from '../systems/combat'
   import { planet } from '../state/planet.svelte'
 
+  /**
+   * Zwei Rollen, ein Panel: `lage` gehört dorthin, wo man sofort reagiert,
+   * `bau` zwischen die übrigen Kaufreihen. Zusammen waren sie ein Block, in
+   * dem der Abwehrknopf neben dem Einkaufszettel stand.
+   */
+  interface Props {
+    zeige?: 'alles' | 'lage' | 'bau'
+  }
+  let { zeige = 'alles' }: Props = $props()
+
   const s = $derived(combatStatus())
   const imKampf = $derived(s.kraft > 0)
 
@@ -26,6 +36,7 @@
   }
 </script>
 
+{#if zeige !== 'bau'}
 {#if imKampf}
   <div class="wave">
     <div class="line">
@@ -81,6 +92,8 @@
   </div>
 {/if}
 
+{/if}
+
 {#if s.stillgelegt > 0}
   <p class="damage">
     <strong class="num">{Math.round(s.stillgelegt * 100)} %</strong> deiner Anlagen stehen still.
@@ -88,6 +101,7 @@
   </p>
 {/if}
 
+{#if zeige !== 'lage'}
 <h3>Verteidigung</h3>
 {#if sichtbar.length === 0}
   <p class="hint">Noch nichts zu bauen. Setz weiter O₂ frei.</p>
@@ -124,6 +138,7 @@
       </li>
     {/each}
   </ul>
+{/if}
 {/if}
 
 <style>
