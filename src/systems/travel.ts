@@ -8,6 +8,7 @@ import { canAffordMaterials, isUnlocked, run, spendMaterials, unlockPlanet } fro
 import { resetAtmosphereNotices } from './atmosphere'
 import { metaEffects } from './metaEffects'
 import { resetPopulationNotices } from './population'
+import { resetStorageNotices } from './storage'
 
 /**
  * Reisen zwischen Planeten (DESIGN.md §16).
@@ -102,6 +103,7 @@ export function travelTo(id: string): boolean {
 
   resetPopulationNotices()
   resetAtmosphereNotices()
+  resetStorageNotices()
   play('travel')
   return true
 }

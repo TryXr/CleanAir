@@ -23,6 +23,29 @@ export interface ActiveEvent {
 export const FIRST_EVENT_DELAY = 150
 
 /**
+ * Eine laufende Baustelle (M11, §17).
+ *
+ * Bezahlen legt seit M11 nur noch eine Bestellung an — Material, O₂ und
+ * verbaute Menschen sind sofort weg, das Gebäude entsteht erst durch Arbeit.
+ * Planetenlokal wie alles andere: eine halb fertige Halle auf Vesta wartet
+ * dort weiter, während man auf Pyra steht.
+ */
+export interface BuildSite {
+  /** Generator-id. */
+  id: string
+  /** Wie viele Stück aus dieser Bestellung noch entstehen sollen. */
+  remaining: number
+  /**
+   * Geleistete Arbeitersekunden am *aktuellen* Stück.
+   *
+   * Bewusst pro Stück und nicht für die ganze Bestellung: so liefert eine
+   * Zehnerbestellung nach und nach, statt zehnmal so lange gar nichts zu
+   * tun. Fortschritt, den man sieht, ist der halbe Unterschied.
+   */
+  progress: number
+}
+
+/**
  * PLANET — wird beim Planetenwechsel vollständig zurückgesetzt.
  *
  * Alles, was einen Prestige-Sprung überleben soll, gehört nach meta.svelte.ts.
@@ -66,8 +89,19 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
     /** Grundlage der Genesis-Kerne beim Abschluss (§6). */
     biomass: new Decimal(0),
 
-    /** Generator-id -> Anzahl. */
+    /** Generator-id -> Anzahl. Nur **fertige** Anlagen (M11). */
     generators: {} as Record<string, number>,
+    /**
+     * Offene Baustellen in Auftragsreihenfolge (M11, §17). Die Kolonne
+     * arbeitet die vorderste ab und rückt dann nach.
+     */
+    sites: [] as BuildSite[],
+    /**
+     * Bewohner auf der Baustelle. Ein eigener Topf statt eines Eintrags in
+     * `staff`: Bauarbeiter stehen an keiner Anlage, sondern an dem, was noch
+     * keine ist.
+     */
+    builders: 0,
     /** ids gekaufter Upgrades. */
     upgrades: [] as string[],
 
@@ -172,6 +206,22 @@ export function generatorCount(id: string): number {
   return planet.generators[id] ?? 0
 }
 
+/**
+ * Stück dieses Typs, die bestellt, aber noch nicht fertig sind (M11).
+ *
+ * Steht hier neben `generatorCount` und nicht im Bausystem, weil die
+ * Kostenkurve sie mitzählen muss: sonst kostet zweimal „Max" hintereinander
+ * beide Male den niedrigen Preis, und die Bestellung wäre ein Rabatt auf
+ * sich selbst.
+ */
+export function pendingUnits(id: string): number {
+  let sum = 0
+  for (const site of planet.sites) {
+    if (site.id === id) sum += site.remaining
+  }
+  return sum
+}
+
 export function hasUpgrade(id: string): boolean {
   return planet.upgrades.includes(id)
 }
@@ -199,6 +249,8 @@ export function serializePlanet() {
     stability: planet.stability,
     biomass: writeDecimal(planet.biomass),
     generators: { ...planet.generators },
+    sites: planet.sites.map((s) => ({ ...s })),
+    builders: planet.builders,
     upgrades: [...planet.upgrades],
     settlers: writeDecimal(planet.settlers),
     staff: { ...planet.staff },
@@ -299,6 +351,21 @@ export function deserializePlanet(raw: unknown): void {
     if (count > 0) generators[def.id] = Math.floor(count)
   }
   planet.generators = generators
+
+  // Baustellen (M11). Dieselbe Vorsicht wie oben: unbekannte ids fliegen raus,
+  // und eine Bestellung ohne Rest ist keine Baustelle mehr.
+  const savedSites = Array.isArray(s.sites) ? s.sites : []
+  planet.sites = savedSites
+    .map((raw) => (raw ?? {}) as Record<string, unknown>)
+    .filter((site) => GENERATORS.some((def) => def.id === site.id))
+    .map((site) => ({
+      id: readString(site.id, ''),
+      remaining: Math.max(0, Math.floor(readNumber(site.remaining, 0))),
+      progress: Math.max(0, readNumber(site.progress, 0)),
+    }))
+    .filter((site) => site.remaining > 0)
+
+  planet.builders = Math.max(0, Math.floor(readNumber(s.builders, 0)))
 
   const savedUpgrades = Array.isArray(s.upgrades) ? s.upgrades : []
   planet.upgrades = UPGRADES.filter((u) => savedUpgrades.includes(u.id)).map((u) => u.id)

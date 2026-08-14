@@ -7,13 +7,20 @@ import {
   type SupplyKind,
 } from '../data/generators'
 import { UPGRADES, findUpgrade } from '../data/upgrades'
-import { currentPlanetDef, generatorCount, hasUpgrade, planet } from '../state/planet.svelte'
+import {
+  currentPlanetDef,
+  generatorCount,
+  hasUpgrade,
+  pendingUnits,
+  planet,
+} from '../state/planet.svelte'
 import { meta } from '../state/meta.svelte'
-import { addMaterial, affordableCount, canAffordMaterials, spendMaterials } from '../state/run.svelte'
+import { affordableCount } from '../state/run.svelte'
 import { play } from '../engine/audio'
 import { achievementEffects } from './achievements'
 import { fireThrottle, n2Percent } from './atmosphere'
-import { enforceStaffLimit, laborFactor, unassigned } from './labor'
+import { enforceStaffLimit, laborFactor } from './labor'
+import { storeMaterial } from './storage'
 import { eventEffects } from './eventEffects'
 import { WOOD_PER_TREE, forestO2Rate, forestRoom } from './forest'
 import { metaEffects } from './metaEffects'
@@ -53,8 +60,8 @@ interface Multipliers {
   global: Decimal
   /** Zusätzlich je nach Gasart — hier wirken Forschung und Techniker. */
   byGas: Record<GasKind, Decimal>
-  /** Zusätzlich je nach Ausgabeart — hier wirken die übrigen Berufe. */
-  byKind: Record<'plant' | 'fell' | 'material' | 'supply' | 'housing', Decimal>
+  /** Zusätzlich je nach Ausgabeart. */
+  byKind: Record<'plant' | 'fell' | 'material' | 'supply' | 'housing' | 'storage', Decimal>
   perGenerator: Record<string, Decimal>
 }
 
@@ -83,8 +90,11 @@ function collectMultipliers(): Multipliers {
       fell: new Decimal(1),
       material: new Decimal(1),
       supply: new Decimal(1),
-      // Wohnraum ist eine Kapazität und wird bewusst nirgends multipliziert.
+      // Wohnraum und Lagerplatz sind Kapazitäten und werden bewusst nirgends
+      // multipliziert — sonst würde ein Brand Betten und Regale verschwinden
+      // lassen.
       housing: new Decimal(1),
+      storage: new Decimal(1),
     },
     perGenerator: {},
   }
@@ -237,9 +247,15 @@ export function clickGain(): Decimal {
 
 // --- Kosten ---------------------------------------------------------------
 
-/** Preis des nächsten Stücks, nach Forschungsrabatt. */
+/**
+ * Preis des nächsten Stücks, nach Forschungsrabatt.
+ *
+ * Bestellte, aber noch nicht fertige Stück zählen seit M11 mit. Ohne sie
+ * kostet zweimal „Max" hintereinander beide Male den niedrigen Preis — die
+ * Baustelle wäre ein Rabatt auf sich selbst, und wer schnell klickt, spart.
+ */
 function firstUnitCost(def: GeneratorDef): Decimal {
-  const owned = generatorCount(def.id)
+  const owned = generatorCount(def.id) + pendingUnits(def.id)
   return new Decimal(def.baseCost)
     .mul(Decimal.pow(def.costGrowth, owned))
     .mul(researchEffects().buildCost)
@@ -315,30 +331,21 @@ export function isAvailable(def: GeneratorDef): boolean {
     case 'housing':
       // Versorgung und Wohnraum gibt es nur, wo überhaupt jemand wohnt.
       return planetDef.allowsPopulation
+    case 'storage':
+      // Eine Lagerhalle, wo nichts gefördert wird, wäre eine Zeile ohne
+      // Zweck. Das Lager selbst gilt trotzdem für den ganzen Durchlauf.
+      return planetDef.materials.length > 0
   }
 }
 
-export function buyGenerator(id: string, amount: number): boolean {
-  const def = findGenerator(id)
-  if (!def || amount < 1) return false
-  if (!isAvailable(def)) return false
-
-  const cost = generatorCost(def, amount)
-  if (planet.oxygen.lt(cost)) return false
-  // Alle drei Preise müssen stimmen, bevor irgendetwas abgebucht wird — sonst
-  // wäre O₂ weg und die Anlage stünde trotzdem nicht.
-  if (!canAffordMaterials(def.materialCost, amount)) return false
-  const people = (def.populationCost ?? 0) * amount
-  if (people > 0 && unassigned().lt(people)) return false
-
-  planet.oxygen = planet.oxygen.sub(cost)
-  spendMaterials(def.materialCost, amount)
-  // Die Leute ziehen ein und stehen nie wieder zur Verfügung.
-  if (people > 0) planet.bound = planet.bound.add(people)
-  planet.generators[id] = generatorCount(id) + amount
-  play('buy')
-  return true
-}
+/*
+ * `buyGenerator` gibt es seit M11 nicht mehr.
+ *
+ * Bezahlen legt jetzt eine Baustelle an — orderGenerator() in
+ * systems/construction.ts. Die Funktion ist ersatzlos dorthin gewandert
+ * statt hier als Weiterleitung stehenzubleiben: eine Anlage, die sofort
+ * dasteht, soll es im Code gar nicht mehr geben können.
+ */
 
 /**
  * Abreißen (§17).
@@ -442,7 +449,10 @@ export function productionSystem(dt: number): void {
     const felled = Decimal.min(fellingRate().mul(dt), planet.trees)
     if (felled.gt(0)) {
       planet.trees = planet.trees.sub(felled)
-      addMaterial('holz', felled.mul(WOOD_PER_TREE))
+      // Über das Lager, nicht daran vorbei: bei vollem Regal verfällt das
+      // Holz — die Bäume sind trotzdem gefällt. Das ist die unangenehme
+      // Seite einer vollen Halle und genau so gemeint.
+      storeMaterial('holz', felled.mul(WOOD_PER_TREE))
     }
   }
 
@@ -450,7 +460,7 @@ export function productionSystem(dt: number): void {
   for (const gen of GENERATORS) {
     if (gen.output.kind !== 'material') continue
     const gained = generatorRate(gen).mul(dt)
-    if (gained.gt(0)) addMaterial(gen.output.material, gained)
+    if (gained.gt(0)) storeMaterial(gen.output.material, gained)
   }
 
   // Versorgung bleibt auf dem Planeten — verbraucht wird sie in population.ts.

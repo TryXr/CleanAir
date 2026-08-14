@@ -73,6 +73,18 @@ export function staffing(def: GeneratorDef): number {
 const SATIETY_FLOOR = 0.25
 
 /**
+ * Wie viel ein Paar Hände gerade leistet — 0,25 bei leeren Vorräten, 1 bei
+ * voller Sättigung.
+ *
+ * Eigene Funktion, weil seit M11 auch die Baustelle danach rechnet. Zweimal
+ * dieselbe Formel hinzuschreiben hieße, sie beim nächsten Balancing genau
+ * einmal zu ändern.
+ */
+export function handFactor(): number {
+  return SATIETY_FLOOR + (1 - SATIETY_FLOOR) * planet.satiety
+}
+
+/**
  * Der Faktor, mit dem production.ts jede Anlagenleistung multipliziert.
  *
  * **Versorgung ist ausgenommen.** Nahrung und Wasser laufen immer mit voller
@@ -89,15 +101,40 @@ const SATIETY_FLOOR = 0.25
 export function laborFactor(def: GeneratorDef): number {
   if (!def.workSlots) return 1
   if (def.output.kind === 'supply') return staffing(def)
-  return staffing(def) * (SATIETY_FLOOR + (1 - SATIETY_FLOOR) * planet.satiety)
+  return staffing(def) * handFactor()
 }
 
 // --- Zuweisen -------------------------------------------------------------
 
-/** Bewohner, die weder zugewiesen noch von einem Bau verschluckt sind. */
+/**
+ * Bewohner, die weder an einer Anlage stehen noch auf der Baustelle noch von
+ * einem Bau verschluckt sind.
+ */
 export function unassigned(): Decimal {
-  const frei = planet.settlers.sub(planet.bound).sub(totalStaff())
+  const frei = planet.settlers.sub(planet.bound).sub(totalStaff()).sub(planet.builders)
   return frei.lt(0) ? new Decimal(0) : frei
+}
+
+// --- Baukolonne (M11) -----------------------------------------------------
+
+export function canAssignBuilder(): boolean {
+  return unassigned().gte(1)
+}
+
+/** Liefert, wie viele tatsächlich auf die Baustelle gegangen sind. */
+export function assignBuilder(amount = 1): number {
+  const frei = Math.floor(unassigned().toNumber())
+  const n = Math.min(amount, frei)
+  if (n <= 0) return 0
+  planet.builders += n
+  return n
+}
+
+export function unassignBuilder(amount = 1): number {
+  const n = Math.min(amount, planet.builders)
+  if (n <= 0) return 0
+  planet.builders -= n
+  return n
 }
 
 export function canAssign(id: string): boolean {
@@ -150,8 +187,21 @@ export function enforceStaffLimit(): void {
 
   // Danach erst die Gesamtzahl prüfen — sonst räumt man doppelt.
   const verfuegbar = planet.settlers.sub(planet.bound)
-  let gesamt = totalStaff()
+  let gesamt = totalStaff().add(planet.builders)
   if (gesamt.lte(verfuegbar)) return
+
+  /*
+   * Die Baustelle zuerst leeren. Wenn die Kolonie schrumpft, ist ein
+   * unterbesetztes Sägewerk der kleinere Schaden als eine Nahrungskette, die
+   * stehenbleibt — und die Baustelle wartet ohnehin geduldig.
+   */
+  if (planet.builders > 0) {
+    const zuviel = Math.ceil(gesamt.sub(verfuegbar).toNumber())
+    const weg = Math.min(planet.builders, zuviel)
+    planet.builders -= weg
+    gesamt = gesamt.sub(weg)
+    if (gesamt.lte(verfuegbar)) return
+  }
 
   const gekuerzt = { ...planet.staff }
   for (const def of GENERATORS) {

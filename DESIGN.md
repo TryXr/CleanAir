@@ -1083,7 +1083,7 @@ Jeder Pfeil braucht Hände. Ohne zugewiesene Bewohner steht die ganze Kette.
 | | Inhalt | Warum diese Reihenfolge |
 |---|---|---|
 | **M10** ✓ | Aurora startet mit 10 Bewohnern und endlichen Rationen. Zuweisung an Anlagen, Sättigung regelt die Arbeitsleistung, Abriss als Weg zurück. | Kleinstmöglicher vollständiger Loop, an dem sich das Modell beweisen muss |
-| **M11** | Bauen kostet Hände und Zeit: Bauplatz, Bauarbeiter, Fertigstellung. Lagerhallen mit echter Kapazitätsgrenze, Wohnhäuser. | Braucht den Arbeitskraft-Begriff aus M10 |
+| **M11** ✓ | Bauen kostet Hände und Zeit: Bauplatz, Bauarbeiter, Fertigstellung. Lagerhallen mit echter Kapazitätsgrenze, Wohnhäuser. | Braucht den Arbeitskraft-Begriff aus M10 |
 | **M12** | Verarbeitungsketten mit Zwischengütern und Rezepten. Rakete aus Metallplatten statt aus O₂. | Braucht Gebäude und Lager aus M11 |
 | **M13** | Aurora als Mars zu Ende, dann Vesta bis Nimbus auf die neue Wirtschaft umstellen und vollständig neu balancieren. | Aufräumen, wenn das Modell steht |
 
@@ -1141,6 +1141,56 @@ selbst zu ernähren gibt man zuletzt auf.
 **Pro-Kopf-Verbrauch steht am Planeten**, nicht global — Aurora rechnet mit
 einem Dutzend Leuten, Vesta bis Nimbus noch mit Zehntausenden.
 
+### Entschieden in M11
+
+**Bezahlen legt eine Baustelle an, keine Anlage.** Material, O₂ und verbaute
+Menschen sind sofort weg; das Gebäude entsteht durch Arbeit. Jede Anlage hat
+dafür ein Pflichtfeld `buildWork` in Arbeitersekunden — kein Default, damit
+ein vergessener Wert nicht stillschweigend die alte Sofort-Mechanik
+zurückbringt.
+
+**Die Kolonne arbeitet die vorderste Baustelle ab, nicht alle gleichzeitig.**
+Eine Reihe, die sichtbar von oben abgearbeitet wird, versteht man; fünf
+gleichzeitig kriechende Balken nicht. Fortschritt zählt pro *Stück*, also
+liefert eine Zehnerbestellung nach und nach statt zehnmal so lange gar nichts.
+
+**Es gibt einen Grundtakt ohne Bauarbeiter** (`0,5` Arbeit/s, die Bauautomaten
+der Landefähre). Das widerspricht dem Tabelleneintrag „braucht einen
+zugewiesenen Bauarbeiter" bewusst — ohne ihn wären Vesta bis Nimbus
+**Sackgassen**: sie starten mit null Bewohnern, Bewohner brauchen Wohnraum,
+Wohnraum will gebaut werden. Gemessen: mit Grundtakt steht die erste
+Wohnkuppel auf Vesta nach 119 s und die ersten Siedler landen in derselben
+Sekunde. Hände bleiben trotzdem die Hauptsache — ein einziger Bauarbeiter
+verdreifacht das Tempo.
+
+**Abbrechen erstattet die offenen Stück vollständig.** Kein Widerspruch zum
+„Abriss ohne Rückerstattung": dort steht ein fertiges Gebäude, hier steht noch
+nichts. Ein Fehlklick auf „Max" darf keine Strafe sein.
+
+> **Falle, beim Bauen dieselbe wie beim Preis:** Die Kostenkurve muss
+> *bestellte* Stück mitzählen, sonst kostet zweimal „Max" hintereinander
+> beide Male den niedrigen Preis. Und beim Abbrechen muss die Baustelle
+> **zuerst** aus der Reihe fliegen und **dann** der Preis gerechnet werden —
+> andersherum zählt sie sich selbst mit und erstattet die Stufen *über* den
+> eigenen. Gemessen war das ein Gewinn von 4021 O₂ pro Abbruch.
+
+**Das Lager ist endlich, die Grenze gehört dem Durchlauf.** Grundplatz 1000 je
+Material, jede Lagerhalle +2500 — für alle Materialien zugleich, damit nicht
+eine schnelle Mine den Rest aus dem Regal drängt. Hallen auf *allen* Planeten
+zählen mit: eine planetenlokale Grenze würde beim Reisen sinken und im selben
+Moment Material vernichten, das längst im Regal lag. Überschuss verfällt, aber
+was schon liegt, bleibt liegen — auch nach einem Abriss (§1.2).
+
+**Aurora bekommt das Wohnmodul.** Es kostet kein Material, weil es aus
+Regolith vor Ort gedruckt wird — so hat der materiallose Planet einen zweiten
+Akt, ohne dass Aurora ein Vorkommen bekommt und §11 verletzt.
+
+**Gemessen (simuliert, nicht geschätzt):** Aurora liegt jetzt bei 22,8–25,1
+min je nach Klickrate und Spielweise; die Bauzeit kostet rund zwei Minuten
+gegenüber den 21,1 min aus M10. Das ist der obere Rand des Fensters aus §13
+(15–25 min) — nachgestellt wurde nichts, weil der Unterschied zum Fenster
+sechs Sekunden beträgt und damit unter dem Rauschen einer Heuristik liegt.
+
 ### Offene Fragen dieses Kurswechsels
 
 - **Was wird aus dem Klick-Knopf?** Wenn O₂ keine Währung mehr ist, ist
@@ -1148,8 +1198,12 @@ einem Dutzend Leuten, Vesta bis Nimbus noch mit Zehntausenden.
   Anlage, die auch ohne zugewiesenen Bewohner ein wenig liefert.
 - **Haben Bewohner Namen?** Bei Dutzenden wäre es möglich und stärkt §1.4
   („Zahlen erzählen eine Geschichte"), kostet aber UI.
-- **Aurora hat noch keinen Wohnraum zum Bauen.** Die Wohnkuppel kostet Stein,
-  den Aurora nicht führt — die Kolonie bleibt dort bei den zwölf Plätzen der
-  Landekapseln. Ob sich das zu statisch anfühlt, muss ein Spieltest zeigen.
+- **Auf Aurora zahlen sich Menschen noch nicht aus.** Gemessen ist der Planet
+  *mit* gebautem Wohnraum langsamer als ohne (25,1 gegen 23,4 min): die
+  O₂-Seite besteht dort aus Maschinen, die keine Hände brauchen, also kostet
+  jeder zusätzliche Mensch Atem und O₂ und bringt nur Bautempo. Das ist die
+  direkte Folge der M10-Entscheidung „Maschine gegen Handarbeit" und gehört
+  in den Balancing-Pass von M13 — entweder über den Wald als Hand-Hebel oder
+  über eine O₂-Anlage mit Plätzen.
 - **Der Arbeitskraft-Multiplikator** (`1 + √siedler / 40`) ist bei zwölf
   Bewohnern praktisch wirkungslos und gehört ersetzt.

@@ -53,6 +53,12 @@ export type Output =
   | { kind: 'supply'; supply: SupplyKind }
   /** Wohnraum. Eine Kapazität, keine Rate — siehe housingCapacity(). */
   | { kind: 'housing' }
+  /**
+   * Lagerraum. Ebenfalls eine Kapazität, keine Rate — siehe
+   * systems/storage.ts. Seit M11 ist das Lager endlich, und Überschuss
+   * verfällt an der Grenze.
+   */
+  | { kind: 'storage' }
 
 export type SupplyKind = 'food' | 'water'
 
@@ -91,6 +97,20 @@ export interface GeneratorDef {
    * `plant` und `fell` die Zahl der Bäume.
    */
   baseRate: number
+
+  /**
+   * Arbeitersekunden, die ein Stück bis zur Fertigstellung braucht (M11, §17).
+   *
+   * Bezahlen legt seit M11 nur noch eine **Baustelle** an. Was daraus wird,
+   * entscheidet die Baukolonne: ein Bauarbeiter leistet eine Arbeitersekunde
+   * pro Sekunde, die Bauautomaten der Landefähre einen Bruchteil davon
+   * (systems/construction.ts).
+   *
+   * Pflichtfeld, kein Default. Ein vergessener Wert wäre sonst ein Gebäude,
+   * das in null Zeit dasteht — und damit genau die Sofort-Mechanik, die M11
+   * abschafft. Der Compiler soll daran erinnern.
+   */
+  buildWork: number
   /** Ab wie viel jemals freigesetztem O₂ der Generator sichtbar wird. */
   revealAt: number
 
@@ -130,6 +150,8 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 10,
     costGrowth: 1.12,
     baseRate: 0.3,
+    /** Die kleinste Baustelle des Spiels — sonst wäre Minute eins Warten. */
+    buildWork: 4,
     revealAt: 0,
   },
 
@@ -146,6 +168,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 25,
     costGrowth: 1.15,
     baseRate: 0.09,
+    buildWork: 6,
     revealAt: 0,
   },
   {
@@ -156,6 +179,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 40,
     costGrowth: 1.15,
     baseRate: 0.07,
+    buildWork: 8,
     revealAt: 0,
     workSlots: 1,
   },
@@ -167,6 +191,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 120,
     costGrowth: 1.13,
     baseRate: 4,
+    buildWork: 15,
     revealAt: 40,
   },
   {
@@ -177,7 +202,33 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 1500,
     costGrowth: 1.14,
     baseRate: 55,
+    buildWork: 40,
     revealAt: 400,
+  },
+
+  /* --- Wohnraum, den Aurora bauen kann (M11) -----------------------------
+     Die offene Frage aus §17: die Wohnkuppel kostet Stein, den Aurora nicht
+     führt — die Kolonie blieb dort bei den zwölf Betten der Landekapseln und
+     damit statisch. Das Wohnmodul ist die Antwort: es kostet **kein**
+     Material, weil es aus dem Regolith vor Ort gedruckt wird. Damit hat auch
+     der materiallose Planet einen zweiten Akt, ohne dass Aurora ein
+     Materialvorkommen bekommt und §11 verletzt.
+
+     Wie die Kuppel bewusst ohne populationCost: Wohnraum, der Menschen
+     kostet, ist ein Henne-Ei-Problem ohne Ausgang.
+  ---------------------------------------------------------------------- */
+  {
+    id: 'habitat',
+    name: 'Wohnmodul',
+    description:
+      'Aus Regolith gedruckt, in einer Nacht aufgestellt. Vier Kojen, eine Schleuse, kein Fenster.',
+    output: { kind: 'housing' },
+    baseCost: 350,
+    /** Steiler als die O₂-Seite: jeder neue Mensch atmet und isst mit. */
+    costGrowth: 1.2,
+    baseRate: 4,
+    buildWork: 20,
+    revealAt: 60,
   },
 
   /* --- Puffer -----------------------------------------------------------
@@ -193,6 +244,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 300,
     costGrowth: 1.12,
     baseRate: 14,
+    buildWork: 20,
     revealAt: 200,
   },
   {
@@ -205,6 +257,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     /** Der Cracker ist die erste Anlage, die ohne Material nicht anläuft. */
     materialCost: { titan: 8 },
     baseRate: 260,
+    buildWork: 60,
     populationCost: 12,
     revealAt: 3000,
   },
@@ -222,6 +275,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 2000,
     costGrowth: 1.15,
     baseRate: 0.0018,
+    buildWork: 30,
     revealAt: 1500,
   },
 
@@ -234,7 +288,34 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 2600,
     costGrowth: 1.15,
     baseRate: 0.0016,
+    buildWork: 30,
     revealAt: 1500,
+  },
+
+  /* --- Lager (M11, §17) --------------------------------------------------
+     Das Lager ist seit M11 endlich, und ohne Hallen verfällt jeder Überschuss
+     an der Grenze. Die Halle steht auf einem Planeten, ihr Platz gehört aber
+     dem **Durchlauf** — wie das Lager selbst (systems/storage.ts). Sonst
+     würde eine Reise die Kapazität senken und im selben Moment Material
+     vernichten, das längst im Regal lag.
+
+     Verfügbar nur, wo überhaupt etwas gefördert wird: eine Halle auf Aurora
+     wäre eine Zeile ohne Zweck.
+  ---------------------------------------------------------------------- */
+  {
+    id: 'depot',
+    name: 'Lagerhalle',
+    description:
+      'Regale bis unters Dach, halb in den Fels getrieben. Was hier keinen Platz findet, bleibt liegen und verwittert.',
+    output: { kind: 'storage' },
+    baseCost: 900,
+    costGrowth: 1.12,
+    /** Aus dem, was am Ort liegt — der Steinbruch braucht selbst kein Material. */
+    materialCost: { stein: 10 },
+    /** Platz je Halle und Material. Die Raketen brauchen bis zu 20 000. */
+    baseRate: 2500,
+    buildWork: 25,
+    revealAt: 500,
   },
 
   /* --- Wald -------------------------------------------------------------
@@ -250,6 +331,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 800,
     costGrowth: 1.13,
     baseRate: 0.5,
+    buildWork: 12,
     revealAt: 600,
     workSlots: 1,
   },
@@ -262,6 +344,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.14,
     materialCost: { stein: 5 },
     baseRate: 0.35,
+    buildWork: 35,
     populationCost: 3,
     revealAt: 1800,
     workSlots: 2,
@@ -293,6 +376,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
      * echte Investition, ohne die Arbeitskraft zu erwürgen.
      */
     baseRate: 300,
+    buildWork: 60,
     revealAt: 400,
   },
   {
@@ -305,6 +389,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     materialCost: { holz: 8, stein: 6 },
     populationCost: 4,
     baseRate: 3.5,
+    buildWork: 45,
     revealAt: 1200,
     workSlots: 2,
   },
@@ -318,6 +403,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     materialCost: { stein: 12 },
     populationCost: 3,
     baseRate: 4.5,
+    buildWork: 40,
     revealAt: 1000,
   },
 
@@ -330,6 +416,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 1200,
     costGrowth: 1.13,
     baseRate: 0.4,
+    buildWork: 25,
     revealAt: 350,
     workSlots: 2,
   },
@@ -342,6 +429,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.15,
     materialCost: { stein: 40, holz: 25 },
     baseRate: 0.12,
+    buildWork: 70,
     populationCost: 8,
     revealAt: 6000,
     workSlots: 3,
@@ -356,6 +444,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 2200,
     costGrowth: 1.13,
     baseRate: 0.3,
+    buildWork: 30,
     populationCost: 3,
     revealAt: 1400,
     workSlots: 2,
@@ -369,6 +458,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.14,
     materialCost: { obsidian: 15 },
     baseRate: 0.22,
+    buildWork: 45,
     populationCost: 4,
     revealAt: 3500,
     workSlots: 2,
@@ -383,6 +473,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 1800,
     costGrowth: 1.12,
     baseRate: 0.55,
+    buildWork: 28,
     populationCost: 2,
     revealAt: 1100,
     workSlots: 2,
@@ -397,6 +488,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseCost: 9000,
     costGrowth: 1.14,
     baseRate: 0.18,
+    buildWork: 60,
     populationCost: 5,
     revealAt: 5000,
     workSlots: 3,
@@ -414,6 +506,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.11,
     materialCost: { helium: 4 },
     baseRate: 3200,
+    buildWork: 45,
     populationCost: 6,
     revealAt: 2500,
     planets: ['nimbus'],

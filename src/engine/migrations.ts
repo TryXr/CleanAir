@@ -210,6 +210,26 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.planet = planet
     return s
   },
+
+  /**
+   * M11: Bauen kostet Hände und Zeit; das Lager ist endlich (§17).
+   *
+   * Keine offene Baustelle und keine Baukolonne — ein alter Stand hat beides
+   * nie gekannt. Was schon gebaut ist, bleibt gebaut: rückwirkend Gebäude in
+   * Baustellen zu verwandeln wäre ein Rückschritt für etwas längst Bezahltes.
+   *
+   * Das Lager wird bewusst **nicht** auf die neue Grenze gestutzt. Wer mit
+   * 50 000 Titan lädt, behält sie — die Kapazität stoppt ab jetzt den
+   * Nachschub, sie vernichtet nichts (§1.2). Ohne diese Entscheidung würde
+   * die Migration stillschweigend Stunden an Förderarbeit löschen.
+   */
+  13: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    planet.sites = []
+    planet.builders = 0
+    s.planet = planet
+    return s
+  },
 }
 
 export interface MigrationResult {

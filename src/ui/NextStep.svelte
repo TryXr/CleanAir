@@ -5,7 +5,7 @@
   import { canBuildRocket } from '../systems/travel'
   import { generatorCost } from '../systems/production'
   import { housingCapacity } from '../systems/population'
-  import { currentPlanetDef, generatorCount, planet } from '../state/planet.svelte'
+  import { currentPlanetDef, generatorCount, pendingUnits, planet } from '../state/planet.svelte'
 
   /**
    * Ein Satz, der sagt, was jetzt dran ist.
@@ -23,10 +23,19 @@
     const erste = GENERATORS[0]!
 
     // Ganz am Anfang: es gibt genau eine sinnvolle Handlung.
-    if (generatorCount(erste.id) === 0) {
+    if (generatorCount(erste.id) === 0 && pendingUnits(erste.id) === 0) {
       return planet.oxygen.gte(generatorCost(erste, 1))
         ? `Du kannst dir die erste ${erste.name} leisten — unter „Aufbau".`
         : 'Setz O₂ frei, bis die erste Anlage bezahlbar ist.'
+    }
+
+    /*
+     * Seit M11 die häufigste Ratlosigkeit: es ist bezahlt, es passiert
+     * nichts. Der Grund steht auf der Baustelle und nicht dort, wo geklickt
+     * wurde — also hier.
+     */
+    if (planet.sites.length > 0 && planet.builders === 0) {
+      return 'Auf der Baustelle steht niemand. Weis unter „Aufbau" Bauarbeiter zu.'
     }
 
     if (planet.completed) {
@@ -47,7 +56,7 @@
 
     // Wohnraum ist seit M5 die Bremse, die man am ehesten übersieht.
     if (def.allowsPopulation && housingCapacity().lte(0)) {
-      return 'Ohne Wohnkuppeln landet niemand. Bau welche unter „Aufbau".'
+      return 'Ohne Wohnraum landet niemand. Bau welchen unter „Aufbau".'
     }
 
     const offen = atmosphereStatus().find((s) => !s.ok)

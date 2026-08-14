@@ -5,13 +5,23 @@ import App from './App.svelte'
 import { format, formatTime } from './engine/format'
 import { applyOffline, registerSystem, runTicks, startLoop, stopLoop } from './engine/loop'
 import { isAudioReady, play as playSound, unlockAudio } from './engine/audio'
-import { SAVE_VERSION, buildSave, exportSave, importSave, loadGame, saveNow } from './engine/save'
+import {
+  SAVE_VERSION,
+  buildSave,
+  exportSave,
+  importSave,
+  loadGame,
+  saveNow,
+  suspendPersistence,
+} from './engine/save'
 import * as achievements from './systems/achievements'
 import * as atmosphere from './systems/atmosphere'
 import * as events from './systems/events'
 import * as combat from './systems/combat'
+import * as construction from './systems/construction'
 import * as forest from './systems/forest'
 import * as labor from './systems/labor'
+import * as storage from './systems/storage'
 import * as population from './systems/population'
 import * as prestige from './systems/prestige'
 import * as production from './systems/production'
@@ -20,9 +30,11 @@ import * as travel from './systems/travel'
 import { atmosphereSystem, resetAtmosphereNotices } from './systems/atmosphere'
 import { achievementsSystem } from './systems/achievements'
 import { combatSystem } from './systems/combat'
+import { constructionSystem } from './systems/construction'
 import { eventsSystem } from './systems/events'
 import { populationSystem, resetPopulationNotices } from './systems/population'
 import { productionSystem } from './systems/production'
+import { resetStorageNotices } from './systems/storage'
 import { AURORA, PLANETS } from './data/planets'
 import { EVENTS } from './data/events'
 import { GENERATORS } from './data/generators'
@@ -46,10 +58,13 @@ import { settings } from './state/settings.svelte'
    1. zeit         — Uhren zuerst, alles andere rechnet gegen sie.
    2. ereignisse   — legen ihre Faktoren an, bevor jemand sie liest.
    3. produktion   — Zufluss vor Verbrauch, damit ein Tick nie ins Negative kippt.
-   4. bevölkerung  — atmet weg, was eben entstanden ist.
-   5. atmosphäre   — bewertet zuletzt den fertigen Zustand des Ticks und
+   4. bau          — nach der Produktion: eine Anlage, die in diesem Tick
+                     fertig wird, liefert erst im nächsten. Andersherum
+                     produzierte sie, bevor sie stand.
+   5. bevölkerung  — atmet weg, was eben entstanden ist.
+   6. atmosphäre   — bewertet zuletzt den fertigen Zustand des Ticks und
                      entscheidet über Brände und den Stabilitäts-Timer.
-   6. anoxen       — ganz zuletzt: die Welle schlägt auf den fertigen Zustand
+   7. anoxen       — ganz zuletzt: die Welle schlägt auf den fertigen Zustand
                      ein. Andersherum würde eine Sabotage im selben Tick noch
                      produzieren, den sie gerade lahmgelegt hat.
 -------------------------------------------------------------------------- */
@@ -61,6 +76,7 @@ registerSystem('zeit', (dt) => {
 
 registerSystem('ereignisse', eventsSystem)
 registerSystem('produktion', productionSystem)
+registerSystem('bau', constructionSystem)
 registerSystem('bevölkerung', populationSystem)
 registerSystem('atmosphäre', atmosphereSystem)
 registerSystem('anoxen', combatSystem)
@@ -110,6 +126,7 @@ function creditAbsence(awayMs: number): void {
 
 resetPopulationNotices()
 resetAtmosphereNotices()
+resetStorageNotices()
 
 if (loaded.status === 'loaded') creditAbsence(loaded.awayMs)
 
@@ -135,14 +152,16 @@ const autosaveTimer = setInterval(() => saveNow(), Math.max(5, settings.autosave
  * wegschreibt; ohne diesen Schalter überschreibt eine Simulation den
  * echten Spielstand. Genau das ist beim Bau von M3 einmal passiert.
  */
-let persistenceOff = false
 function stopPersistence(): void {
-  persistenceOff = true
+  // Die eigentliche Sperre sitzt in save.ts — nur dort greift sie auch für
+  // importSave() und damit für den Selbsttest. Ein Schalter allein hier war
+  // löchrig und hat beim Bau von M11 einen Spielstand gekostet.
+  suspendPersistence()
   clearInterval(autosaveTimer)
 }
 
 function persist(): void {
-  if (!persistenceOff) saveNow()
+  saveNow()
 }
 
 window.addEventListener('beforeunload', persist)
@@ -182,6 +201,8 @@ if (import.meta.env.DEV) {
       events,
       forest,
       labor,
+      construction,
+      storage,
       combat,
       achievements,
       travel,

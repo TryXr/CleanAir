@@ -2,14 +2,20 @@
   import { MATERIALS } from '../data/materials'
   import { format, formatRate } from '../engine/format'
   import { materialRate } from '../systems/production'
+  import { isStorageFull, materialCapacity, storageFraction } from '../systems/storage'
   import { currentPlanetDef } from '../state/planet.svelte'
   import { materialAmount } from '../state/run.svelte'
 
   /**
    * Das globale Lager (DESIGN.md §16). Es gehört dem Durchlauf, nicht dem
    * Planeten — Holz von hier baut später auch anderswo.
+   *
+   * Seit M11 ist es endlich (§17). Die Grenze steht bewusst in jeder Zeile
+   * und nicht nur als Fußnote: ein Regal, das still überläuft, ist der
+   * unangenehmste Weg, Fortschritt zu verlieren.
    */
   const def = $derived(currentPlanetDef())
+  const cap = $derived(materialCapacity())
 
   // Alles anzeigen, was man besitzt oder hier fördern kann. Ein Material,
   // das es auf diesem Planeten nicht gibt und von dem nichts im Lager
@@ -20,6 +26,8 @@
       amount: materialAmount(m.id),
       rate: materialRate(m.id),
       local: def.materials.includes(m.id),
+      full: isStorageFull(m.id),
+      fraction: storageFraction(m.id),
     })).filter((r) => r.amount.gt(0) || r.local),
   )
 </script>
@@ -37,14 +45,25 @@
           {#if !row.local}<span class="foreign">nicht hier</span>{/if}
         </dt>
         <dd class="num">
-          {format(row.amount)}
-          {#if row.rate.gt(0)}<span class="rate">+{formatRate(row.rate)}</span>{/if}
+          <span class="amount" class:full={row.full}>{format(row.amount)}</span>
+          <span class="cap">/ {format(cap)}</span>
+          {#if row.full}
+            <span class="over">voll — Nachschub verfällt</span>
+          {:else if row.rate.gt(0)}
+            <span class="rate">+{formatRate(row.rate)}</span>
+          {/if}
         </dd>
+      </div>
+      <div class="track" aria-hidden="true">
+        <div class="fill" class:full={row.full} style:width="{Math.round(row.fraction * 100)}%"></div>
       </div>
     {/each}
   </dl>
 
-  <p class="hint">Das Lager gilt für alle Planeten dieses Durchlaufs.</p>
+  <p class="hint">
+    Das Lager gilt für alle Planeten dieses Durchlaufs. Lagerhallen heben die Grenze — für jedes
+    Material zugleich.
+  </p>
 {/if}
 
 <style>
@@ -66,8 +85,43 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 12px;
-    border-bottom: 1px dotted var(--line-soft);
-    padding-bottom: 6px;
+    padding-bottom: 4px;
+  }
+
+  .track {
+    display: block;
+    height: 3px;
+    padding: 0;
+    margin-bottom: 4px;
+    background: var(--line-soft);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .fill {
+    height: 100%;
+    background: var(--o2-dim);
+  }
+
+  .fill.full {
+    background: var(--warn);
+  }
+
+  .amount.full {
+    color: var(--warn);
+  }
+
+  .cap {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .over {
+    margin-left: 7px;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--warn);
   }
 
   dt {

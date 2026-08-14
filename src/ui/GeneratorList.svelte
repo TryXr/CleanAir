@@ -1,16 +1,16 @@
 <script lang="ts">
   import { GENERATORS, type GeneratorDef } from '../data/generators'
   import { findMaterial } from '../data/materials'
-  import { format, formatInt, formatRate } from '../engine/format'
+  import { format, formatInt, formatRate, formatTime } from '../engine/format'
   import {
-    buyGenerator,
     demolish,
     generatorCost,
     generatorRate,
     isAvailable,
     maxAffordable,
   } from '../systems/production'
-  import { generatorCount, planet } from '../state/planet.svelte'
+  import { buildRate, orderGenerator } from '../systems/construction'
+  import { generatorCount, pendingUnits, planet } from '../state/planet.svelte'
   import { canAffordMaterials } from '../state/run.svelte'
   import { session, type BuyAmount } from '../state/session.svelte'
 
@@ -29,7 +29,23 @@
     { key: 'plant', title: 'Wald', hint: 'Bäume atmen für dich' },
     { key: 'fell', title: 'Holzernte', hint: 'kostet Atmosphäre' },
     { key: 'material', title: 'Abbau', hint: 'füllt das globale Lager' },
+    { key: 'housing', title: 'Wohnraum', hint: 'ohne Betten kommt niemand' },
+    { key: 'storage', title: 'Lager', hint: 'hebt die Grenze des Regals' },
   ]
+
+  /**
+   * Wie lange dieses Stück bei der aktuellen Kolonne dauert (M11).
+   *
+   * Bewusst an der Kaufschaltfläche und nicht nur auf der Baustelle: die
+   * Entscheidung „lohnt sich das jetzt?" fällt hier, und eine Bauzeit, die
+   * man erst nach dem Bezahlen sieht, wäre eine Überraschung statt einer
+   * Information.
+   */
+  function buildLabel(def: GeneratorDef, amount: number): string {
+    const rate = buildRate()
+    if (rate <= 0) return 'Bauzeit unbestimmt'
+    return `${formatTime((def.buildWork * Math.max(1, amount)) / rate)} Bauzeit`
+  }
 
   /** „40 Stein, 25 Holz" — für die Kaufschaltfläche. */
   function materialLabel(def: GeneratorDef, amount: number): string {
@@ -55,7 +71,7 @@
 
   function onBuy(def: GeneratorDef): void {
     const amount = amountFor(def)
-    if (amount > 0) buyGenerator(def.id, amount)
+    if (amount > 0) orderGenerator(def.id, amount)
   }
 
   /**
@@ -89,6 +105,12 @@
       return count > 0
         ? `Wohnraum für ${formatInt(total)}`
         : `Wohnraum für ${formatInt(def.baseRate)} pro Stück`
+    }
+    if (out.kind === 'storage') {
+      const total = generatorCount(def.id) * def.baseRate
+      return count > 0
+        ? `+${formatInt(total)} Platz je Material`
+        : `+${formatInt(def.baseRate)} Platz je Material pro Stück`
     }
     if (out.kind === 'supply') {
       const name = out.supply === 'food' ? 'Nahrung' : 'Wasser'
@@ -124,6 +146,7 @@
   <ul class="generators">
     {#each group.items as def (def.id)}
       {@const count = generatorCount(def.id)}
+      {@const imBau = pendingUnits(def.id)}
       {@const amount = amountFor(def)}
       {@const cost = generatorCost(def, Math.max(1, amount))}
       {@const hasMaterials = canAffordMaterials(def.materialCost, Math.max(1, amount))}
@@ -133,6 +156,11 @@
           <div class="line">
             <span class="name">{def.name}</span>
             <span class="count num">{formatInt(count)}</span>
+            <!-- Bestelltes gehört sichtbar neben das Gebaute: sonst wirkt
+                 ein Klick folgenlos und man bestellt dasselbe zweimal. -->
+            {#if imBau > 0}
+              <span class="pending num">+{formatInt(imBau)} im Bau</span>
+            {/if}
           </div>
           <p class="desc">{def.description}</p>
           <span class="rate num">{rateLabel(def)}</span>
@@ -152,7 +180,7 @@
 
         <button class="buy" disabled={!affordable} onclick={() => onBuy(def)}>
           <span class="buy-label">
-            Kaufen{amount > 1 ? ` ×${formatInt(amount)}` : ''}
+            Bauen{amount > 1 ? ` ×${formatInt(amount)}` : ''}
           </span>
           <span class="cost num">{amount > 0 ? format(cost) : '—'} O₂</span>
           {#if def.materialCost}
@@ -160,6 +188,7 @@
               {materialLabel(def, amount)}
             </span>
           {/if}
+          <span class="cost time num">{buildLabel(def, amount)}</span>
         </button>
       </li>
     {/each}
@@ -298,6 +327,16 @@
   .wreck:hover {
     color: var(--bad);
     border-color: var(--bad);
+  }
+
+  .pending {
+    font-size: 11px;
+    color: var(--warn);
+  }
+
+  .cost.time {
+    font-size: 10px;
+    color: var(--muted);
   }
 
   .cost.material {

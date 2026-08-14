@@ -12,6 +12,7 @@
   import { pendingCores } from './systems/prestige'
   import AchievementGrid from './ui/AchievementGrid.svelte'
   import AtmospherePanel from './ui/AtmospherePanel.svelte'
+  import BuildPanel from './ui/BuildPanel.svelte'
   import CombatPanel from './ui/CombatPanel.svelte'
   import DebugPanel from './ui/DebugPanel.svelte'
   import EventPanel from './ui/EventPanel.svelte'
@@ -166,6 +167,13 @@
     {/if}
 
     {#if session.tab === 'aufbau'}
+      <!-- Die Baustelle steht *über* den Anlagen: sie ist seit M11 der Ort,
+           an dem ein Kauf endet, und wer sie übersieht, wundert sich, warum
+           nichts passiert. -->
+      <Panel title="Baustelle" hint="bezahlt ist nicht gebaut">
+        <BuildPanel />
+      </Panel>
+
       <Panel title="Anlagen">
         <GeneratorList />
       </Panel>

@@ -26,6 +26,14 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M11 ist fertig: **Bezahlen legt eine Baustelle an, keine Anlage.** Wer eine
+Anlage direkt in `planet.generators` schreibt, hebelt den Meilenstein aus —
+der Weg führt über `orderGenerator()` in systems/construction.ts, und fertig
+wird sie durch Arbeit (Bauarbeiter plus einen kleinen Grundtakt, ohne den
+jeder Planet ohne Startbevölkerung eine Sackgasse wäre). Dazu ein **endliches
+Lager**: `addMaterial()` ist der rohe Setzer, im Spiel geht Material
+ausschließlich über `storeMaterial()` aus systems/storage.ts.
+
 **Boni gehören in eine Sammelstelle, nie in die Formel.** Es gibt inzwischen
 fünf Quellen — Meta-Baum, Forschung, Berufe, Ereignisse, Achievements. Jede
 hat ihr eigenes `*Effects()`-Modul, und `collectMultipliers()` in
@@ -40,6 +48,8 @@ stur laufender Regler erzeugt denselben Schaden spiegelverkehrt. Seit §17
 gilt das auch für Bevölkerung: Zuwanderung passiert automatisch, also ist
 **Abriss** der Weg zurück — und Schrumpfen darf deshalb nicht am
 Sättigungsfaktor hängen, sonst wirkt der Abriss bei knappen Vorräten nicht.
+Seit M11 ist die Lagergrenze das Gegenstück zum Abbau — sie stoppt aber nur
+den Nachschub und vernichtet nie, was schon liegt.
 
 ## Drei Lebensdauern, nicht zwei
 
@@ -134,18 +144,23 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 56 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 77 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
 diesem Projekt jedes Mal mehrere Meilensteine unentdeckt überlebt hat:
 Save-Rundlauf, Reisen mit Ein- und Auslagern, Raketen-Sperren, Sackgassen,
 Vollständigkeit der Serialisierung, Regler-Verhalten des Ventils, Sabotage der
-Anoxen, Achievement-Boni, Ton, die Trennung Maschine/Handarbeit und der
-Abriss als Weg zurück.
+Anoxen, Achievement-Boni, Ton, die Trennung Maschine/Handarbeit, der Abriss
+als Weg zurück — und seit M11, dass eine Bestellung *nicht* sofort dasteht,
+dass Bestelltes den Preis mitzieht, dass ein Abbruch exakt erstattet und dass
+das Lager wirklich überläuft statt still weiterzuwachsen.
 
-Der Test sichert den Zustand vorher und stellt ihn danach wieder her, ist
-aber trotzdem nichts für einen echten Spielstand.
+Der Test sichert den Zustand vorher und stellt ihn danach wieder her — und
+sperrt seit M11 zusätzlich das Speichern, solange er läuft. Vorher schrieb
+jeder Lauf über `importSave()` in den echten Spielstand; genau daran ist beim
+Bau von M11 einer verloren gegangen. Die Prüfung „Gesperrte Persistenz
+schreibt nichts" hält das offen.
 
 **Neue Prüfung nur mit Gegenprobe.** Ein Test, der auf korrektem Code besteht,
 beweist nichts — den Fehler absichtlich einbauen, rot sehen, zurückbauen.
@@ -172,6 +187,13 @@ Abschlusszeit gegen §13 prüfen.
 Zustand, den das Autosave 30 Sekunden später wegschreibt. Ohne den Schalter
 überschreibt ein Balancing-Lauf den echten Spielstand — beim Bau von M3
 genau einmal passiert.
+
+Seit M11 sitzt die eigentliche Sperre in [save.ts](src/engine/save.ts)
+(`suspendPersistence()`), nicht mehr nur in main.ts. Der Schalter dort deckte
+Timer, `beforeunload` und Tab-Wechsel ab — aber nicht `saveGame()` selbst, und
+`importSave()` ruft es auf. Der Selbsttest stellt seinen Ausgangszustand genau
+darüber wieder her, schrieb also bei **jedem** Lauf. So ist beim Bau von M11
+ein zweiter Spielstand verloren gegangen, obwohl die Regel oben befolgt war.
 
 Ein simulierter Spieler braucht außerdem zwei Dinge, sonst misst man Unsinn:
 **Klicks** (ohne sie kommt er nie an den ersten Generator) und einen

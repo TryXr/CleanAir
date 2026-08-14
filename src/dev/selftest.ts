@@ -1,27 +1,43 @@
 import Decimal from 'break_infinity.js'
-import { GENERATORS } from '../data/generators'
+import { GENERATORS, findGenerator } from '../data/generators'
 import { AURORA, PLANETS } from '../data/planets'
 import { ROCKETS } from '../data/rockets'
 import { findSound } from '../data/sounds'
 import { play } from '../engine/audio'
-import { exportSave, importSave } from '../engine/save'
+import {
+  exportSave,
+  importSave,
+  isPersistenceSuspended,
+  resumePersistence,
+  saveGame,
+  suspendPersistence,
+} from '../engine/save'
 import { deserializeSettings, serializeSettings, settings } from '../state/settings.svelte'
-import { deserializePlanet, planet, resetPlanet, serializePlanet } from '../state/planet.svelte'
-import { run } from '../state/run.svelte'
+import {
+  deserializePlanet,
+  pendingUnits,
+  planet,
+  resetPlanet,
+  serializePlanet,
+} from '../state/planet.svelte'
+import { materialAmount, run } from '../state/run.svelte'
 import { atmosphereSystem, n2Percent } from '../systems/atmosphere'
 import { meta } from '../state/meta.svelte'
 import { achievementsSystem } from '../systems/achievements'
 import { combatSystem } from '../systems/combat'
-import { assign, unassign } from '../systems/labor'
+import { buildRate, cancelSite, constructionSystem, orderGenerator } from '../systems/construction'
+import { assign, assignBuilder, unassign } from '../systems/labor'
 import { housingCapacity, populationSystem } from '../systems/population'
 import {
   clickGain,
   currentO2Rate,
   demolish,
+  generatorCost,
   isAvailable,
   productionSystem,
   supplyRate,
 } from '../systems/production'
+import { isStorageFull, materialCapacity, storeMaterial } from '../systems/storage'
 import { buildRocket, travelTo } from '../systems/travel'
 
 /**
@@ -70,6 +86,18 @@ function freshRun(): void {
 }
 
 export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebnisse: Result[] } {
+  /*
+   * Erst die Speichersperre, dann alles andere.
+   *
+   * `restore()` geht über importSave(), und das schreibt am Ende bewusst in
+   * den Spielstand — „wer importiert, will wieder gespeichert haben". Damit
+   * schrieb jeder Testlauf in den echten Stand, und ein Lauf, der mitten in
+   * einer Simulation startet, konserviert genau diese Simulation. So ist
+   * beim Bau von M11 ein Spielstand verloren gegangen.
+   */
+  const warGesperrt = isPersistenceSuspended()
+  suspendPersistence()
+
   const sicherung = snapshot()
   const r: Result[] = []
 
@@ -104,6 +132,14 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     )
     check(r, 'Import stellt Freischaltungen wieder her', run.unlocked.includes('vesta'))
     check(r, 'Import stellt eingelagerte Planeten wieder her', run.planets.vesta !== undefined)
+
+    /*
+     * Die Speichersperre muss dort greifen, wo wirklich geschrieben wird.
+     * Der Test läuft selbst unter dieser Sperre — schlägt die Prüfung fehl,
+     * schreibt gerade ein Testlauf oder eine Simulation in den echten Stand.
+     * Genau so ist beim Bau von M11 einer verloren gegangen.
+     */
+    check(r, 'Gesperrte Persistenz schreibt nichts', saveGame() === false)
 
     /* --- Reisen ----------------------------------------------------------
        Ein Planet muss den Wechsel unverändert überstehen.
@@ -330,6 +366,148 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     for (let i = 0; i < 3000; i++) populationSystem(1)
     check(r, 'Versorgung erholt sich wieder', planet.satiety > 0.9, `${planet.satiety}`)
 
+    /* --- Bauen kostet Hände und Zeit (M11, §17) ---------------------------
+       Der Kern des Meilensteins: bezahlt ist nicht gebaut. Geprüft wird
+       beides — dass eine Bestellung *nicht* sofort dasteht, und dass sie
+       trotzdem zuverlässig fertig wird.
+    --------------------------------------------------------------------- */
+    freshRun()
+    planet.oxygen = new Decimal(1e6)
+    planet.settlers = new Decimal(20)
+    planet.satiety = 1
+
+    const bestellt = orderGenerator('electrolysis', 3)
+    check(r, 'Bestellung wird angenommen', bestellt)
+    check(
+      r,
+      'Bestellung liefert nicht sofort eine Anlage',
+      (planet.generators.electrolysis ?? 0) === 0,
+      `sofort da: ${planet.generators.electrolysis ?? 0}`,
+    )
+    check(r, 'Bestellung legt eine Baustelle an', pendingUnits('electrolysis') === 3)
+
+    // Ohne Bauarbeiter läuft es trotzdem — sonst wäre jeder Planet ohne
+    // Bewohner eine Sackgasse.
+    const ohneKolonne = buildRate()
+    assignBuilder(4)
+    const mitKolonne = buildRate()
+    check(r, 'Bau läuft auch ohne Bauarbeiter', ohneKolonne > 0, `${ohneKolonne}/s`)
+    check(
+      r,
+      'Bauarbeiter beschleunigen den Bau deutlich',
+      mitKolonne > ohneKolonne * 2,
+      `${ohneKolonne} → ${mitKolonne}`,
+    )
+
+    for (let i = 0; i < 120; i++) constructionSystem(1)
+    check(
+      r,
+      'Baustelle wird fertig und liefert die Anlagen',
+      (planet.generators.electrolysis ?? 0) === 3,
+      `gebaut: ${planet.generators.electrolysis ?? 0}`,
+    )
+    check(r, 'Fertige Baustelle verschwindet aus der Reihe', planet.sites.length === 0)
+
+    // Bestelltes muss die Kostenkurve mitzählen. Sonst kostet zweimal „Max"
+    // hintereinander beide Male den niedrigen Preis.
+    freshRun()
+    planet.oxygen = new Decimal(1e9)
+    const preisLeer = generatorCost(findGenerator('electrolysis')!, 1).toNumber()
+    orderGenerator('electrolysis', 5)
+    const preisBestellt = generatorCost(findGenerator('electrolysis')!, 1).toNumber()
+    check(
+      r,
+      'Bestellte Stück verteuern das nächste',
+      preisBestellt > preisLeer,
+      `${preisLeer} → ${preisBestellt}`,
+    )
+
+    // Abbrechen erstattet die offenen Stück vollständig — O₂ wie Material.
+    freshRun()
+    travelTo('vesta')
+    planet.oxygen = new Decimal(1e9)
+    run.materials = { stein: new Decimal(500) }
+    const o2Vorher = planet.oxygen.toNumber()
+    const steinVorher = materialAmount('stein').toNumber()
+    orderGenerator('dome', 4)
+    check(r, 'Bestellung bucht Material ab', materialAmount('stein').toNumber() < steinVorher)
+    cancelSite(0)
+    check(
+      r,
+      'Abbruch erstattet O₂ vollständig',
+      Math.abs(planet.oxygen.toNumber() - o2Vorher) < 0.01,
+      `${o2Vorher} → ${planet.oxygen.toNumber()}`,
+    )
+    check(
+      r,
+      'Abbruch erstattet Material vollständig',
+      Math.abs(materialAmount('stein').toNumber() - steinVorher) < 0.01,
+      `${steinVorher} → ${materialAmount('stein').toNumber()}`,
+    )
+    check(r, 'Abbruch räumt die Baustelle weg', planet.sites.length === 0)
+
+    /* --- Wohnraum auf Aurora (offene Frage aus §17) -----------------------
+       Die Wohnkuppel kostet Stein, den Aurora nicht führt — die Kolonie blieb
+       bei den zwölf Betten der Landekapseln stehen. Das Wohnmodul muss dort
+       ohne jedes Material baubar sein.
+    --------------------------------------------------------------------- */
+    freshRun()
+    const wohnmodul = findGenerator('habitat')!
+    check(r, 'Aurora kann Wohnraum bauen', isAvailable(wohnmodul))
+    check(r, 'Wohnraum auf Aurora kostet kein Material', wohnmodul.materialCost === undefined)
+
+    const bettenVorher = housingCapacity().toNumber()
+    planet.oxygen = new Decimal(1e6)
+    planet.settlers = new Decimal(10)
+    assignBuilder(3)
+    orderGenerator('habitat', 2)
+    for (let i = 0; i < 200; i++) constructionSystem(1)
+    check(
+      r,
+      'Gebauter Wohnraum hebt die Kapazität',
+      housingCapacity().toNumber() > bettenVorher,
+      `${bettenVorher} → ${housingCapacity().toNumber()}`,
+    )
+
+    /* --- Das Lager ist endlich (M11, §17) ---------------------------------
+       Ohne Grenze war Abbau nur eine Frage der Zeit. Mit Grenze muss der
+       Überschuss wirklich verfallen — und Hallen müssen wirklich helfen.
+    --------------------------------------------------------------------- */
+    freshRun()
+    travelTo('vesta')
+    run.materials = {}
+    const grenze = materialCapacity().toNumber()
+    storeMaterial('stein', new Decimal(grenze * 10))
+    check(
+      r,
+      'Lager läuft nicht über die Grenze',
+      Math.abs(materialAmount('stein').toNumber() - grenze) < 0.01,
+      `${materialAmount('stein').toNumber()} statt ${grenze}`,
+    )
+    check(r, 'Volles Lager meldet sich als voll', isStorageFull('stein'))
+
+    planet.generators = { depot: 2 }
+    const grenzeMitHalle = materialCapacity().toNumber()
+    check(
+      r,
+      'Lagerhalle hebt die Grenze',
+      grenzeMitHalle > grenze,
+      `${grenze} → ${grenzeMitHalle}`,
+    )
+    check(r, 'Nach dem Ausbau ist wieder Platz', !isStorageFull('stein'))
+
+    // Und die andere Richtung: ein volles Regal darf nie kleiner machen, was
+    // schon drinliegt. Sonst würde ein Abriss Material vernichten (§1.2).
+    planet.generators = {}
+    const drinnen = materialAmount('stein').toNumber()
+    storeMaterial('stein', new Decimal(1e6))
+    check(
+      r,
+      'Volles Lager vernichtet nicht, was schon liegt',
+      materialAmount('stein').toNumber() >= drinnen,
+      `${drinnen} → ${materialAmount('stein').toNumber()}`,
+    )
+
     /* --- Achievements ----------------------------------------------------
        Sie müssen sich auslösen *und* wirken. Ein Erfolg ohne Effekt wäre
        genau die Vitrine, die §10 nicht will.
@@ -399,6 +577,10 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     check(r, 'Keine negative Bevölkerung', planet.settlers.gte(0))
   } finally {
     restore(sicherung)
+    // Nur freigeben, wenn der Test die Sperre selbst gesetzt hat. Wer mitten
+    // in einer Balancing-Simulation testet, will danach weiterhin nicht
+    // gespeichert haben.
+    if (!warGesperrt) resumePersistence()
   }
 
   const fehlgeschlagen = r.filter((x) => !x.ok)

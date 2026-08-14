@@ -8,7 +8,7 @@ import { session } from '../state/session.svelte'
 export const SAVE_KEY = 'cleanair.save'
 
 /** Bei jeder Struktur­änderung erhöhen und in migrations.ts eintragen. */
-export const SAVE_VERSION = 12
+export const SAVE_VERSION = 13
 
 export interface SaveData extends SaveShape {
   version: number
@@ -39,8 +39,37 @@ export function buildSave(): SaveData {
  */
 let discarded = false
 
+/**
+ * Speichersperre für Simulationen und Selbsttests.
+ *
+ * **Der Schalter muss hier liegen, nicht beim Aufrufer.** Bis M11 kannte nur
+ * main.ts ein `stopPersistence()`, und das sperrte den Autosave-Timer,
+ * `beforeunload` und den Tab-Wechsel — aber nicht `saveGame()` selbst.
+ * `importSave()` ruft es am Ende bewusst auf, und der Selbsttest stellt
+ * seinen Ausgangszustand genau darüber wieder her. Jeder `selftest()`-Lauf
+ * schrieb damit in den echten Spielstand, obwohl die Sperre aktiv war.
+ *
+ * Daran ist beim Bau von M11 ein Spielstand verloren gegangen. Die Regel aus
+ * CLAUDE.md („vor jeder Simulation `stopPersistence()`") war korrekt befolgt
+ * und trotzdem wirkungslos — also gehört die Prüfung an die eine Stelle, die
+ * wirklich schreibt.
+ */
+let persistenceSuspended = false
+
+export function suspendPersistence(): void {
+  persistenceSuspended = true
+}
+
+export function resumePersistence(): void {
+  persistenceSuspended = false
+}
+
+export function isPersistenceSuspended(): boolean {
+  return persistenceSuspended
+}
+
 export function saveGame(): boolean {
-  if (discarded) return false
+  if (discarded || persistenceSuspended) return false
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(buildSave()))
     return true
@@ -57,7 +86,8 @@ export function saveGame(): boolean {
 export function saveNow(): boolean {
   // Kein Fehler, sondern Absicht: nach dem Verwerfen gibt es nichts zu
   // speichern. Ein rotes „Speichern fehlgeschlagen" wäre hier gelogen.
-  if (discarded) return true
+  // Dasselbe gilt für eine laufende Simulation.
+  if (discarded || persistenceSuspended) return true
 
   const ok = saveGame()
   session.saveFailed = !ok
