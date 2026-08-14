@@ -209,6 +209,20 @@ Genau so sind die vorhandenen Prüfungen entstanden.
 Was er *nicht* kann: Spielgefühl. Ob Brände nerven, ob ein Fenster zu eng ist,
 ob sich ein Planet zäh statt langsam anfühlt — dafür gibt es nur Spielen.
 
+**Und er sieht die Oberfläche nicht.** Jede Prüfung und jeder Balancing-Lauf
+ruft `orderGenerator()` direkt auf und geht damit an der Anlagenliste vorbei.
+Ein Fehler, der nur dort sitzt, bleibt für sie unsichtbar — gemessen acht
+Meilensteine lang: in [GeneratorList.svelte](src/ui/GeneratorList.svelte)
+entscheidet die Tabelle `GROUPS`, welche Anlagen überhaupt angezeigt werden,
+und `supply` hatte dort nie einen Eintrag. Kondensator und Keimkammer waren
+seit M5 nicht baubar, während 89 Prüfungen grün meldeten und die Simulationen
+munter Keimkammern bauten — über einen Weg, den ein Mensch nie hat.
+
+> **Eine neue `Output`-Art braucht immer zwei Einträge:** die Behandlung in
+> der Logik *und* eine Zeile in `GROUPS`. Der Compiler erzwingt nur das erste.
+> Die Union zwingt jeden Switch, den neuen Fall zu behandeln; `GROUPS` ist
+> eine ungetypte Datenliste, und was dort fehlt, verschwindet lautlos.
+
 ## Balancing prüfen statt schätzen
 
 Zieldauern pro Planet stehen in DESIGN.md §13 und wurden bisher **simuliert,
