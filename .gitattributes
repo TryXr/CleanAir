@@ -1,0 +1,9 @@
+# Zeilenenden deterministisch halten.
+#
+# Ohne diese Datei entschied core.autocrlf pro Rechner, was im Repository
+# landet — im M11-Commit sahen dadurch elf Dateien nach 5000 geänderten
+# Zeilen aus, obwohl sich nur ihre Zeilenenden gedreht hatten. Ein Diff, den
+# man nicht lesen kann, ist ein Review, das nicht stattfindet.
+#
+# Im Repository immer LF, im Arbeitsverzeichnis darf jeder haben, was er will.
+* text=auto eol=lf
