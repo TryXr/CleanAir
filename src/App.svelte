@@ -152,7 +152,7 @@
     {/if}
 
     {#if session.tab === 'kolonie'}
-      <Panel title="Zuweisung" hint="ohne Hände läuft nichts">
+      <Panel title="Zuweisung" hint="Handarbeit braucht Hände">
         <StaffPanel />
       </Panel>
 

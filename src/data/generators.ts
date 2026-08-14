@@ -97,10 +97,17 @@ export interface GeneratorDef {
   /**
    * Arbeitsplätze pro Stück (§17).
    *
-   * Der Kern des Kurswechsels: eine Anlage mit Plätzen produziert **nichts**,
-   * solange niemand zugewiesen ist. Halb besetzt heißt halbe Leistung. Fehlt
-   * das Feld, läuft die Anlage wie bisher von allein — so können die alten
-   * Planeten weiterlaufen, bis M13 sie nachzieht.
+   * Eine Anlage mit Plätzen produziert **nichts**, solange niemand zugewiesen
+   * ist — nicht weniger, nichts. Halb besetzt heißt halbe Leistung.
+   *
+   * Die Trennlinie ist bewusst **Maschine gegen Handarbeit**, nicht „alles
+   * braucht jemanden": Elektrolyse, Photolyse, Prozessor, Sublimator, Wäscher
+   * und Ventil sind chemische Apparate und laufen von selbst. Plätze haben
+   * nur Bergbau, Schmelze, Sägewerk, Forst und Landwirtschaft — Arbeiten, bei
+   * denen jemand mit anpackt.
+   *
+   * Das hält auch den Anfang schlank: die O₂-Seite braucht keine Verwaltung,
+   * und Zuweisung bleibt eine Entscheidung statt einer Pflichtübung.
    */
   workSlots?: number
 
@@ -118,14 +125,12 @@ export const GENERATORS: readonly GeneratorDef[] = [
   {
     id: 'electrolysis',
     name: 'Elektrolyse-Zelle',
-    description:
-      'Spaltet gebundenes Wasser im Gestein. Langsam, aber sie läuft überall — solange jemand sie bedient.',
+    description: 'Spaltet gebundenes Wasser im Gestein. Langsam, aber sie läuft von allein.',
     output: { kind: 'gas', gas: 'o2' },
     baseCost: 10,
     costGrowth: 1.12,
     baseRate: 0.3,
     revealAt: 0,
-    workSlots: 1,
   },
 
   /* --- Überleben auf Aurora ---------------------------------------------
@@ -142,7 +147,6 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.15,
     baseRate: 0.09,
     revealAt: 0,
-    workSlots: 1,
   },
   {
     id: 'sprouter',
@@ -164,7 +168,6 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.13,
     baseRate: 4,
     revealAt: 40,
-    workSlots: 2,
   },
   {
     id: 'processor',
@@ -175,7 +178,6 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.14,
     baseRate: 55,
     revealAt: 400,
-    workSlots: 3,
   },
 
   /* --- Puffer -----------------------------------------------------------
@@ -262,6 +264,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseRate: 0.35,
     populationCost: 3,
     revealAt: 1800,
+    workSlots: 2,
   },
 
   /* --- Leben ------------------------------------------------------------
@@ -303,6 +306,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     populationCost: 4,
     baseRate: 3.5,
     revealAt: 1200,
+    workSlots: 2,
   },
   {
     id: 'icemelt',
@@ -327,6 +331,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     costGrowth: 1.13,
     baseRate: 0.4,
     revealAt: 350,
+    workSlots: 2,
   },
   {
     id: 'titanmine',
@@ -339,6 +344,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseRate: 0.12,
     populationCost: 8,
     revealAt: 6000,
+    workSlots: 3,
   },
 
   /* --- Pyra: Dreck statt Wald ------------------------------------------- */
@@ -352,6 +358,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseRate: 0.3,
     populationCost: 3,
     revealAt: 1400,
+    workSlots: 2,
   },
   {
     id: 'sulfurvent',
@@ -364,6 +371,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseRate: 0.22,
     populationCost: 4,
     revealAt: 3500,
+    workSlots: 2,
   },
 
   /* --- Kryo: Wasser im Überfluss ---------------------------------------- */
@@ -377,6 +385,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseRate: 0.55,
     populationCost: 2,
     revealAt: 1100,
+    workSlots: 2,
   },
 
   /* --- Nimbus: Gas kostet nichts ---------------------------------------- */
@@ -390,6 +399,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseRate: 0.18,
     populationCost: 5,
     revealAt: 5000,
+    workSlots: 3,
   },
   {
     id: 'gasscoop',

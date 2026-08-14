@@ -14,7 +14,13 @@ import { achievementsSystem } from '../systems/achievements'
 import { combatSystem } from '../systems/combat'
 import { assign, unassign } from '../systems/labor'
 import { populationSystem } from '../systems/population'
-import { clickGain, currentO2Rate, isAvailable, productionSystem } from '../systems/production'
+import {
+  clickGain,
+  currentO2Rate,
+  isAvailable,
+  productionSystem,
+  supplyRate,
+} from '../systems/production'
 import { buildRocket, travelTo } from '../systems/travel'
 
 /**
@@ -250,17 +256,31 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     check(r, 'Aurora startet mit Mannschaft', planet.settlers.eq(10), planet.settlers.toString())
     check(r, 'Aurora startet mit Rationen', planet.food.gt(0) && planet.water.gt(0))
 
-    planet.generators = { electrolysis: 5 }
+    /*
+     * Geprüft wird an der Keimkammer, nicht an der Elektrolyse: seit der
+     * Trennung „Maschine gegen Handarbeit" laufen chemische Apparate von
+     * selbst. Genau das gehört mitgeprüft, sonst wandert die Regel
+     * unbemerkt wieder auf alle Anlagen zurück.
+     */
+    planet.generators = { electrolysis: 5, sprouter: 4 }
     planet.staff = {}
-    check(r, 'Unbesetzte Anlagen produzieren nichts', currentO2Rate().eq(0))
-    assign('electrolysis', 5)
-    check(r, 'Besetzte Anlagen produzieren', currentO2Rate().gt(0))
+    planet.satiety = 1
+    check(r, 'Maschinen laufen ohne Zuweisung', currentO2Rate().gt(0))
+    check(r, 'Handarbeit ohne Zuweisung liefert nichts', supplyRate('food').eq(0))
+
+    assign('sprouter', 4)
+    check(r, 'Besetzte Handarbeit liefert', supplyRate('food').gt(0))
 
     // Halb besetzt heißt halbe Leistung.
-    const voll = currentO2Rate().toNumber()
-    unassign('electrolysis', 3)
-    const teilweise = currentO2Rate().toNumber()
-    check(r, 'Halbe Besetzung heißt halbe Leistung', teilweise < voll && teilweise > 0)
+    const voll = supplyRate('food').toNumber()
+    unassign('sprouter', 2)
+    const teilweise = supplyRate('food').toNumber()
+    check(
+      r,
+      'Halbe Besetzung heißt halbe Leistung',
+      teilweise < voll && teilweise > 0,
+      `${voll} → ${teilweise}`,
+    )
 
     // Leere Vorräte legen die Arbeit lahm, töten aber niemanden.
     planet.food = new Decimal(0)

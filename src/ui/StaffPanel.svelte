@@ -52,7 +52,8 @@
 
 {#if anlagen.length === 0}
   <p class="empty">
-    Noch keine Anlage mit Arbeitsplätzen gebaut. Unter „Aufbau" entsteht die erste.
+    Noch nichts zu verteilen. Chemische Anlagen wie die Elektrolyse laufen von allein — Hände
+    brauchen nur Bergbau, Sägewerk, Forst und Landwirtschaft.
   </p>
 {:else}
   <ul>

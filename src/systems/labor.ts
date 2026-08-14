@@ -10,6 +10,12 @@ import { generatorCount, planet } from '../state/planet.svelte'
  * hört Bevölkerung auf, ein Multiplikator zu sein, und wird zu dem, wodurch
  * überhaupt etwas passiert.
  *
+ * Plätze haben aber nur **Handarbeit**: Bergbau, Schmelze, Sägewerk, Forst,
+ * Landwirtschaft. Chemische Apparate — Elektrolyse, Photolyse, Prozessor,
+ * Sublimator, Wäscher, Ventil — laufen von selbst. Das hält den Anfang
+ * schlank und macht Zuweisung zu einer Entscheidung statt zu einer
+ * Pflichtübung an jeder einzelnen Anlage.
+ *
  * Zwei Faktoren greifen ineinander:
  *
  *   leistung = besetzung × sättigung

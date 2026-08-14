@@ -20,10 +20,11 @@ synthetisierte Ton.
 **Achtung: DESIGN.md §17 ist der nächste Kurswechsel und hat Vorrang vor §5,
 §13 und §16.** Ab M10 ist O₂ **keine Währung mehr**, sondern nur noch der
 Wert, den man hochbringt — bezahlt wird mit Material und Arbeitskraft.
-Bevölkerung zählt in Dutzenden statt Zehntausenden, Berufe *produzieren*
-statt zu multiplizieren, und Versorgung regelt die Arbeitsleistung, statt
-Menschen sterben zu lassen. Vor jeder Arbeit an Kosten, Bevölkerung oder
-Berufen dort nachlesen.
+Bevölkerung zählt in Dutzenden statt Zehntausenden, Versorgung regelt die
+Arbeitsleistung statt Menschen sterben zu lassen — und Arbeitsplätze haben
+nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
+Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
+Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
 **Boni gehören in eine Sammelstelle, nie in die Formel.** Es gibt inzwischen
 fünf Quellen — Meta-Baum, Forschung, Berufe, Ereignisse, Achievements. Jede
@@ -130,14 +131,14 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 52 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 53 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
 diesem Projekt jedes Mal mehrere Meilensteine unentdeckt überlebt hat:
 Save-Rundlauf, Reisen mit Ein- und Auslagern, Raketen-Sperren, Sackgassen,
 Vollständigkeit der Serialisierung, Regler-Verhalten des Ventils, Sabotage der
-Anoxen, Achievement-Boni und Ton.
+Anoxen, Achievement-Boni, Ton und die Trennung Maschine/Handarbeit.
 
 Der Test sichert den Zustand vorher und stellt ihn danach wieder her, ist
 aber trotzdem nichts für einen echten Spielstand.

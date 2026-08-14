@@ -164,11 +164,17 @@ export const AURORA: PlanetDef = {
    * rund 100/s statt bei Tausenden. Gemessen war Aurora mit dem alten Wert
    * schlicht unschaffbar: nach 90 Minuten stand der Anteil bei 0,00 %.
    *
-   * Simuliert mit einem Spieler, der die Zuweisung nachjustiert:
-   * 3·10⁴ → 7,6 min, 1·10⁵ → 10,2 min, 3·10⁵ → 17,7 min. Mit diesem Wert
-   * liegt Aurora bei rund 20 Minuten — dem Fenster aus §13.
+   * Zweimal nachgemessen, weil sich die Voraussetzung geändert hat: solange
+   * auch die O₂-Anlagen Personal brauchten, lag der Wert bei 4·10⁵. Seit die
+   * Trennung „Maschine gegen Handarbeit" gilt, laufen Elektrolyse, Photolyse
+   * und Prozessor von allein, und die erreichbare Rate steigt um das
+   * Zwanzigfache.
+   *
+   * Simuliert mit zugewiesener Handarbeit: 4·10⁵ → 11,5 min, 1,5·10⁶ →
+   * 15,2 min, 4·10⁶ → 21,1 min. Gewählt ist der letzte Wert — Zielfenster
+   * laut §13 sind 15–25 Minuten.
    */
-  baseAtmosphere: 400000,
+  baseAtmosphere: 4000000,
 
   /**
    * Nach oben offen: Aurora hat kein N₂ zum Verdünnen, ein Deckel wäre also
