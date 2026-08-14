@@ -61,20 +61,9 @@
   {/if}
 {/if}
 
-<label class="immigration">
-  <span class="line">
-    <span>Zuwanderung</span>
-    <span class="num">{Math.round(planet.immigration * 100)} %</span>
-  </span>
-  <input
-    type="range"
-    min="0"
-    max="100"
-    step="5"
-    value={Math.round(planet.immigration * 100)}
-    oninput={(e) => (planet.immigration = e.currentTarget.valueAsNumber / 100)}
-  />
-</label>
+<!-- Kein Zuwanderungsregler mehr (§17): Menschen kommen von selbst, sobald
+     Rationen und Wohnraum reichen. Wer weniger will, reißt Wohnraum ab —
+     das ist die Entscheidung, nicht ein Schieber. -->
 
 <style>
   .waiting {
@@ -167,23 +156,4 @@
     padding-left: 11px;
   }
 
-  .immigration {
-    display: block;
-    margin-top: 4px;
-  }
-
-  .line {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-
-  input[type='range'] {
-    width: 100%;
-    accent-color: var(--o2);
-  }
 </style>

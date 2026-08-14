@@ -32,11 +32,14 @@ hat ihr eigenes `*Effects()`-Modul, und `collectMultipliers()` in
 production.ts multipliziert sie aus. Wer einen Bonus direkt in eine Rechnung
 schreibt, macht ihn unauffindbar.
 
-**Anlagen laufen nie rückwärts abschaltbar.** Alles, was eine Menge dauerhaft
+**Alles, was wächst, braucht ein Gegenstück.** Alles, was eine Menge dauerhaft
 *erhöht*, braucht ein Gegenstück — sonst ist Überschuss ein permanenter
 Schaden und verstößt gegen §1.2. Wäscher für Schadstoffe, Abblasventil für
 N₂. Beide arbeiten anteilig, und das Ventil nur oberhalb des Fensters: ein
-stur laufender Regler erzeugt denselben Schaden spiegelverkehrt.
+stur laufender Regler erzeugt denselben Schaden spiegelverkehrt. Seit §17
+gilt das auch für Bevölkerung: Zuwanderung passiert automatisch, also ist
+**Abriss** der Weg zurück — und Schrumpfen darf deshalb nicht am
+Sättigungsfaktor hängen, sonst wirkt der Abriss bei knappen Vorräten nicht.
 
 ## Drei Lebensdauern, nicht zwei
 
@@ -131,14 +134,15 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 53 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 56 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
 diesem Projekt jedes Mal mehrere Meilensteine unentdeckt überlebt hat:
 Save-Rundlauf, Reisen mit Ein- und Auslagern, Raketen-Sperren, Sackgassen,
 Vollständigkeit der Serialisierung, Regler-Verhalten des Ventils, Sabotage der
-Anoxen, Achievement-Boni, Ton und die Trennung Maschine/Handarbeit.
+Anoxen, Achievement-Boni, Ton, die Trennung Maschine/Handarbeit und der
+Abriss als Weg zurück.
 
 Der Test sichert den Zustand vorher und stellt ihn danach wieder her, ist
 aber trotzdem nichts für einen echten Spielstand.

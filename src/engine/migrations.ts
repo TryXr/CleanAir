@@ -191,6 +191,25 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.planet = planet
     return s
   },
+
+  /**
+   * M10-Nachtrag: Berufe und Zuwanderungsregler entfallen (§17).
+   *
+   * Berufe waren Bonusgeber und sind durch die Zuweisung an Anlagen ersetzt.
+   * Zuwanderung passiert automatisch, sobald Rationen und Wohnraum reichen —
+   * wer weniger Menschen will, reißt Wohnraum ab.
+   *
+   * Beide Felder werden gelöscht statt übersetzt: sie haben in der neuen
+   * Mechanik keine Entsprechung, und ein stiller Rest im Save wäre nur eine
+   * Falle für den nächsten Leser.
+   */
+  12: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    delete planet.jobs
+    delete planet.immigration
+    s.planet = planet
+    return s
+  },
 }
 
 export interface MigrationResult {

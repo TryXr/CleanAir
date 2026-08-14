@@ -11,7 +11,6 @@ import * as atmosphere from './systems/atmosphere'
 import * as events from './systems/events'
 import * as combat from './systems/combat'
 import * as forest from './systems/forest'
-import * as jobs from './systems/jobs'
 import * as labor from './systems/labor'
 import * as population from './systems/population'
 import * as prestige from './systems/prestige'
@@ -28,7 +27,6 @@ import { AURORA, PLANETS } from './data/planets'
 import { EVENTS } from './data/events'
 import { GENERATORS } from './data/generators'
 import { ACHIEVEMENTS } from './data/achievements'
-import { JOBS } from './data/jobs'
 import { MATERIALS } from './data/materials'
 import { ROCKETS } from './data/rockets'
 import { selftest } from './dev/selftest'
@@ -183,7 +181,6 @@ if (import.meta.env.DEV) {
       research,
       events,
       forest,
-      jobs,
       labor,
       combat,
       achievements,
@@ -202,7 +199,6 @@ if (import.meta.env.DEV) {
         RESEARCH,
         EVENTS,
         MATERIALS,
-        JOBS,
         ACHIEVEMENTS,
         AURORA,
         PLANETS,

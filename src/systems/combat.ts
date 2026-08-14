@@ -11,7 +11,7 @@ import { currentPlanetDef, generatorCount, planet } from '../state/planet.svelte
 import { canAffordMaterials, spendMaterials } from '../state/run.svelte'
 import { effectiveO2Window, o2Percent } from './atmosphere'
 import { achievementEffects } from './achievements'
-import { freePopulation } from './jobs'
+import { unassigned } from './labor'
 
 /**
  * Die Anoxen (DESIGN.md §7, §8).
@@ -90,7 +90,7 @@ export function canBuildDefense(id: string): boolean {
   if (!def) return false
   if (planet.oxygen.lt(defenseCost(id))) return false
   if (!canAffordMaterials(def.materialCost)) return false
-  return (def.populationCost ?? 0) <= freePopulation().toNumber()
+  return (def.populationCost ?? 0) <= unassigned().toNumber()
 }
 
 export function buildDefense(id: string): boolean {

@@ -13,10 +13,9 @@ import { addMaterial, affordableCount, canAffordMaterials, spendMaterials } from
 import { play } from '../engine/audio'
 import { achievementEffects } from './achievements'
 import { fireThrottle, n2Percent } from './atmosphere'
-import { laborFactor } from './labor'
+import { enforceStaffLimit, laborFactor, unassigned } from './labor'
 import { eventEffects } from './eventEffects'
 import { WOOD_PER_TREE, forestO2Rate, forestRoom } from './forest'
-import { freePopulation, jobEffects } from './jobs'
 import { metaEffects } from './metaEffects'
 import { researchEffects } from './research'
 
@@ -64,7 +63,6 @@ function collectMultipliers(): Multipliers {
   const rEffects = researchEffects()
   const events = eventEffects()
 
-  const jEffects = jobEffects()
   const aEffects = achievementEffects()
   const m: Multipliers = {
     click: mEffects.clickPower.mul(rEffects.clickPower).mul(aEffects.clickPower).mul(BASE_CLICK),
@@ -75,16 +73,16 @@ function collectMultipliers(): Multipliers {
       .mul(events.production)
       .mul(fireThrottle()),
     byGas: {
-      o2: rEffects.o2Yield.mul(jEffects.gas),
-      n2: rEffects.n2Yield.mul(jEffects.gas),
-      scrub: rEffects.scrubYield.mul(jEffects.gas),
-      vent: new Decimal(jEffects.gas),
+      o2: rEffects.o2Yield,
+      n2: rEffects.n2Yield,
+      scrub: rEffects.scrubYield,
+      vent: new Decimal(1),
     },
     byKind: {
-      plant: new Decimal(jEffects.planting),
+      plant: new Decimal(1),
       fell: new Decimal(1),
-      material: new Decimal(jEffects.mining),
-      supply: new Decimal(jEffects.supply),
+      material: new Decimal(1),
+      supply: new Decimal(1),
       // Wohnraum ist eine Kapazität und wird bewusst nirgends multipliziert.
       housing: new Decimal(1),
     },
@@ -331,7 +329,7 @@ export function buyGenerator(id: string, amount: number): boolean {
   // wäre O₂ weg und die Anlage stünde trotzdem nicht.
   if (!canAffordMaterials(def.materialCost, amount)) return false
   const people = (def.populationCost ?? 0) * amount
-  if (people > 0 && freePopulation().lt(people)) return false
+  if (people > 0 && unassigned().lt(people)) return false
 
   planet.oxygen = planet.oxygen.sub(cost)
   spendMaterials(def.materialCost, amount)
@@ -339,6 +337,51 @@ export function buyGenerator(id: string, amount: number): boolean {
   if (people > 0) planet.bound = planet.bound.add(people)
   planet.generators[id] = generatorCount(id) + amount
   play('buy')
+  return true
+}
+
+/**
+ * Abreißen (§17).
+ *
+ * Seit Zuwanderung automatisch passiert, ist die Kolonie sonst eine
+ * Einbahnstraße: mehr Wohnraum heißt mehr Menschen heißt mehr Verbrauch, und
+ * es gäbe keinen Weg zurück. Abriss ist damit kein Komfort, sondern das
+ * Gegenstück, das CLAUDE.md für jede dauerhaft *erhöhende* Anlage verlangt —
+ * dieselbe Regel wie Wäscher für Schadstoffe und Ventil für N₂.
+ *
+ * **Ohne Rückerstattung.** Wer abreißt, will Last loswerden, nicht Geld
+ * zurück. Eine Erstattung würde außerdem Bauen und Abreißen zu einer
+ * Rechenaufgabe machen, statt zu einer Entscheidung über die Kolonie.
+ *
+ * Verbaute Menschen kommen dagegen zurück — sie sind nicht verbraucht,
+ * sondern gebunden gewesen.
+ */
+export function canDemolish(id: string): boolean {
+  return generatorCount(id) > 0
+}
+
+export function demolish(id: string, amount = 1): boolean {
+  const def = findGenerator(id)
+  if (!def || !canDemolish(id)) return false
+
+  const weg = Math.min(amount, generatorCount(id))
+  const rest = generatorCount(id) - weg
+  if (rest > 0) planet.generators[id] = rest
+  else delete planet.generators[id]
+
+  if (def.populationCost) {
+    planet.bound = planet.bound.sub(def.populationCost * weg)
+    if (planet.bound.lt(0)) planet.bound = new Decimal(0)
+  }
+
+  // Lahmgelegte Stück dürfen nicht mehr sein als vorhandene, und an
+  // verschwundenen Plätzen kann niemand mehr stehen.
+  const aus = planet.disabled[id] ?? 0
+  if (aus > rest) {
+    if (rest > 0) planet.disabled[id] = rest
+    else delete planet.disabled[id]
+  }
+  enforceStaffLimit()
   return true
 }
 

@@ -4,6 +4,7 @@
   import { format, formatInt, formatRate } from '../engine/format'
   import {
     buyGenerator,
+    demolish,
     generatorCost,
     generatorRate,
     isAvailable,
@@ -136,6 +137,18 @@
           <p class="desc">{def.description}</p>
           <span class="rate num">{rateLabel(def)}</span>
         </div>
+
+        <!-- Abreißen (§17): das Gegenstück zur automatischen Zuwanderung.
+             Ohne den Weg zurück wäre jede Wohnkuppel eine Einbahnstraße. -->
+        {#if count > 0}
+          <button
+            class="wreck"
+            onclick={() => demolish(def.id)}
+            title="Ein Stück abreißen — ohne Rückerstattung"
+          >
+            Abreißen
+          </button>
+        {/if}
 
         <button class="buy" disabled={!affordable} onclick={() => onBuy(def)}>
           <span class="buy-label">
@@ -274,6 +287,17 @@
 
   .buy:not(:disabled) .cost {
     color: var(--o2);
+  }
+
+  .wreck {
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .wreck:hover {
+    color: var(--bad);
+    border-color: var(--bad);
   }
 
   .cost.material {

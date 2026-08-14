@@ -18,7 +18,6 @@
   import ForestPanel from './ui/ForestPanel.svelte'
   import GeneratorList from './ui/GeneratorList.svelte'
   import InventoryPanel from './ui/InventoryPanel.svelte'
-  import JobPanel from './ui/JobPanel.svelte'
   import LogPanel from './ui/LogPanel.svelte'
   import MetaTree from './ui/MetaTree.svelte'
   import NextStep from './ui/NextStep.svelte'
@@ -164,9 +163,6 @@
         <SupplyPanel />
       </Panel>
 
-      <Panel title="Berufe" hint="verteilte Arbeitskraft">
-        <JobPanel />
-      </Panel>
     {/if}
 
     {#if session.tab === 'aufbau'}

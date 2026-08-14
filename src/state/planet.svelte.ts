@@ -4,7 +4,6 @@ import { ABILITIES } from '../data/abilities'
 import { DEFENSES } from '../data/defenses'
 import { EVENTS } from '../data/events'
 import { GENERATORS } from '../data/generators'
-import { JOBS } from '../data/jobs'
 import { UPGRADES } from '../data/upgrades'
 import { readDecimal, readNumber, readString, writeDecimal } from '../engine/serialize'
 
@@ -89,8 +88,6 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
      * nicht (§17). Damit verliert man offline nur Produktion, nie Menschen.
      */
     satiety: 1,
-    /** Zuwanderungsregler 0…1 (§5). */
-    immigration: 1,
 
     /**
      * Vorräte. Planetenlokal wie die Luft, nicht im globalen Lager — jede
@@ -104,9 +101,6 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
      * weiter, stehen aber nie wieder für Berufe zur Verfügung.
      */
     bound: new Decimal(0),
-
-    /** Beruf-id -> zugewiesene Arbeiter. */
-    jobs: {} as Record<string, number>,
 
     /** Laufende Ereignisse und die Zeit bis zum nächsten. */
     events: [] as ActiveEvent[],
@@ -209,11 +203,9 @@ export function serializePlanet() {
     settlers: writeDecimal(planet.settlers),
     staff: { ...planet.staff },
     satiety: planet.satiety,
-    immigration: planet.immigration,
     food: writeDecimal(planet.food),
     water: writeDecimal(planet.water),
     bound: writeDecimal(planet.bound),
-    jobs: { ...planet.jobs },
     events: planet.events.map((e) => ({ ...e })),
     nextEventIn: planet.nextEventIn,
     defenses: { ...planet.defenses },
@@ -247,19 +239,10 @@ export function deserializePlanet(raw: unknown): void {
   planet.biomass = readDecimal(s.biomass, 0)
   planet.settlers = readDecimal(s.settlers, 0)
   planet.satiety = Math.min(1, Math.max(0, readNumber(s.satiety, 1)))
-  planet.immigration = Math.min(1, Math.max(0, readNumber(s.immigration, 1)))
   planet.food = readDecimal(s.food, 0)
   planet.water = readDecimal(s.water, 0)
   planet.bound = readDecimal(s.bound, 0)
 
-  // Nur bekannte Berufe übernehmen, wie bei Generatoren und Forschung.
-  const savedJobs = (s.jobs ?? {}) as Record<string, unknown>
-  const jobs: Record<string, number> = {}
-  for (const def of JOBS) {
-    const count = Math.floor(readNumber(savedJobs[def.id], 0))
-    if (count > 0) jobs[def.id] = count
-  }
-  planet.jobs = jobs
   planet.nextEventIn = Math.max(0, readNumber(s.nextEventIn, FIRST_EVENT_DELAY))
   planet.threat = Math.max(0, readNumber(s.threat, 0))
   planet.waveNumber = Math.max(0, Math.floor(readNumber(s.waveNumber, 0)))

@@ -13,10 +13,11 @@ import { meta } from '../state/meta.svelte'
 import { achievementsSystem } from '../systems/achievements'
 import { combatSystem } from '../systems/combat'
 import { assign, unassign } from '../systems/labor'
-import { populationSystem } from '../systems/population'
+import { housingCapacity, populationSystem } from '../systems/population'
 import {
   clickGain,
   currentO2Rate,
+  demolish,
   isAvailable,
   productionSystem,
   supplyRate,
@@ -290,7 +291,40 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     check(r, 'Leere Vorräte senken die Sättigung', planet.satiety < 0.2, `${planet.satiety}`)
     check(r, 'Hunger tötet niemanden', planet.settlers.toNumber() >= leuteVorher - 0.001)
 
+    /* --- Abriss deeskaliert (§17) ------------------------------------------
+       Seit Zuwanderung automatisch passiert, ist Abriss der einzige Weg
+       zurück. Er muss also nicht nur Gebäude entfernen, sondern die
+       Bevölkerung auch wirklich schrumpfen lassen — und zwar unabhängig von
+       der Sättigung. Genau daran wäre er beinahe gescheitert.
+    --------------------------------------------------------------------- */
+    freshRun()
+    travelTo('vesta')
+    planet.generators = { dome: 10 }
+    // Über der Kapazität *nach* dem Abriss, aber unter der davor — sonst
+    // prüft der Test nichts. Genau daran ist er beim ersten Anlauf gescheitert.
+    planet.settlers = new Decimal(2500)
+    planet.food = new Decimal(0)
+    planet.water = new Decimal(0)
+    planet.satiety = 0
+    const platzVorher = housingCapacity().toNumber()
+
+    demolish('dome', 5)
+    const platzNachher = housingCapacity().toNumber()
+    check(r, 'Abriss senkt den Wohnraum', platzNachher < platzVorher, `${platzVorher} → ${platzNachher}`)
+    check(r, 'Abriss entfernt Anlagen', (planet.generators.dome ?? 0) === 5)
+
+    const leuteVorAbriss = planet.settlers.toNumber()
+    for (let i = 0; i < 1200; i++) populationSystem(1)
+    check(
+      r,
+      'Bevölkerung schrumpft auch bei leeren Vorräten',
+      planet.settlers.toNumber() < leuteVorAbriss,
+      `${leuteVorAbriss} → ${planet.settlers.toNumber().toFixed(0)}`,
+    )
+
     // Und der Rückweg bleibt offen: Versorgung erholt sich wieder.
+    freshRun()
+    planet.settlers = new Decimal(10)
     planet.food = new Decimal(500)
     planet.water = new Decimal(500)
     for (let i = 0; i < 3000; i++) populationSystem(1)

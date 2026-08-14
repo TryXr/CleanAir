@@ -5,7 +5,6 @@ import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { effectiveO2Window, o2Percent } from './atmosphere'
 import { eventEffects } from './eventEffects'
-import { enforceJobLimit } from './jobs'
 import { enforceStaffLimit } from './labor'
 import { metaEffects } from './metaEffects'
 import { currentO2Rate } from './production'
@@ -239,7 +238,6 @@ export function populationSystem(dt: number): void {
 
   // Erstlandung
   if (planet.settlers.lte(0)) {
-    if (planet.immigration <= 0) return
     planet.settlers = new Decimal(Math.min(SEED_SETTLERS, capacity.toNumber()))
     if (!hasLandedLogged) {
       addLog(`Die erste Landefähre setzt auf ${def.name} auf.`, 'good')
@@ -248,30 +246,43 @@ export function populationSystem(dt: number): void {
     return
   }
 
-  /*
-   * Logistisches Wachstum, aber nur bei guter Versorgung (§17): Nachwuchs
-   * setzt Überschuss voraus, nicht bloß Überleben. Bei knapper Sättigung
-   * steht die Kolonie still, statt weiter zu wachsen und alles zu verschärfen.
-   */
-  const rate =
-    BASE_GROWTH *
-    def.growthFactor *
-    Math.max(0, (planet.satiety - 0.7) / 0.3) *
-    // Draußen atembare Luft macht Nachwuchs attraktiver, ist aber keine
-    // Bedingung mehr — in der Kapsel lebt es sich auch, nur enger.
-    (0.25 + 0.75 * habitability()) *
-    metaEffects().growthRate *
-    researchEffects().growthRate *
-    eventEffects().growth *
-    planet.immigration
-  const room = new Decimal(1).sub(planet.settlers.div(capacity))
-  planet.settlers = planet.settlers.add(planet.settlers.mul(rate).mul(room).mul(dt))
+  /* --- Schrumpfen und Wachsen sind zwei verschiedene Dinge (§17) -----------
+     Sie hingen bis eben an derselben Rate, und die enthält den
+     Sättigungs-Faktor. Bei knapper Versorgung war die Rate null — und damit
+     schrumpfte eine überfüllte Kolonie *nicht*, obwohl sie es müsste. Genau
+     das hätte den Abriss wirkungslos gemacht: Wohnraum abreißen, und nichts
+     passiert. Also getrennt.
+  ---------------------------------------------------------------------- */
+  if (planet.settlers.gt(capacity)) {
+    // Zu eng geworden — etwa nach einem Abriss. Die Leute ziehen ab, langsam
+    // und unabhängig davon, wie gut sie versorgt sind.
+    const ueberhang = planet.settlers.sub(capacity)
+    planet.settlers = planet.settlers.sub(ueberhang.mul(BASE_GROWTH * 2 * dt))
+    if (planet.settlers.lt(capacity)) planet.settlers = capacity
+  } else {
+    /*
+     * Zuwanderung passiert von selbst, sobald Rationen und Wohnraum reichen —
+     * es gibt keinen Regler mehr. Nachwuchs setzt Überschuss voraus, nicht
+     * bloß Überleben: unter 70 % Sättigung wächst nichts.
+     */
+    const rate =
+      BASE_GROWTH *
+      def.growthFactor *
+      Math.max(0, (planet.satiety - 0.7) / 0.3) *
+      // Draußen atembare Luft macht Nachwuchs attraktiver, ist aber keine
+      // Bedingung mehr — in der Kapsel lebt es sich auch, nur enger.
+      (0.25 + 0.75 * habitability()) *
+      metaEffects().growthRate *
+      researchEffects().growthRate *
+      eventEffects().growth
+    const room = new Decimal(1).sub(planet.settlers.div(capacity))
+    planet.settlers = planet.settlers.add(planet.settlers.mul(rate).mul(room).mul(dt))
+  }
 
   if (planet.settlers.lt(0)) planet.settlers = new Decimal(0)
 
   // Schrumpft die Kolonie, dürfen keine Leute an Plätzen stehenbleiben, die
   // es nicht mehr gibt.
-  enforceJobLimit()
   enforceStaffLimit()
 
   const negative = netO2Rate().lt(0)
