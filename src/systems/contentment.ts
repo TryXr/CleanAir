@@ -26,7 +26,19 @@ import { generatorCount, planet } from '../state/planet.svelte'
  * Zahl entscheidet, wie schnell Zuwachs den Bonus wieder auffrisst — sie ist
  * der eigentliche Balancing-Hebel dieses Systems.
  */
-const COMFORT_PER_CAPITA = 3
+const COMFORT_PER_CAPITA = 1.5
+
+/**
+ * Komfortpunkte, die diese Kolonie für volle Zufriedenheit bräuchte.
+ *
+ * Eigene Funktion, damit niemand die Rechnung nachbaut. Genau das war
+ * passiert: das Balancing-Werkzeug hatte `leute × 3` eingetippt, und als die
+ * Konstante auf 1,5 fiel, überbaute der simulierte Spieler um das Doppelte —
+ * gemessen wurde danach seine veraltete Regel und nicht die Änderung.
+ */
+export function comfortNeeded(): number {
+  return planet.settlers.toNumber() * COMFORT_PER_CAPITA
+}
 
 /** Alle Komfortpunkte, die auf diesem Planeten stehen. */
 export function comfortPoints(): number {

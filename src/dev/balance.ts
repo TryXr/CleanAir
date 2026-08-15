@@ -31,10 +31,16 @@ import {
   requiredDefense,
   useAbility,
 } from '../systems/combat'
-import { contentment } from '../systems/contentment'
+import { comfortNeeded, contentment } from '../systems/contentment'
 import { reseedEvents } from '../systems/events'
 import { buyResearch, canBuyResearch } from '../systems/research'
-import { assignBuilder, canAssign, canAssignBuilder, handFactor, unassigned } from '../systems/labor'
+import {
+  assignBuilder,
+  canAssign,
+  canAssignBuilder,
+  handFactor,
+  unassigned,
+} from '../systems/labor'
 import { housingCapacity, resetPopulationNotices } from '../systems/population'
 import { resetStorageNotices } from '../systems/storage'
 import { assign } from '../systems/labor'
@@ -360,7 +366,9 @@ function entscheiden(
   for (const g of listen.supply) if (steht(g.id) < Math.ceil(leute / 3) + 1) kaufen(g)
   for (const g of listen.housing) if (leute >= housingCapacity().toNumber() - 2) kaufen(g)
   if (opts.komfort) {
-    for (const g of listen.amenity) if (steht(g.id) * g.baseRate < leute * 3) kaufen(g)
+    // Bedarf kommt aus contentment.ts, nicht aus einer zweiten Formel hier.
+    const komfortDa = listen.amenity.reduce((n, g) => n + steht(g.id) * g.baseRate, 0)
+    if (komfortDa < comfortNeeded()) for (const g of listen.amenity) kaufen(g)
   }
 
   /*
@@ -372,6 +380,7 @@ function entscheiden(
    * ist damit *nicht* über den Zielpunkt zu lösen.
    */
   const o2Ziel = (def.o2Window.min + Math.min(def.o2Window.max, def.o2Window.min + 4)) / 2
+  const n2Ziel = def.n2Window ? (def.n2Window.min + def.n2Window.max) / 2 : 0
 
   /*
    * Die eigene Industrie erstickt einen (Pyra, §11).
@@ -404,7 +413,6 @@ function entscheiden(
      *
      * Also: O₂ nur nachlegen, wenn der Puffer nicht hinterherhinkt.
      */
-    const n2Ziel = (def.n2Window.min + def.n2Window.max) / 2
 
     /*
      * O₂ darf nur so weit vorlaufen, wie der Puffer schon steht.
@@ -550,7 +558,38 @@ function entscheiden(
    * null Crackern bei 160 Minuten, obwohl Geld, Titan und Menschen da waren.
    */
   if (planet.builders < 3 && canAssignBuilder()) assignBuilder(1)
+
+  /*
+   * **Einen Hebel, der über sein Ziel schießt, besetzt man nicht weiter.**
+   *
+   * Das ist der Unterschied zwischen einem Menschen und einer
+   * Zuweisungsschleife: wer sieht, dass der Puffer über dem Fenster steht,
+   * zieht Leute von der Nitratgrube ab, statt weiter Gas zu machen, das er
+   * nicht mehr loswird. Ohne diese Zeile misst man etwas Absurdes — mit
+   * geschenkter doppelter Handleistung wurde Vesta *unlösbar* und Pyra fiel
+   * von 84,5 auf 127,3 min, weil der Simulant stur weiter N₂ produzierte.
+   *
+   * Es ist auch der Grund, warum Zufriedenheit vorher nirgends etwas brachte:
+   * ihr Bonus landete auf Anlagen, deren Ausstoß schon zu hoch war.
+   */
+  const ueberZiel = (g: GeneratorDef): boolean => {
+    if (g.output.kind !== 'gas') return false
+    if (g.output.gas === 'o2') return o2 > o2Ziel
+    if (g.output.gas === 'n2') return def.n2Window !== undefined && n2 > n2Ziel
+    return false
+  }
+
   for (const g of listen.mitPlaetzen) {
+    /*
+     * Nur **nicht weiter** besetzen, nicht räumen.
+     *
+     * Alle abzuziehen klingt konsequenter und ist schlechter: der Wert fällt
+     * unter das Ziel, die Leute kommen zurück, er steigt darüber — ein
+     * Regler, der schwingt statt zu halten. Gemessen kostete das Vesta 67
+     * Minuten (105,4 statt 38,4). Der Bestand bleibt also stehen, es wächst
+     * nur nichts mehr nach.
+     */
+    if (ueberZiel(g)) continue
     while (canAssign(g.id) && unassigned().toNumber() > reserve) assign(g.id, 1)
   }
 }

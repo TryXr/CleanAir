@@ -1437,6 +1437,38 @@ Ware wären zwei Systeme für dieselbe Sache.
 | **M14** | Zufriedenheit als zweiter Faktor auf die Handleistung, Werkstatt mit Gütern auf Bestellung, Zufriedenheits-Bauten. | Braucht die Bestell-Reihe aus M11 und das globale Lager aus M12 |
 | **M15** | Der sechste Planet nach Nimbus — mit eigener Mechanik nach §11. | Erst wenn feststeht, wie weit Zufriedenheit trägt |
 
+### Zufriedenheit hat die falsche Form — gemessen, nicht vermutet
+
+Der unbequemste Befund dieser Messreihe, und er betrifft M14 selbst.
+
+**Komfort lohnt sich auf keinem Planeten.** Voller Ausbau kostet Vesta 4,1
+min (38,4 → 42,5), Pyra 20,8 (84,5 → 105,3), Nimbus 6,5 (151,7 → 158,2); nur
+Kryo gewinnt 1,1. Naheliegend wäre, die Kosten zu senken — der Bedarf pro Kopf
+ist von 3 auf 1,5 gefallen, und es hat **nichts** geändert (42,7 → 42,5).
+
+Der Grund liegt tiefer, und der entscheidende Versuch war, den Bonus zu
+**verschenken**: volle Zufriedenheit ohne jedes Gebäude. Danach war Vesta
+*gar nicht mehr abzuschließen* und Pyra fiel von 84,5 auf 127,3 min.
+
+> **Das Ziel dieses Spiels ist ein Fenster, kein Maximum.** Ein Bonus auf den
+> laufenden Ausstoß erhöht damit nicht den Erfolg, sondern die Gefahr,
+> darüber hinauszuschießen — und über dem O₂-Fenster gibt es kein Zurück (§4).
+> Doppelte Hände heißt doppeltes N₂ aus der Nitratgrube, und das ist auf einem
+> Planeten mit Puffer kein Geschenk, sondern ein Problem.
+
+Ebenfalls ausprobiert und wieder ausgebaut: den Bonus auf Bauen und Forschung
+umzuhängen statt auf die Produktion. Pyra verbesserte sich damit (105,3 →
+97,2), Vesta schloss dafür gar nicht mehr ab — schnellere Forschung bringt
+mehr Produktion, also denselben Überschuss eine Ecke weiter. **Nicht
+festgeschrieben**, weil eine halb gemessene Umgestaltung schlechter ist als
+ein benanntes Problem.
+
+Damit ist die wichtigste Frage vor M15: **worauf darf Zufriedenheit wirken,
+ohne das Fenster zu gefährden?** Kandidaten, die nichts beschleunigen, was
+geregelt ist: Verbrauch senken (weniger Atem oder Nahrung pro Kopf), Kosten
+senken, Zuwanderung erhöhen, oder Genesis-Kerne beim Abflug. Keiner davon ist
+gemessen.
+
 ### Offene Fragen dieses Kurswechsels
 
 - **Wie hoch darf die Obergrenze wirklich?** 200 % verdoppelt die Ausbeute
