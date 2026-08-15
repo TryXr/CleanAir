@@ -28,6 +28,7 @@ import { meta } from '../state/meta.svelte'
 import { achievementsSystem } from '../systems/achievements'
 import { combatSystem } from '../systems/combat'
 import {
+  availableGoods,
   buildRate,
   cancelSite,
   constructionSystem,
@@ -775,6 +776,22 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     freshRun()
     run.materials = { holz: new Decimal(40) }
     const holzVorher = materialAmount('holz').toNumber()
+    /*
+     * Ein Rezept ohne jeden Eingang gehört nicht in die Liste. Sonst steht
+     * die Werkstatt ab Sekunde eins auf Aurora und bietet Balken aus Holz an,
+     * das es dort nicht gibt — dieselbe Klasse Anzeigefehler wie damals bei
+     * `supply`, nur andersherum.
+     */
+    run.materials = {}
+    check(r, 'Werkstatt zeigt nichts ohne Eingänge', availableGoods().length === 0)
+    run.materials = { holz: new Decimal(40) }
+    check(
+      r,
+      'Werkstatt zeigt das Rezept, dessen Eingang da ist',
+      availableGoods().some((g) => g.id === 'balken'),
+      availableGoods().map((g) => g.id).join(', '),
+    )
+
     const wareBestellt = orderGood('balken', 3)
     check(r, 'Werkstatt nimmt die Bestellung an', wareBestellt)
     check(r, 'Werkstatt bucht Material sofort ab', materialAmount('holz').toNumber() < holzVorher)

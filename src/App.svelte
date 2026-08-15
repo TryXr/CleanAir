@@ -7,6 +7,7 @@
   import { hasAnyMaterial } from './state/run.svelte'
   import { session, type TabId } from './state/session.svelte'
   import { settings } from './state/settings.svelte'
+  import { availableGoods } from './systems/construction'
   import { activeEvents } from './systems/eventEffects'
   import { stableCount } from './systems/finale'
   import { hasForest } from './systems/forest'
@@ -197,7 +198,10 @@
       <!-- Die Werkstatt steht bei den Anlagen und nicht bei der Kolonie:
            bestellt wird hier, gewirkt wird über die Bauten, die diese Güter
            kosten. -->
-      {#if showPopulation}
+      <!-- Erst zeigen, wenn es etwas zu fertigen gibt: sonst stünde die
+           Werkstatt ab Sekunde eins auf Aurora und böte Balken aus Holz an,
+           das es dort nicht gibt (§18, Anzeigefrage). -->
+      {#if showPopulation && availableGoods().length > 0}
         <Panel title="Werkstatt" hint="Material und Arbeitszeit, kein O₂">
           <WorkshopPanel />
         </Panel>

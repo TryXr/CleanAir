@@ -1354,12 +1354,18 @@ Die Lehre ist nicht „besser hinsehen", sondern eine Zuständigkeit:
   Aurora zwar nicht mehr der Preis der *Rakete*, bezahlt aber weiterhin jede
   Anlage. „O₂ freisetzen" hat damit ein Ziel, solange Gebäude O₂ kosten — die
   Frage stellt sich erst wieder, wenn auch das fällt.
-- **Wohnkuppel, Hydroponik und Eisschmelze erscheinen auf Aurora, obwohl sie
-  Stein und Holz kosten, die es dort nicht gibt.** Das ist *kein* Fehler: das
-  Lager gilt für den ganzen Durchlauf, mitgebrachtes Material macht sie
-  baubar, und die fehlenden Kosten stehen rot an der Schaltfläche. Beim
-  allerersten Besuch sind sie trotzdem drei Zeilen ohne Funktion — eine
-  Anzeigefrage, keine Regelfrage.
+- ~~**Wohnkuppel, Hydroponik und Eisschmelze erscheinen auf Aurora, obwohl sie
+  Stein und Holz kosten, die es dort nicht gibt.**~~ **Nachgesehen nach M17
+  und in dieser Form nicht auffindbar** — beim ersten Besuch zeigt die Liste
+  nur Elektrolyse, Kondensator und Keimkammer. Dafür stand ein anderer Fall
+  daneben, den niemand vermutet hatte: **die Werkstatt** war ab Sekunde eins
+  auf Aurora sichtbar und bot Balken aus Holz an, das es dort nicht gibt.
+  Behoben über `availableGoods()` — ein Rezept erscheint erst, wenn
+  mindestens einer seiner Eingänge im Lager liegt.
+
+  Gefunden wurde es, indem der Planet zum ersten Mal in der *Oberfläche*
+  geöffnet wurde statt simuliert. Dasselbe Muster wie bei den
+  Versorgungsanlagen acht Meilensteine zuvor.
 - **Haben Bewohner Namen?** Bei Dutzenden wäre es möglich und stärkt §1.4
   („Zahlen erzählen eine Geschichte"), kostet aber UI.
 - ~~**Der Arbeitskraft-Multiplikator** (`1 + √siedler / 40`) gehört

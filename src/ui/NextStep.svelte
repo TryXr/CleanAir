@@ -1,7 +1,12 @@
 <script lang="ts">
   import { GENERATORS } from '../data/generators'
   import { rocketFor } from '../data/rockets'
-  import { atmosphereStatus, fireIntensity, inWindow } from '../systems/atmosphere'
+  import {
+    atmosphereStatus,
+    fireIntensity,
+    inWindow,
+    pollutionPercent,
+  } from '../systems/atmosphere'
   import { canBuildRocket } from '../systems/travel'
   import { generatorCost } from '../systems/production'
   import { housingCapacity } from '../systems/population'
@@ -21,6 +26,22 @@
   const hinweis = $derived.by((): string | null => {
     const def = currentPlanetDef()
     const erste = GENERATORS[0]!
+
+    /*
+     * **Auf einem vergifteten Planeten ist der erste Zug ein anderer** (M15).
+     *
+     * Der Hinweis unten schickt jeden Neuankömmling an den Klick-Knopf, und
+     * auf fünf Planeten ist das richtig. Auf Erebos ist es der schlechteste
+     * verfügbare Zug: O₂ in eine Luft zu pumpen, die zu 60 % aus Dreck
+     * besteht, verpufft im Nenner — erst waschen, dann atmen lassen (§19).
+     *
+     * Gefunden, indem der Planet zum ersten Mal in der Oberfläche geöffnet
+     * wurde statt nur simuliert. Genau dafür steht die Warnung in CLAUDE.md,
+     * dass der Selbsttest die Oberfläche nicht sieht.
+     */
+    if (def.maxPollution !== undefined && pollutionPercent() > def.maxPollution * 5) {
+      return 'Die Luft ist voller Schadstoffe. Solange sie stehen, bringt jedes O₂ nichts — wasch sie erst heraus.'
+    }
 
     // Ganz am Anfang: es gibt genau eine sinnvolle Handlung.
     if (generatorCount(erste.id) === 0 && pendingUnits(erste.id) === 0) {

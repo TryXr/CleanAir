@@ -1,10 +1,10 @@
 import Decimal from 'break_infinity.js'
 import { findGenerator, type GeneratorDef } from '../data/generators'
-import { findGood, type GoodDef } from '../data/goods'
+import { GOODS, findGood, type GoodDef } from '../data/goods'
 import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { generatorCount, planet, type BuildSite } from '../state/planet.svelte'
-import { canAffordMaterials, spendMaterials } from '../state/run.svelte'
+import { canAffordMaterials, materialAmount, spendMaterials } from '../state/run.svelte'
 import { handFactor, unassigned } from './labor'
 import { generatorCost, isAvailable } from './production'
 import { storeMaterial } from './storage'
@@ -130,6 +130,30 @@ export function orderGenerator(id: string, amount: number): boolean {
   planet.sites = [...planet.sites, { art: 'anlage', id, remaining: amount, progress: 0 }]
   play('buy')
   return true
+}
+
+/**
+ * Welche Rezepte die Werkstatt gerade anbietet.
+ *
+ * Ein Rezept erscheint erst, wenn **mindestens einer seiner Eingänge im Lager
+ * liegt**. Ohne diese Regel steht die Werkstatt von der ersten Sekunde auf
+ * Aurora und bietet Balken aus Holz an, das es dort nicht gibt und das der
+ * Spieler noch nie gesehen hat — zwei Zeilen ohne Funktion, genau die
+ * Anzeigefrage, die §18 offengelassen hatte.
+ *
+ * Bewusst „einer" und nicht „alle": Werkzeug braucht Platten *und* Balken,
+ * und es soll sichtbar werden, sobald Platten da sind. Was dann noch fehlt,
+ * steht rot an der Schaltfläche — so hält es der Rest des Spiels auch.
+ *
+ * Steht hier und nicht in der Komponente, damit der Selbsttest es sehen kann
+ * (CLAUDE.md: Anzeigetabellen gehören nicht in die `.svelte`-Datei).
+ */
+export function availableGoods(): GoodDef[] {
+  return GOODS.filter(
+    (g) =>
+      planet.oxygenTotal.gte(g.revealAt) &&
+      Object.keys(g.input).some((id) => materialAmount(id).gt(0)),
+  )
 }
 
 /**

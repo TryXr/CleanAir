@@ -11,15 +11,14 @@
    * eigentliche Entscheidung: dieselbe Kolonne kann in derselben Zeit ein
    * Haus bauen oder Werkzeug machen.
    */
-  import { GOODS, type GoodDef } from '../data/goods'
+  import { type GoodDef } from '../data/goods'
   import { findMaterial } from '../data/materials'
   import { formatInt, formatTime } from '../engine/format'
-  import { buildRate, goodBlocker, orderGood } from '../systems/construction'
-  import { planet } from '../state/planet.svelte'
+  import { availableGoods, buildRate, goodBlocker, orderGood } from '../systems/construction'
   import { canAffordMaterials, materialAmount } from '../state/run.svelte'
   import { session } from '../state/session.svelte'
 
-  const sichtbar = $derived(GOODS.filter((g) => planet.oxygenTotal.gte(g.revealAt)))
+  const sichtbar = $derived(availableGoods())
 
   /** „4 Holz" — was ein Stück verbraucht. */
   function eingang(def: GoodDef, amount: number): string {

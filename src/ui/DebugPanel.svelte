@@ -5,7 +5,9 @@
   import { addLog } from '../state/log.svelte'
   import { planet } from '../state/planet.svelte'
   import { meta } from '../state/meta.svelte'
-  import { unlockPlanet } from '../state/run.svelte'
+  import { run, unlockPlanet } from '../state/run.svelte'
+  import { MATERIALS } from '../data/materials'
+  import { PLANETS } from '../data/planets'
 
   /**
    * Werkzeuge fürs Spieltesten. Wird in App.svelte nur eingehängt, wenn
@@ -43,6 +45,44 @@
     travelTo(next.id)
     addLog(`Debug: gesprungen nach ${next.name}.`, 'warn')
   }
+
+  /**
+   * Versetzt in die Spätphase: alle Planeten frei, das Lager voll.
+   *
+   * Der Grund ist der Befund, der sich durch dieses Projekt zieht — Fehler
+   * sitzen dort, wo nur ein Mensch hinkommt, und an Erebos, der Werkstatt und
+   * dem Ende kommt man sonst erst nach Stunden. Wer sie nie mit der Hand
+   * öffnet, findet dort dieselben Sachen wie damals bei den
+   * Versorgungsanlagen: nie.
+   *
+   * Bewusst **ohne** stabile Atmosphären — die muss man weiterhin selbst
+   * herstellen. Es ist eine Abkürzung zum Inhalt, kein Durchspielen.
+   */
+  function lateGame(): void {
+    for (const p of PLANETS) unlockPlanet(p.id)
+    const lager: Record<string, Decimal> = {}
+    for (const m of MATERIALS) lager[m.id] = new Decimal(50000)
+    run.materials = lager
+    planet.oxygen = planet.oxygen.add(new Decimal(5e7))
+    planet.oxygenTotal = planet.oxygenTotal.add(new Decimal(5e7))
+    addLog('Debug: Spätphase hergestellt — alle Planeten frei, Lager voll.', 'warn')
+  }
+
+  /**
+   * Erklärt alle Planeten für stabil — der einzige Weg, das Ende in Minuten
+   * statt in Stunden zu sehen. Getrennt vom Knopf darüber, weil es das Spiel
+   * *überspringt* statt es abzukürzen.
+   */
+  function allStable(): void {
+    planet.completed = true
+    const eingelagert = { ...run.planets }
+    for (const p of PLANETS) {
+      if (p.id === planet.id) continue
+      eingelagert[p.id] = { ...(eingelagert[p.id] ?? { id: p.id }), completed: true }
+    }
+    run.planets = eingelagert
+    addLog('Debug: alle Atmosphären als stabil markiert.', 'warn')
+  }
 </script>
 
 <p class="state">
@@ -51,7 +91,15 @@
 </p>
 
 <button onclick={skipPlanet}>Nächster Planet</button>
+<button onclick={lateGame}>Spätphase</button>
+<button onclick={allStable}>Alles stabil</button>
 <button class="danger" onclick={resetAll}>Alles zurücksetzen</button>
+
+<p class="hint">
+  „Spätphase" schaltet alle Planeten frei und füllt das Lager — der Weg zu Erebos und zur
+  Werkstatt, ohne Stunden dafür zu spielen. „Alles stabil" erklärt zusätzlich alle Atmosphären
+  für fertig und macht damit das Ende sichtbar; das überspringt das Spiel, statt es abzukürzen.
+</p>
 
 <p class="hint">
   Löscht Spielstand, Meta und Forschung und startet frisch auf Aurora — ohne Rückfrage.
