@@ -1481,12 +1481,14 @@ Ware wären zwei Systeme für dieselbe Sache.
   | Aurora | 24,9 min | 15–25 | im Fenster |
   | Vesta | 38,4 min | 30–45 | im Fenster |
   | Pyra | 84,5 min | 60–120 | im Fenster |
-  | Kryo | 97,5 min | 120–240 | **zu schnell** |
-  | Nimbus | 63,5 min | 120–240 | **zu schnell** |
+  | Kryo | 129,6 min | 120–240 | im Fenster |
+  | Nimbus | 151,7 min | 120–240 | im Fenster |
 
-  (Stand nach den beiden Korrekturen unten. Kryo und Nimbus sind durch die
-  behobene Wellen-Spirale nochmals schneller geworden — sie hatten von ihr
-  gezehrt.)
+  **Zum ersten Mal liegen alle fünf im Fenster**, gemessen mit demselben
+  Regler und ohne mitgeschleppten Fortschritt. Die Zahlen der letzten beiden
+  stammen aus den Korrekturen weiter unten; Kryo und Nimbus waren nach der
+  Wellen-Behebung auf 97,5 und 63,5 min gefallen — ein Teil ihrer früheren
+  Spielzeit war die Spirale, nicht der Planet.
 
   Zur Obergrenze selbst: auf Vesta kostet voller Komfort 4,3 min (38,4 gegen
   42,7). Sie trivialisiert dort also nichts.
@@ -1534,11 +1536,29 @@ ohnehin nur noch gewaschen wird.
 > 61,5. Flach über den ganzen Bereich, und Pyra fällt bei vollem Druck von
 > 196,4 auf 61,5 min.
 
-**Nimbus lässt sich nicht über die Größe bremsen.** Sein `baseAtmosphere` zu
-erhöhen macht ihn *schneller* statt langsamer (3 M → 80,2 min, 4,5 M → 69,7,
-6 M → 67,6): eine größere Grundatmosphäre verdünnt beide Gase, und der
-Gasschöpfer liefert den Puffer ohnehin fast umsonst. Auch hier ist der
-naheliegende Regler der falsche.
+**Jeder Planet hat genau einen Hebel, und er ist nirgends derselbe.** Das ist
+der nützlichste Einzelbefund dieser Messreihe. Gemessen wurde jeweils, was
+eine Halbierung oder Verdopplung mit der Dauer macht:
+
+| Planet | wirkt | wirkt **nicht** |
+|---|---|---|
+| Pyra | Schadstoffausstoß (61,5 → 118,8 min) | — |
+| Kryo | Grundatmosphäre (97,5 → 129,6) | Bevölkerung (−0,6), Wachstum (−0,2) |
+| Nimbus | Bevölkerungsgrenze (63,5 → 151,7) | Grundatmosphäre — sie wirkt **rückwärts** |
+
+Nimbus ist der lehrreiche Fall: seine Grundatmosphäre zu erhöhen macht ihn
+*schneller* (3 M → 80,2 min, 4,5 M → 69,7, 6 M → 67,6), weil mehr Inertgas
+beide Anteile verdünnt und der Gasschöpfer den Puffer ohnehin verschenkt.
+Gebremst wird er über den bewohnbaren Platz — was zugleich die bessere
+Geschichte ist: ein Mond ohne Boden, auf dem Menschen auf Schwebeplattformen
+leben. „Größe" heißt bei ihm das, was zu füllen ist, nicht die Zahl derer,
+die füllen.
+
+> **Den Hebel messen, nicht raten.** Dreimal in Folge war der naheliegende
+> Regler der falsche: Pyras Dreck wirkte nicht (bis die Wellen behoben
+> waren), Kryos Bevölkerung wirkt nicht, Nimbus' Größe wirkt verkehrt herum.
+> Eine Sensitivitätsmessung über vier Kandidaten kostet zehn Minuten und
+> ersetzt eine Woche Zahlenraten.
 - **Bringt der sechste Planet eine neue Mechanik oder den Abschluss?** §11
   verlangt eine neue; ein Finale, das nur das Vorhandene bündelt, wäre der
   ehrlichere Schluss. Beides ist vertretbar, entschieden ist es nicht.

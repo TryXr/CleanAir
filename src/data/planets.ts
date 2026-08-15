@@ -438,16 +438,21 @@ export const KRYO: PlanetDef = {
     'Kryo ist still und weiß. Wasser gibt es im Überfluss, aber alles hier braucht seine Zeit — auch die Menschen.',
 
   /**
-   * Das Fünfzigfache von Vesta. Simuliert: 1,5 M → 138 min. Zielfenster laut
-   * §13 sind 2–4 h.
+   * **Verdoppelt im Nachtrag zu M14**, von 1,5 M auf 3 M — das Hundertfache
+   * von Vesta.
    *
-   * Kryo verträgt einen so viel größeren Maßstab als Pyra, weil sein
-   * Hand-Hebel (Nitrateis) direkt auf der harten Seite sitzt und die Kolonie
-   * mit 240 Bewohnern die größte vor Nimbus ist. Der Widerstand des Planeten
-   * bleibt trotzdem die Zeit: `growthFactor` 0,45 heißt, dass diese 240
-   * Menschen sehr lange brauchen, bis sie da sind.
+   * Nötig, weil Kryo nach der Wellen-Korrektur bei 97,5 min lag und damit
+   * deutlich unter dem Fenster aus §13 (2–4 h). Ein Teil seiner früher
+   * gemessenen Spielzeit war nicht der Planet, sondern die Wellen-Spirale.
+   *
+   * Die Grundatmosphäre ist bei ihm der **einzige** Hebel, der greift, und
+   * das ist gemessen und nicht geraten: die Bevölkerungsgrenze zu halbieren
+   * ändert 0,6 Minuten, den Wachstumsfaktor zu halbieren 0,2 — und die Rate
+   * des Nitrateises zu halbieren macht ihn sogar *schneller* (72,4), weil
+   * weniger Puffer weniger Überschuss zum Abblasen heißt. Verdoppelt steht er
+   * bei 129,6 min. Darüber sättigt es: 4,5 M bringt nur 133,7.
    */
-  baseAtmosphere: 1500000,
+  baseAtmosphere: 3000000,
   o2Window: { min: 19, max: 23 },
   n2Window: { min: 74, max: 80 },
   maxPollution: 1,
@@ -536,8 +541,25 @@ export const NIMBUS: PlanetDef = {
   startWater: 0,
   baseHousing: 8,
   settleAt: 3,
-  /** Die größte Kolonie des Durchlaufs — und sie wird gebraucht. */
-  popCapacity: 360,
+  /**
+   * **Die kleinste Kolonie des Durchlaufs, nicht die größte** — halbiert von
+   * 360 auf 180 im Nachtrag zu M14.
+   *
+   * Der Grund ist zuerst gemessen und dann erzählt worden, aber die
+   * Geschichte passt besser als die alte: Nimbus ist ein Mond ohne Boden.
+   * Menschen leben hier auf Schwebeplattformen, und davon gibt es wenige —
+   * die *Atmosphäre* ist gewaltig, der bewohnbare Platz ist es nicht. „Größe"
+   * heißt bei ihm das, was zu füllen ist, nicht die Zahl derer, die füllen.
+   *
+   * Gemessen war die Bevölkerungsgrenze der mit Abstand stärkste Hebel des
+   * Planeten: halbiert bringt sie 63,5 auf 151,7 min. Alles andere reicht
+   * nicht heran — halbe Schwebefarm 74,3, halber Gasschöpfer 90,6, doppelte
+   * Stabilitätszeit 90,9. Und die Grundatmosphäre wirkt bei ihm sogar
+   * **rückwärts**: sie zu erhöhen macht ihn schneller (4,5 M → 69,7), weil
+   * mehr Inertgas beide Anteile verdünnt und der Gasschöpfer den Puffer
+   * ohnehin verschenkt.
+   */
+  popCapacity: 180,
 }
 
 /** Reihenfolge = Fortschritt. Die Rakete eines Planeten öffnet den nächsten. */
