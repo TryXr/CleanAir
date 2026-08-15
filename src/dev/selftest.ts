@@ -1,6 +1,7 @@
 import Decimal from 'break_infinity.js'
 import { runPlanet } from './balance'
 import { GENERATOR_GROUPS, GENERATORS, findGenerator, groupOf } from '../data/generators'
+import { FINALE } from '../data/finale'
 import { AURORA, PLANETS } from '../data/planets'
 import { ROCKETS } from '../data/rockets'
 import { findSound } from '../data/sounds'
@@ -34,6 +35,7 @@ import {
   orderGood,
 } from '../systems/construction'
 import { contentment } from '../systems/contentment'
+import { finaleBlocker, seedUniverse } from '../systems/finale'
 import { craftBlocker, craftingSystem } from '../systems/crafting'
 import { assign, assignBuilder, handFactor, unassign } from '../systems/labor'
 import { housingCapacity, o2ConsumptionRate, populationSystem } from '../systems/population'
@@ -517,6 +519,45 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       housingCapacity().toNumber() > bettenVorher,
       `${bettenVorher} → ${housingCapacity().toNumber()}`,
     )
+
+    /* --- Das Ende (M16, §19) ----------------------------------------------
+       Drei Eigenschaften, die ein Ende haben muss: es geht nicht zu früh, es
+       geht nicht zweimal, und es nimmt nichts weg. Die dritte ist die
+       wichtigste — §1.2 gilt auch hier.
+    --------------------------------------------------------------------- */
+    freshRun()
+    meta.finaleReached = false
+    run.materials = Object.fromEntries(
+      Object.entries(FINALE.materialCost).map(([id, m]) => [id, new Decimal(m * 2)]),
+    )
+    check(
+      r,
+      'Aussaat ist ohne stehende Atmosphären gesperrt',
+      finaleBlocker() !== null && !seedUniverse(),
+      finaleBlocker() ?? 'kein Grund',
+    )
+
+    // Alle sechs stabil — über die eingelagerten Planeten, wie im Spiel.
+    planet.completed = true
+    run.planets = Object.fromEntries(
+      PLANETS.filter((p) => p.id !== planet.id).map((p) => [
+        p.id,
+        { id: p.id, completed: true },
+      ]),
+    )
+    check(r, 'Aussaat wird frei, wenn alles steht', finaleBlocker() === null, finaleBlocker() ?? '')
+
+    const kerneVorher = meta.genesisCores.toString()
+    const ausgesaet = seedUniverse()
+    check(r, 'Aussaat gelingt', ausgesaet && meta.finaleReached)
+    check(r, 'Aussaat nimmt keine Kerne weg', meta.genesisCores.toString() === kerneVorher)
+    check(r, 'Aussaat geht nur einmal', !seedUniverse())
+
+    // Und sie überlebt den Prestige-Reset — ein Ende gehört nicht dem Durchlauf.
+    const blobFinale = exportSave()
+    meta.finaleReached = false
+    importSave(blobFinale)
+    check(r, 'Save erhält die Aussaat', meta.finaleReached)
 
     /* --- Erebos beginnt mit der falschen Atmosphäre (M15) ------------------
        Der ganze Planet steht und fällt mit seinem Startzustand. Wäre er leer,

@@ -30,6 +30,7 @@
 16. [Kurswechsel: Materialien, Planeten, Rakete](#16-kurswechsel-materialien-planeten-rakete)
 17. [Kurswechsel II: Die Kolonie](#17-kurswechsel-ii-die-kolonie)
 18. [Kurswechsel III: Zufriedenheit und die Werkstatt](#18-kurswechsel-iii-zufriedenheit-und-die-werkstatt)
+19. [Das Ende](#19-das-ende)
 
 ---
 
@@ -1674,3 +1675,58 @@ null, am Ende O₂ 21,4 % und N₂ 76,0 %.
 Sein `anoxenPressure` liegt bei 0,9 und damit unter Nimbus' 1,4. Das ist
 Absicht: Erebos' Widerstand soll aus seiner Luft kommen. Pyra hat vorgeführt,
 wie schnell die Anoxen sonst das eigentliche Thema eines Planeten überdecken.
+
+---
+
+## 19. Das Ende
+
+Bis M15 hatte CleanAir kein Ende, sondern nur immer neue Anfänge: ein Planet
+steht stabil, eine Rakete bringt dich weiter, ein Reset bringt Kerne. Das ist
+für ein Incremental-Spiel normal — und es kostet die Aussage. Ein Spiel über
+Terraforming, das nie ankommt, sagt nichts darüber, wofür man es tut.
+
+### Die Aussaat
+
+**Erebos liefert die Vorlage, ohne dass es geplant war.** Dort war schon
+jemand, hat verloren und **keine Notizen hinterlassen**; das Einzige, was von
+ihm blieb, ist seine vergiftete Luft. Das Finale ist genau das Gegenteil: du
+gibst weiter, was hier gelernt wurde — an Welten, die du nie sehen wirst.
+
+Keine siebte Welt, kein siebtes System. Kapseln mit Sporen, Nährsalz, einem
+Rechenwerk und den Notizen.
+
+### Drei Eigenschaften, die nicht verhandelbar sind
+
+**1. Es kostet von jedem Planeten etwas.** Metallplatten von Aurora, Titan und
+Holz von Vesta, Obsidian von Pyra, Eis von Kryo, Helium von Nimbus — dazu
+Werkzeug und Balken aus der Werkstatt (M14). Die letzte Konsequenz aus §16:
+kein Planet hat alles, also ist das Ende nur zu haben, wenn man überall war
+und zurückgekommen ist.
+
+**2. Es verlangt alle sechs Atmosphären.** Nicht die Raketen — die sind seit
+§16 nur Transport —, sondern `completed`: sechsmal ein Wert, der stabil im
+Fenster steht. Das ist die einzige Bedingung im Spiel, die sich nicht kaufen
+lässt.
+
+**3. Es nimmt nichts weg.** Kein Reset, kein Bildschirm, der sich über das
+Spiel legt, kein „Danke fürs Spielen, bitte neu anfangen". Wer danach
+weiterspielen will, spielt weiter; wer einen Prestige-Durchlauf anhängt,
+behält die Aussaat trotzdem — deshalb steht das Flag in `meta` und nicht im
+Durchlauf. §1.2 gilt auch für ein Ende.
+
+> **Der Epilog bleibt lesbar.** Er steht als Panel neben der Sternenkarte und
+> nicht als Overlay, das man einmal sieht und wegklickt. Ein Text, den man
+> nicht wiederfinden kann, ist kein Abschluss, sondern eine Zwischensequenz.
+
+### Ton
+
+Nüchtern und kurz. Das Spiel erzählt seine Geschichte sonst über Zahlen und
+Anlagenbeschreibungen (§1.4); ein Ende, das plötzlich pathetisch wird, gehörte
+einem anderen Spiel. Es endet auf einer Messung, nicht auf einem Triumph:
+
+> *Irgendwo, in einer Nacht in dreihundert Jahren, wird auf einem namenlosen
+> Fels der erste Anteil messbar. Nicht atembar. Messbar.*
+
+Und die Anoxen bleiben ausdrücklich unbesiegt. Sie waren zuerst da (§7); ein
+Ende, das sie wegräumt, würde die einzige Position im Spiel verraten, die
+nicht die des Spielers ist.

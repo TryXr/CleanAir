@@ -8,6 +8,7 @@
   import { session, type TabId } from './state/session.svelte'
   import { settings } from './state/settings.svelte'
   import { activeEvents } from './systems/eventEffects'
+  import { stableCount } from './systems/finale'
   import { hasForest } from './systems/forest'
   import { pendingCores } from './systems/prestige'
   import AchievementGrid from './ui/AchievementGrid.svelte'
@@ -16,6 +17,7 @@
   import CombatPanel from './ui/CombatPanel.svelte'
   import DebugPanel from './ui/DebugPanel.svelte'
   import EventPanel from './ui/EventPanel.svelte'
+  import FinalePanel from './ui/FinalePanel.svelte'
   import ForestPanel from './ui/ForestPanel.svelte'
   import GeneratorList from './ui/GeneratorList.svelte'
   import InventoryPanel from './ui/InventoryPanel.svelte'
@@ -60,6 +62,12 @@
   const showPrestige = $derived(planet.completed || meta.stats.runs > 0 || pendingCores().gte(1))
   // Die Sternenkarte lohnt erst, wenn es überhaupt ein Ziel gibt.
   const showMap = $derived(planet.rocketBuilt || meta.stats.runs > 0 || planet.completed)
+  /*
+   * Das Ende zeigt sich ab der Hälfte — vorher wäre es ein Versprechen, mit
+   * dem niemand etwas anfangen kann, und danach ist es das, worauf man
+   * hinspielt. Wer ausgesät hat, behält den Epilog für immer.
+   */
+  const showFinale = $derived(meta.finaleReached || stableCount() >= 3)
 
   const isDev = import.meta.env.DEV
 
@@ -242,6 +250,16 @@
       {#if showPrestige}
         <Panel title="Durchlauf" hint="Reset gegen Kerne">
           <PrestigePanel />
+        </Panel>
+      {/if}
+
+      <!-- Das Ende steht bei der Sternenkarte und nicht in einem eigenen
+           Reiter: es ist der letzte Punkt derselben Reise, kein Nebenschauplatz.
+           Sichtbar wird es erst, wenn die Hälfte steht — vorher wäre es ein
+           Versprechen, mit dem niemand etwas anfangen kann. -->
+      {#if showFinale}
+        <Panel title={meta.finaleReached ? 'Die Aussaat' : 'Das Ende'} hint="was danach kommt">
+          <FinalePanel />
         </Panel>
       {/if}
     {/if}

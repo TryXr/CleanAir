@@ -25,6 +25,18 @@ export const meta = $state({
   achievements: [] as string[],
 
   planetsCompleted: 0,
+
+  /**
+   * Wurde ausgesät (M16, §19)? Die einzige Sache im Spiel, die man genau
+   * einmal erreicht.
+   *
+   * Steht bewusst in `meta` und nicht im Durchlauf: ein Prestige-Reset nimmt
+   * alles andere, aber kein Ende. Und `finaleAt` ist kein Schmuck — der
+   * Epilog nennt eine Nacht in dreihundert Jahren, und dafür braucht er einen
+   * Zeitpunkt, ab dem gezählt wird.
+   */
+  finaleReached: false,
+  finaleAt: 0,
   /** Gesamte gespielte Zeit in Sekunden, inkl. angerechneter Offline-Zeit. */
   totalPlaytime: 0,
   firstStarted: Date.now(),
@@ -71,6 +83,8 @@ export function serializeMeta() {
     researchNodes: { ...meta.researchNodes },
     achievements: [...meta.achievements],
     planetsCompleted: meta.planetsCompleted,
+    finaleReached: meta.finaleReached,
+    finaleAt: meta.finaleAt,
     totalPlaytime: meta.totalPlaytime,
     firstStarted: meta.firstStarted,
     stats: {
@@ -117,6 +131,8 @@ export function deserializeMeta(raw: unknown): void {
   meta.achievements = ACHIEVEMENTS.filter((a) => savedAchievements.includes(a.id)).map((a) => a.id)
 
   meta.planetsCompleted = readInt(s.planetsCompleted, 0)
+  meta.finaleReached = s.finaleReached === true
+  meta.finaleAt = readNumber(s.finaleAt, 0)
   meta.totalPlaytime = readNumber(s.totalPlaytime, 0)
   meta.firstStarted = readNumber(s.firstStarted, Date.now())
 

@@ -243,6 +243,19 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
    * könnte mit dem Save auseinanderlaufen und bräuchte ein eigenes
    * Gegenstück; der abgeleitete hat beides nicht.
    */
+  /**
+   * M16: das Ende (§19).
+   *
+   * Nichts umzurechnen — `finaleReached` liest sich aus einem alten Save von
+   * selbst als `false`, und das ist auch richtig: wer vor M16 gespielt hat,
+   * hat nicht ausgesät. Der Eintrag steht trotzdem hier, weil die Regel aus
+   * CLAUDE.md keine Ausnahme für „ist ja nur ein Feld" kennt — ein
+   * stillschweigend übersprungener Versionssprung ist genau die Stelle, an
+   * der später niemand mehr weiß, ob eine Migration fehlt oder überflüssig
+   * war.
+   */
+  15: (s) => s,
+
   14: (s) => {
     const planet = (s.planet ?? {}) as SaveShape
     const sites = Array.isArray(planet.sites) ? planet.sites : []

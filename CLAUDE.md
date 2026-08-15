@@ -26,6 +26,12 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M16 ist fertig: **Das Spiel hat ein Ende** (§19). „Die Aussaat" verlangt alle
+sechs stabilen Atmosphären und von jedem Planeten Material — und **nimmt
+nichts weg**: kein Reset, kein Overlay, der Epilog bleibt als Panel lesbar.
+`meta.finaleReached` steht in der Meta-Ebene, weil es die einzige Sache ist,
+die man genau einmal erreicht und die kein Durchlauf-Reset kassiert (§1.2).
+
 M15 ist fertig: **Erebos hat schon eine Atmosphäre, die falsche.** Sechs
 Planeten, aber kein sechstes System — die neue Sache ist ein umgekehrtes
 Problem. `startAirO2`, `startAirN2` und `startPollution` in
@@ -208,7 +214,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 113 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 119 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
