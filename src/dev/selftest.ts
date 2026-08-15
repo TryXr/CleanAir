@@ -48,6 +48,15 @@ import {
   sendCrew,
 } from '../systems/salvage'
 import { findSalvage } from '../data/salvage'
+import { landmarkFor } from '../data/landmarks'
+import {
+  canOrderStage,
+  landmarkDone,
+  landmarkEffects,
+  landmarkHere,
+  orderStage,
+  stagesDone,
+} from '../systems/landmarks'
 import { craftBlocker, craftingSystem } from '../systems/crafting'
 import { assign, assignBuilder, crewAway, handFactor, unassign, unassigned } from '../systems/labor'
 import { housingCapacity, o2ConsumptionRate, populationSystem } from '../systems/population'
@@ -1025,6 +1034,113 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       JSON.stringify(planet.expeditions[0] ?? null),
     )
     check(r, 'Ein gespeicherter Trupp bindet weiter Hände', crewAway() === 4)
+
+    /* --- Bauwerke (M19, §20.3) --------------------------------------------
+       Das erste Ding im Spiel, von dem es genau eines gibt. Geprüft wird die
+       Kette: bestellen legt eine Baustelle an, Arbeit hebt die Etappe, und
+       erst die letzte Etappe schaltet die Wirkung frei.
+    --------------------------------------------------------------------- */
+    freshRun()
+    travelTo('aurora')
+    planet.settlers = new Decimal(30)
+    planet.satiety = 1
+    run.materials = {}
+
+    check(r, 'Aurora hat ein Bauwerk', landmarkHere()?.id === 'wetterturm')
+    check(r, 'Erebos hat keines', landmarkFor('erebos') === undefined)
+    check(r, 'Ohne Material keine Etappe', !canOrderStage())
+
+    run.materials = {
+      stein: new Decimal(1000),
+      platten: new Decimal(1000),
+      titan: new Decimal(1000),
+      balken: new Decimal(1000),
+      werkzeug: new Decimal(1000),
+      fundstueck: new Decimal(50),
+    }
+    const steinVorEtappe = materialAmount('stein').toNumber()
+    check(r, 'Mit Material geht die Etappe', orderStage())
+    check(r, 'Etappe bucht Material sofort ab', materialAmount('stein').toNumber() < steinVorEtappe)
+    check(r, 'Etappe steht in derselben Reihe', planet.sites[0]?.art === 'bauwerk')
+    check(r, 'Etappe steht nicht sofort fertig da', stagesDone() === 0)
+    check(r, 'Zweite Etappe geht nicht parallel', !canOrderStage())
+
+    assignBuilder(20)
+    for (let i = 0; i < 900; i++) constructionSystem(1)
+    check(r, 'Arbeit hebt die Etappe', stagesDone() === 1, `${stagesDone()}`)
+
+    /*
+     * Die Wirkung darf erst mit der **letzten** Etappe kommen. Ein Bauwerk,
+     * das nach dem Fundament schon hilft, ist kein Ziel mehr, sondern ein
+     * Kauf mit Extraschritten.
+     */
+    check(r, 'Eine halbe Etappe wirkt nicht', !landmarkEffects().stabilityHold)
+    for (let stufe = 0; stufe < 3; stufe++) {
+      orderStage()
+      for (let i = 0; i < 2000; i++) constructionSystem(1)
+    }
+    check(r, 'Vier Etappen machen das Bauwerk fertig', landmarkDone(), `${stagesDone()}`)
+    check(r, 'Erst das fertige Bauwerk wirkt', landmarkEffects().stabilityHold)
+
+    /*
+     * Und die Wirkung selbst: der Timer hält, statt auf null zu fallen. Das
+     * ist die ganze Zusage des Wetterturms.
+     */
+    planet.stability = 42
+    planet.airO2 = new Decimal(0)
+    atmosphereSystem(1)
+    check(r, 'Der Wetterturm hält den Timer', planet.stability === 42, `${planet.stability}`)
+
+    // Gegenprobe innerhalb des Tests: ohne Bauwerk fällt er.
+    planet.landmarkStage = 0
+    planet.stability = 42
+    atmosphereSystem(1)
+    check(r, 'Ohne Bauwerk fällt der Timer', planet.stability === 0, `${planet.stability}`)
+
+    /*
+     * **Ortsgebunden heißt ortsgebunden.** Der Wetterturm steht auf Aurora
+     * und hilft auf Kryo nicht — dieselbe Verwechslung „Eigenschaft des
+     * aktiven Planeten statt des Durchlaufs" hat in diesem Projekt schon die
+     * Sternenkarte und die Anlagenliste gekostet, nur andersherum.
+     */
+    planet.landmarkStage = 4
+    travelTo('kryo')
+    /*
+     * **Kryos Bauwerk wird ebenfalls fertig gesetzt**, und das ist der ganze
+     * Trick dieser Prüfung. Ohne diese Zeile ist sie wertlos: auf Kryo stünde
+     * `landmarkStage` auf 0, der Wetterturm fiele schon an der Stufenprüfung
+     * durch, und die Gegenprobe (Planetenvergleich ausbauen) bliebe grün.
+     * Genau so ist sie beim ersten Versuch durchgerutscht. Mit fertiger
+     * Zisterne trennt sie sauber: die Wirkung *dieses* Planeten gilt, die des
+     * anderen nicht.
+     */
+    planet.landmarkStage = 4
+    check(r, 'Ein ortsgebundenes Bauwerk wirkt nicht von fern', !landmarkEffects().stabilityHold)
+    check(r, 'Das Bauwerk dieses Planeten wirkt sehr wohl', landmarkEffects().satietyFloor > 0)
+
+    /*
+     * Der Fahrstuhl dagegen **muss** von fern wirken: das Lager gehört seit
+     * §16 dem ganzen Durchlauf. Er steht auf Nimbus, gemessen wird auf Kryo.
+     */
+    const lagerVorher = materialCapacity().toNumber()
+    travelTo('nimbus')
+    planet.landmarkStage = 4
+    travelTo('kryo')
+    check(
+      r,
+      'Der Fahrstuhl wirkt aus der Ferne',
+      materialCapacity().toNumber() > lagerVorher,
+      `${lagerVorher} → ${materialCapacity().toNumber()}`,
+    )
+
+    /* Und durch den Save: die Etappenzahl muss zurückkommen. */
+    freshRun()
+    travelTo('aurora')
+    planet.landmarkStage = 2
+    const bauBlob = exportSave()
+    freshRun()
+    importSave(bauBlob)
+    check(r, 'Save erhält die Etappenzahl', planet.landmarkStage === 2, `${planet.landmarkStage}`)
 
     /* --- Das Lager ist endlich (M11, §17) ---------------------------------
        Ohne Grenze war Abbau nur eine Frage der Zeit. Mit Grenze muss der

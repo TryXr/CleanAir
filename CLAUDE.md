@@ -26,12 +26,21 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
-M18 ist angefangen: **Bergung** (§20.2) steht — ein Trupp zieht los, ist eine
+M19 ist fertig: **Bauwerke** (§20.3) — eines pro Planet, vier Etappen, null
+O₂, in derselben Bauschlange wie ein Haus. Ihre Wirkungen nehmen ausdrücklich
+**Risiko** weg oder geben **Reichweite**; kein einziger Produktionsbonus, weil
+das Ziel ein Fenster ist und kein Maximum. `landmarkEffects()` in
+systems/landmarks.ts ist die Sammelstelle, `scope` unterscheidet ortsgebunden
+von durchlaufweit — Erebos hat keines, dort ist die Aussaat das Bauwerk.
+Bezahlt wird mit **Fundstücken**, dem einzigen nicht herstellbaren Material:
+sie kommen nur aus der Bergung und gehen nur in Bauwerke.
+
+M18 steht: **Bergung** (§20.2) — ein Trupp zieht los, ist eine
 Weile weg und bringt Material und einen Satz Vorgeschichte mit. Der Preis sind
 ausdrücklich **Hände** und nicht Zeit: wer draußen ist, fehlt an jeder Anlage,
 und die Buchhaltung dafür sitzt in `unassigned()` und nicht in einem zweiten
-Zähler. **§20.1 (Baupläne) und §20.3 (Bauwerke) sind noch Entwurf** — wer dort
-etwas voraussetzt, liest einen Plan und keinen Zustand.
+Zähler. **§20.1 (Baupläne) ist noch Entwurf** — wer dort etwas voraussetzt,
+liest einen Plan und keinen Zustand.
 
 M17 ist fertig: **Nach dem Ende läuft die Hochrechnung** (§19). Keine
 Funkverbindung — der Epilog sagt, dass man nicht erfährt, welche Kapseln
@@ -229,7 +238,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 155 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 173 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -247,7 +256,17 @@ eine O₂-Anlage mit Plätzen unbesetzt nichts liefert und besetzt mehr bringt,
 als der Atem der Zugewiesenen kostet. Seit M18, dass ein Bergungstrupp
 wirklich Hände bindet, dass er sie beim Zurückrufen sofort wieder freigibt,
 dass ein Ziel sich erschöpft *und* erholt, und dass Erebos über die Bergung an
-Material kommt, das der Planet nicht führt.
+Material kommt, das der Planet nicht führt. Seit M19, dass eine Etappe nicht
+sofort dasteht, dass **erst die letzte** Etappe die Wirkung freischaltet, dass
+ein ortsgebundenes Bauwerk aus der Ferne nichts tut und der Fahrstuhl sehr
+wohl.
+
+> **Eine Gegenprobe, die grün bleibt, ist kein bestandener Test.** Die Prüfung
+> „ein ortsgebundenes Bauwerk wirkt nicht von fern" blieb beim Ausbau des
+> Planetenvergleichs grün — auf dem Zielplaneten stand die Etappenzahl ohnehin
+> auf null, die Wirkung fiel schon dort durch. Erst mit einem fertigen Bauwerk
+> auf **beiden** Planeten trennt sie sauber. Wer eine Gegenprobe macht und
+> nichts rot wird, hat den Test zu prüfen, nicht den Code zu loben.
 
 Der Test sichert den Zustand vorher und stellt ihn danach wieder her — und
 sperrt seit M11 zusätzlich das Speichern, solange er läuft. Vorher schrieb

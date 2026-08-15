@@ -274,6 +274,16 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
    */
   17: (s) => s,
 
+  /**
+   * M19: Bauwerke (§20.3).
+   *
+   * `landmarkStage` liest sich aus einem alten Save als 0 — niemand hat vor
+   * M19 gebaut. Die neue Baustellenart `bauwerk` braucht ebenfalls nichts:
+   * ein alter Save kennt sie nicht, und der Leser in planet.svelte.ts fällt
+   * für unbekannte Arten auf `anlage` zurück.
+   */
+  18: (s) => s,
+
   14: (s) => {
     const planet = (s.planet ?? {}) as SaveShape
     const sites = Array.isArray(planet.sites) ? planet.sites : []

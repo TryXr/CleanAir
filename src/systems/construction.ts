@@ -5,6 +5,8 @@ import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { generatorCount, planet, type BuildSite } from '../state/planet.svelte'
 import { canAffordMaterials, materialAmount, spendMaterials } from '../state/run.svelte'
+import { findLandmark } from '../data/landmarks'
+import { completeStage, nextStage, stageWork } from './landmarks'
 import { handFactor, unassigned } from './labor'
 import { generatorCost, isAvailable } from './production'
 import { storeMaterial } from './storage'
@@ -58,11 +60,23 @@ export function activeSite(): BuildSite | undefined {
  */
 export function siteWork(site: BuildSite): number {
   if (site.art === 'ware') return findGood(site.id)?.work ?? 0
+  if (site.art === 'bauwerk') {
+    // Nicht die rohe Zahl aus data/: Werkzeug im Lager senkt die Arbeit einer
+    // Etappe (M19). Die Regel steht in systems/landmarks.ts, damit sie an
+    // einer Stelle liegt — hier wird sie nur benutzt.
+    const stage = nextStage()
+    return stage ? stageWork(stage) : 0
+  }
   return findGenerator(site.id)?.buildWork ?? 0
 }
 
 /** Wie das, was hier entsteht, in der Oberfläche heißt. */
 export function siteName(site: BuildSite): string {
+  if (site.art === 'bauwerk') {
+    const def = findLandmark(site.id)
+    const stage = nextStage()
+    return def ? `${def.name} — ${stage?.name ?? 'Etappe'}` : site.id
+  }
   const name = site.art === 'ware' ? findGood(site.id)?.name : findGenerator(site.id)?.name
   return name ?? site.id
 }
@@ -205,6 +219,26 @@ export function cancelSite(index: number): boolean {
   const site = planet.sites[index]
   if (!site) return false
 
+  /*
+   * Eine Etappe lässt sich abbrechen, und sie erstattet vollständig.
+   *
+   * Ohne diesen Zweig fiele ein Bauwerk durch bis zu `findGenerator()`, käme
+   * dort als `false` zurück und bliebe für immer vorn in der Reihe stehen —
+   * eine Baustelle, die man weder abarbeiten muss noch loswird. Dieselbe
+   * Fehlerklasse wie bei den Waren in M14, nur eine Art später.
+   */
+  if (site.art === 'bauwerk') {
+    const def = findLandmark(site.id)
+    const stage = nextStage()
+    planet.sites = planet.sites.filter((_, i) => i !== index)
+    if (def && stage) {
+      for (const [material, menge] of Object.entries(stage.cost)) {
+        storeMaterial(material, new Decimal(menge))
+      }
+    }
+    return true
+  }
+
   // Eine Ware kostet kein O₂ und keine Menschen — es kommt genau das zurück,
   // was hineingegangen ist.
   if (site.art === 'ware') {
@@ -247,6 +281,10 @@ export function cancelSite(index: number): boolean {
  * M11: eine bezahlte Anlage ist noch keine stehende.
  */
 function finishUnit(site: BuildSite): void {
+  if (site.art === 'bauwerk') {
+    completeStage(site.id)
+    return
+  }
   if (site.art === 'ware') {
     const good = findGood(site.id)
     if (!good) return
@@ -292,9 +330,25 @@ export function constructionSystem(dt: number): void {
 
     // Ein Stück ist fertig.
     work -= fehlt
+    /*
+     * **Der Name muss *vor* finishUnit() gelesen werden.**
+     *
+     * Bei einem Bauwerk hebt finishUnit() die Etappenzahl, und siteName()
+     * liest danach die *nächste* Etappe — im Log stand dadurch „Rohbau
+     * fertig", während gerade das Fundament fertig geworden war.
+     */
+    const name = siteName(site)
+    const warBauwerk = site.art === 'bauwerk'
     finishUnit(site)
-    fertig++
-    letzter = siteName(site)
+    /*
+     * Ein Bauwerk meldet sich selbst (systems/landmarks.ts) — mit dem Namen
+     * der Etappe, die gerade fertig wurde, und beim letzten Schritt mit der
+     * Wirkung. Zwei Meldungen für dasselbe Ereignis sind eine zu viel.
+     */
+    if (!warBauwerk) {
+      fertig++
+      letzter = name
+    }
 
     if (site.remaining <= 1) {
       planet.sites = planet.sites.slice(1)

@@ -1,4 +1,4 @@
-# CleanAir — Spielkonzept & Entwicklungsplan
+﻿# CleanAir — Spielkonzept & Entwicklungsplan
 
 > Ein Incremental Game über Terraforming, Bevölkerung und eine Spezies, für die dein
 > Fortschritt Gift ist.
@@ -1785,9 +1785,9 @@ Drei Regeln, die das System klein halten:
 
 ## 20. Kurswechsel IV: Der lange Weg
 
-> **Teilweise gebaut.** §20.2 (Bergung) steht seit M18. §20.1 (Baupläne) und
-> §20.3 (Bauwerke) sind weiterhin Entwurf — wer dort etwas voraussetzt, liest
-> einen Plan und keinen Zustand.
+> **Teilweise gebaut.** §20.2 (Bergung) steht seit M18, §20.3 (Bauwerke) seit
+> M19. **§20.1 (Baupläne) ist weiterhin Entwurf** — wer dort etwas
+> voraussetzt, liest einen Plan und keinen Zustand.
 
 ### Der Befund
 
@@ -1904,11 +1904,9 @@ Drei Regeln halten es im Rahmen:
 
 **Gebaut in M18, und zwei Dinge sind dabei anders geworden als hier geplant:**
 
-- **Fundstücke gibt es noch nicht.** Sie sind die Währung der Bauwerke, und
-  die stehen noch nicht. Eine Währung ohne Ausgabe wäre ein Zähler, der
-  hochläuft und nichts bedeutet — sie kommen mit §20.3. Der Ertrag besteht
-  bis dahin aus Material und Vorgeschichte, und auf Erebos ist genau das schon
-  die Rechtfertigung des Systems.
+- **Fundstücke kamen erst mit M19.** In M18 hätten sie ein Zähler ohne
+  Ausgabe sein müssen; seit die Bauwerke stehen, sind sie deren Währung und
+  das einzige nicht herstellbare Material im Spiel.
 - **Ein Zwischenfall verlängert, statt zu binden.** Geplant war „die Leute
   kommen angeschlagen zurück und fehlen eine Weile". Gebaut ist: der Trupp
   ist **überfällig**, bleibt die Hälfte der Zeit länger draußen und bringt die
@@ -1977,6 +1975,35 @@ Zahl; eines, das am Horizont steht, ist ein Bauwerk.
 **Der Bauplan ist `meta`, das Bauwerk ist der Planet.** Dieselbe Trennung wie
 Forschung gegen Anlagen: was man einmal gelernt hat, bleibt; was auf einem
 Planeten steht, fällt mit dem Durchlauf.
+
+**Gebaut in M19, und drei Dinge sind dabei anders geworden als hier geplant:**
+
+- **Baupläne blieben außen vor.** §20.1 ist weiterhin Entwurf, und das
+  Bauwerk braucht ihn nicht: **Fundstücke sind das Schloss.** Sie kommen
+  ausschließlich aus der Bergung, gehen ausschließlich in Bauwerke, und damit
+  hängt das Ziel schon am langen Weg, ohne dass ein zweites Gattersystem nötig
+  wäre. Ein Bauplan zusätzlich wäre zweimal warten auf dasselbe — genau die
+  Frage, die unten unter „Offen" steht.
+- **Werkzeug wirkt nur an dieser einen Stelle.** Geplant war „mehr Werkzeug
+  baut schneller". Gebaut ist: überzähliges Werkzeug senkt die Arbeitszeit
+  einer **Bauwerks-Etappe**, bis zur Hälfte, sonst nichts. Eine allgemeine
+  Baubeschleunigung hätte auf Wohnraum gewirkt, damit auf Bevölkerung, damit
+  auf den O₂-Verbrauch — also auf etwas, das ins Fenster treffen muss. Das ist
+  die Falle aus §18, nur ein Stockwerk tiefer.
+- **`scope` ist ein Pflichtfeld geworden.** Vier Bauwerke wirken nur auf ihrem
+  Planeten, der Fahrstuhl auf dem ganzen Durchlauf — weil das Lager seit §16
+  allen Planeten gemeinsam gehört. Ohne diese Unterscheidung wäre er beim
+  Wegfliegen verschwunden: dieselbe Verwechslung „Eigenschaft des aktiven
+  Planeten statt des Durchlaufs", die schon die Sternenkarte gekostet hat.
+
+> **Die Prüfung dazu ist beim ersten Versuch durchgerutscht**, und das gehört
+> hierher, weil es die Fehlerklasse selbst betrifft. „Ein ortsgebundenes
+> Bauwerk wirkt nicht von fern" blieb grün, als der Planetenvergleich
+> testweise ausgebaut wurde — denn auf dem Zielplaneten stand die Etappenzahl
+> ohnehin auf null, der Wetterturm fiel schon dort durch. Erst mit **einem
+> fertigen Bauwerk auf beiden Planeten** trennt die Prüfung sauber. Eine
+> Gegenprobe, die grün bleibt, ist kein bestandener Test, sondern ein
+> unbrauchbarer.
 
 ---
 

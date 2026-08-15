@@ -5,6 +5,7 @@ import { DEFENSES } from '../data/defenses'
 import { EVENTS } from '../data/events'
 import { GENERATORS } from '../data/generators'
 import { GOODS } from '../data/goods'
+import { LANDMARKS, landmarkFor } from '../data/landmarks'
 import { SALVAGE } from '../data/salvage'
 import { UPGRADES } from '../data/upgrades'
 import { readDecimal, readNumber, readString, writeDecimal } from '../engine/serialize'
@@ -41,8 +42,8 @@ export interface BuildSite {
    * in derselben Zeit ein Haus bauen oder Werkzeug machen, nicht beides.
    * Zwei getrennte Warteschlangen hätten die Wahl wegdefiniert.
    */
-  art: 'anlage' | 'ware'
-  /** Generator-id oder Rezept-id, je nach `art`. */
+  art: 'anlage' | 'ware' | 'bauwerk'
+  /** Generator-id, Rezept-id oder Bauwerk-id, je nach `art`. */
   id: string
   /** Wie viele Stück aus dieser Bestellung noch entstehen sollen. */
   remaining: number
@@ -190,6 +191,15 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
        ist, wie oft ein Ziel schon angelaufen wurde (das steuert, welcher Satz
        der Vorgeschichte als Nächstes kommt) und wie erschöpft es ist.
     -------------------------------------------------------------------- */
+    /**
+     * Fertige Etappen des Bauwerks dieses Planeten (M19, §20.3).
+     *
+     * Eine Zahl und kein Objekt: die laufende Etappe steht als Baustelle in
+     * `sites`, wie jeder andere Bau auch. Zwei Orte für denselben Fortschritt
+     * wären die verstreute Rechnung, die CLAUDE.md verbietet.
+     */
+    landmarkStage: 0,
+
     expeditions: [] as Expedition[],
     /** Ziel-id -> abgeschlossene Anläufe. */
     salvageRuns: {} as Record<string, number>,
@@ -316,6 +326,7 @@ export function serializePlanet() {
     bound: writeDecimal(planet.bound),
     events: planet.events.map((e) => ({ ...e })),
     nextEventIn: planet.nextEventIn,
+    landmarkStage: planet.landmarkStage,
     expeditions: planet.expeditions.map((e) => ({ ...e })),
     salvageRuns: { ...planet.salvageRuns },
     salvageDepletion: { ...planet.salvageDepletion },
@@ -419,7 +430,13 @@ export function deserializePlanet(raw: unknown): void {
     .map((site) => ({
       // Ohne Angabe eine Anlage: so lasen sich Saves vor M14, und ein
       // fehlendes Feld darf keine Baustelle verschlucken.
-      art: readString(site.art, 'anlage') === 'ware' ? ('ware' as const) : ('anlage' as const),
+      art: ((): BuildSite['art'] => {
+        const roh = readString(site.art, 'anlage')
+        // Ohne Angabe eine Anlage: so lasen sich Saves vor M14.
+        if (roh === 'ware') return 'ware'
+        if (roh === 'bauwerk') return 'bauwerk'
+        return 'anlage'
+      })(),
       id: readString(site.id, ''),
       remaining: Math.max(0, Math.floor(readNumber(site.remaining, 0))),
       progress: Math.max(0, readNumber(site.progress, 0)),
@@ -427,7 +444,9 @@ export function deserializePlanet(raw: unknown): void {
     .filter((site) =>
       site.art === 'ware'
         ? GOODS.some((g) => g.id === site.id)
-        : GENERATORS.some((def) => def.id === site.id),
+        : site.art === 'bauwerk'
+          ? LANDMARKS.some((l) => l.id === site.id)
+          : GENERATORS.some((def) => def.id === site.id),
     )
     .filter((site) => site.remaining > 0)
 
@@ -446,6 +465,14 @@ export function deserializePlanet(raw: unknown): void {
       reacted: e.reacted === true,
     }))
     .filter((e) => e.remaining > 0)
+
+  // Bauwerk (M19). Auf die Zahl der Etappen begrenzt, damit ein Save aus
+  // einer Version mit mehr Etappen keine unmögliche Stufe einschleppt.
+  const bauwerk = landmarkFor(planet.id)
+  planet.landmarkStage = Math.min(
+    bauwerk?.stages.length ?? 0,
+    Math.max(0, Math.floor(readNumber(s.landmarkStage, 0))),
+  )
 
   // Trupps (M18). Dieselbe Vorsicht wie bei Baustellen: unbekannte Ziele
   // fliegen raus, und ein Trupp ohne Leute ist kein Trupp.

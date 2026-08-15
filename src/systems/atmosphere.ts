@@ -4,6 +4,7 @@ import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { currentPlanetDef, planet } from '../state/planet.svelte'
+import { landmarkEffects } from './landmarks'
 import { researchEffects } from './research'
 
 /**
@@ -210,6 +211,8 @@ export function fireThrottle(): number {
 /** Log-Zustände, damit Meldungen nicht 20-mal pro Sekunde erscheinen. */
 let wasBurning = false
 let wasStable = false
+/** Meldet den angehaltenen Timer genau einmal statt in jedem Tick. */
+let wasHolding = false
 
 /** Beim Planetenwechsel und beim Laden zurücksetzen. */
 export function resetAtmosphereNotices(): void {
@@ -233,6 +236,23 @@ export function atmosphereSystem(dt: number): void {
     }
   }
 
+  /*
+   * Der Aschefang (M19, §20.3): eine Obergrenze für den Schadstoffanteil.
+   *
+   * Gekappt wird die **Menge**, nicht der Anteil — Regel 7 aus CLAUDE.md gilt
+   * auch hier: nie einen Anteil direkt setzen. Aus dem Zielprozentsatz p
+   * folgt die zulässige Menge als `p × rest / (100 − p)`, also genau die
+   * Umkehrung, die `airNeededFor()` für O₂ macht.
+   *
+   * Es ist eine Decke und keine Reinigung: der Wäscher bleibt nötig, der
+   * Dreck geht davon nicht weg. Er läuft nur nicht mehr davon.
+   */
+  const cap = landmarkEffects().pollutionCap
+  if (cap !== undefined && def.maxPollution !== undefined && pollutionPercent() > cap) {
+    const rest = totalAtmosphere().sub(planet.pollution)
+    planet.pollution = rest.mul(cap).div(100 - cap)
+  }
+
   const burning = intensity > FIRE_NOTICE
   if (burning && !wasBurning) {
     meta.stats.fires += 1
@@ -251,12 +271,25 @@ export function atmosphereSystem(dt: number): void {
   const stable = inWindow()
   if (stable) {
     planet.stability += dt * researchEffects().stabilitySpeed
+  } else if (landmarkEffects().stabilityHold) {
+    /*
+     * Der Wetterturm (M19, §20.3): der Timer **pausiert**, statt zu fallen.
+     *
+     * Das ist die Sorte Wirkung, die ein Bauwerk haben darf — sie nimmt ein
+     * Risiko weg und erhöht keine Rate. Der Planet wird dadurch nicht
+     * schneller fertig; er wird nur nicht mehr für einen Ausrutscher um
+     * sechs Minuten zurückgeworfen.
+     */
+    if (planet.stability > 0 && !planet.completed && !wasHolding) {
+      addLog('Ein Wert steht außerhalb des Fensters. Der Wetterturm hält den Timer an.', 'warn')
+    }
   } else {
     if (planet.stability > 0 && !planet.completed) {
       addLog('Ein Wert hat das Fenster verlassen. Der Stabilitäts-Timer beginnt von vorn.', 'warn')
     }
     planet.stability = 0
   }
+  wasHolding = !stable && landmarkEffects().stabilityHold
 
   if (stable && !wasStable && !planet.completed) {
     addLog(`Alle Werte im Fenster. ${stabilityRequired()} Sekunden halten.`, 'good')

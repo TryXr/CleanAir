@@ -126,6 +126,24 @@ export const MATERIALS: readonly MaterialDef[] = [
     short: 'Wz',
     singular: 'Werkzeug',
   },
+
+  /* --- Fundstücke (M19, §20.3) ------------------------------------------
+     Das einzige Material, das **nicht herstellbar** ist. Es kommt
+     ausschließlich aus der Bergung, und es geht ausschließlich in Bauwerke.
+
+     Beides zusammen ist der Punkt: es verbindet den langen Weg (§20.2) mit
+     dem Ziel (§20.3), ohne dass eine der beiden Seiten die andere erzwingt.
+     Wer nie bergen geht, baut kein Bauwerk — und verliert nichts, was ihn
+     einen Planeten kostet.
+  --------------------------------------------------------------------- */
+  {
+    id: 'fundstueck',
+    name: 'Fundstücke',
+    description:
+      'Was aus einem Wrack noch etwas taugt: ein Getriebe, eine Dichtung, ein Stück Leitung. Nichts davon lässt sich nachmachen — es war schon da.',
+    short: 'Fd',
+    singular: 'Fundstück',
+  },
 ]
 
 export function findMaterial(id: string): MaterialDef | undefined {

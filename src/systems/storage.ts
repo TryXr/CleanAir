@@ -1,5 +1,6 @@
 import Decimal from 'break_infinity.js'
 import { GENERATORS } from '../data/generators'
+import { landmarkEffects } from './landmarks'
 import { addLog } from '../state/log.svelte'
 import { findMaterial } from '../data/materials'
 import { generatorCount } from '../state/planet.svelte'
@@ -53,6 +54,12 @@ export function materialCapacity(): Decimal {
     for (const raw of Object.values(run.planets)) stueck += depotsInSnapshot(raw, def.id)
     space += stueck * def.baseRate
   }
+  // Der Fahrstuhl (M19, §20.3) — das einzige Bauwerk mit Wirkung auf den
+  // ganzen Durchlauf, weil das Lager seit §16 allen Planeten gemeinsam
+  // gehört. Additiv und nicht multiplikativ: er hebt jedes Lager gleich weit,
+  // egal wie viele Hallen schon stehen.
+  space += landmarkEffects().storage
+
   /*
    * Bewusst ohne Multiplikator: es gibt bislang keine Quelle für einen
    * Lager-Bonus. Kommt einer, gehört er in metaEffects()/researchEffects()

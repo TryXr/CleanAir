@@ -4,7 +4,7 @@
   import { addLog } from './state/log.svelte'
   import { meta } from './state/meta.svelte'
   import { currentPlanetDef, planet } from './state/planet.svelte'
-  import { hasAnyMaterial } from './state/run.svelte'
+  import { hasAnyMaterial, materialAmount } from './state/run.svelte'
   import { session, type TabId } from './state/session.svelte'
   import { settings } from './state/settings.svelte'
   import { availableGoods } from './systems/construction'
@@ -12,6 +12,7 @@
   import { stableCount } from './systems/finale'
   import { hasForest } from './systems/forest'
   import { pendingCores } from './systems/prestige'
+  import { landmarkDone, landmarkHere } from './systems/landmarks'
   import { revealedTargets } from './systems/salvage'
   import { showsPlanetMap } from './systems/travel'
   import AchievementGrid from './ui/AchievementGrid.svelte'
@@ -31,6 +32,7 @@
   import PlanetMap from './ui/PlanetMap.svelte'
   import PlanetView from './ui/PlanetView.svelte'
   import PopulationPanel from './ui/PopulationPanel.svelte'
+  import LandmarkPanel from './ui/LandmarkPanel.svelte'
   import PrestigePanel from './ui/PrestigePanel.svelte'
   import SalvagePanel from './ui/SalvagePanel.svelte'
   import StaffPanel from './ui/StaffPanel.svelte'
@@ -64,6 +66,16 @@
   // Bergung erscheint, sobald hier überhaupt etwas zu finden ist — die
   // Bedingung selbst steht in systems/salvage.ts, damit sie prüfbar bleibt.
   const showSalvage = $derived(revealedTargets().length > 0)
+  /*
+   * Das Bauwerk zeigt sich, sobald es überhaupt eine Währung dafür gibt —
+   * oder sobald schon eine Etappe steht. Vorher wäre es eine Wand: vier
+   * Etappen, die alle Fundstücke verlangen, von denen der Spieler noch nie
+   * eines gesehen hat.
+   */
+  const showLandmark = $derived(
+    landmarkHere() !== undefined &&
+      (materialAmount('fundstueck').gt(0) || planet.landmarkStage > 0 || landmarkDone()),
+  )
   const showAchievements = $derived(meta.achievements.length > 0)
   const showMetaTree = $derived(meta.genesisCores.gt(0) || meta.metaUpgrades.length > 0)
   const showPrestige = $derived(planet.completed || meta.stats.runs > 0 || pendingCores().gte(1))
@@ -218,6 +230,16 @@
       {#if showPopulation && availableGoods().length > 0}
         <Panel title="Werkstatt" hint="Material und Arbeitszeit, kein O₂">
           <WorkshopPanel />
+        </Panel>
+      {/if}
+
+      <!-- Das Bauwerk steht über den Verbesserungen und unter den Anlagen:
+           es ist das größte Vorhaben dieses Planeten, aber man kommt erst
+           dorthin, wenn das Alltägliche läuft. Sichtbar wird es, sobald
+           Fundstücke im Lager liegen — vorher wäre es eine Wand. -->
+      {#if showLandmark}
+        <Panel title={landmarkHere()?.name ?? 'Bauwerk'} hint="eines pro Planet">
+          <LandmarkPanel />
         </Panel>
       {/if}
 

@@ -205,6 +205,50 @@
         ctx!.fill()
       }
 
+      /* --- Das Bauwerk (M19, §20.3) ----------------------------------------
+         Ein Ziel, das man nur als Fortschrittsbalken kennt, ist eine Zahl;
+         eines, das am Horizont steht, ist ein Bauwerk. Deshalb steht es hier
+         auf der Kugel und wächst mit jeder Etappe — an einer festen Stelle,
+         die mit dem Planeten rotiert und hinter dem Rand verschwindet.
+      --------------------------------------------------------------------- */
+      const etappen = planet.landmarkStage
+      if (etappen > 0) {
+        const lon = 0.9 + t
+        const lat = 0.35
+        const cosLat = Math.cos(lat)
+        const x = cosLat * Math.sin(lon)
+        const y = Math.sin(lat)
+        const z = cosLat * Math.cos(lon)
+        if (z > 0.1) {
+          const px = cx + x * r
+          const py = cy - y * r
+          // Höhe nach Etappen, Perspektive nach Tiefe: am Rand ist der Turm
+          // kürzer, weil man ihn schräg sieht.
+          /*
+           * Bewusst kräftiger, als es „richtig" wäre. Die Ansicht ist im
+           * normalen Layout nur 150 px hoch, der Planet hat damit einen
+           * Radius von rund 54 px — ein maßstäblicher Turm wäre drei Pixel
+           * hoch und damit kein Lohn für eine Stunde Arbeit.
+           */
+          const hoehe = r * 0.15 * etappen * (0.45 + z * 0.55)
+          const breite = Math.max(1.8, r * 0.03 * (0.5 + z * 0.5))
+          ctx!.strokeStyle = shadeOf(def.palette.accent, 1.5, 0.55 + z * 0.35)
+          ctx!.lineWidth = breite
+          ctx!.beginPath()
+          ctx!.moveTo(px, py)
+          ctx!.lineTo(px - x * hoehe * 0.35, py - hoehe)
+          ctx!.stroke()
+
+          // Fertig heißt: oben brennt ein Licht.
+          if (etappen >= 4) {
+            ctx!.fillStyle = `rgba(255, 236, 190, ${0.5 + z * 0.4})`
+            ctx!.beginPath()
+            ctx!.arc(px - x * hoehe * 0.35, py - hoehe, breite * 0.9, 0, Math.PI * 2)
+            ctx!.fill()
+          }
+        }
+      }
+
       /* --- Schadstoffdunst -------------------------------------------------- */
       if (dreck > 0.02) {
         ctx!.fillStyle = `rgba(150, 120, 60, ${0.35 * dreck})`

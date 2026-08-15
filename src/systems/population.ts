@@ -5,6 +5,7 @@ import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { effectiveO2Window, o2Percent } from './atmosphere'
 import { contentmentFactor } from './contentment'
+import { landmarkEffects } from './landmarks'
 import { eventEffects } from './eventEffects'
 import { enforceStaffLimit } from './labor'
 import { metaEffects } from './metaEffects'
@@ -197,7 +198,15 @@ export function populationSystem(dt: number): void {
      * gedeiht. Zufriedene Menschen sind genau das.
      */
     planet.biomass = planet.biomass.add(
-      planet.settlers.mul(BIOMASS_PER_SETTLER).mul(contentmentFactor()).mul(dt),
+      planet.settlers
+        .mul(BIOMASS_PER_SETTLER)
+        .mul(contentmentFactor())
+        // Die Saatbank (M19, §20.3). Sie wirkt bewusst auf die Biomasse und
+        // nicht auf eine Rate: Biomasse zahlt auf den Abflug ein (§18) und
+        // ist damit der einzige Ort, an dem ein Bonus nichts ins Fenster
+        // schiebt, was ins Fenster treffen muss.
+        .mul(landmarkEffects().biomass)
+        .mul(dt),
     )
     meta.research = meta.research.add(researchRate().mul(dt))
   }
@@ -229,7 +238,10 @@ export function populationSystem(dt: number): void {
     const gedeckt = Math.min(essenAnteil, wasserAnteil)
 
     planet.satiety += (gedeckt - planet.satiety) * SATIETY_ADJUST * dt
-    planet.satiety = Math.min(1, Math.max(0, planet.satiety))
+    // Die Zisterne (M19, §20.3) legt einen Boden ein: ein Engpass bremst,
+    // aber er kippt die Kolonie nicht mehr. Kein Ertrag, nur ein Risiko
+    // weniger — die einzige Sorte Wirkung, die ein Bauwerk haben darf.
+    planet.satiety = Math.min(1, Math.max(landmarkEffects().satietyFloor, planet.satiety))
   }
 
   const knapp = planet.satiety < 0.6
