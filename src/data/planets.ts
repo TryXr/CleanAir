@@ -385,11 +385,20 @@ export const PYRA: PlanetDef = {
   n2Window: { min: 74, max: 80 },
   maxPollution: 1,
   /**
-   * Viermal so schmutzig wie Vesta. Der Wäscher-Zweig ist hier keine
-   * Nebensache mehr, sondern die halbe Miete — und Holz zum Bauen muss
-   * mitgebracht werden, weil nichts wächst.
+   * **Achtmal so schmutzig wie Vesta** (0,09), verdoppelt im Nachtrag zu M14.
+   *
+   * Bei 0,36 war Pyras eigenes Thema Kulisse: den Wert zu halbieren änderte
+   * die Dauer um 0,1 Minuten, während der Anoxendruck sie verdreifachte. Der
+   * Wäscher-Zweig war „die halbe Miete" nur im Kommentar.
+   *
+   * Gemessen nach der Verdopplung (und nachdem die Wellen-Spirale behoben
+   * war, die den Effekt vorher überdeckte): 61,5 min bei 0,36 gegen 84,5 min
+   * bei 0,72. Der Dreck kostet jetzt 23 Minuten und ist damit die größte
+   * einzelne Bremse des Planeten. Bei 1,44 wären es 118,8 min — das obere
+   * Ende des Fensters aus §13 —, ab 2,88 sättigt der Effekt, weil der
+   * Simulant dann ohnehin nur noch wäscht.
    */
-  pollutionPerO2: 0.36,
+  pollutionPerO2: 0.72,
 
   stabilitySeconds: 240,
   hasEvents: true,

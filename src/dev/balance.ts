@@ -486,7 +486,7 @@ function entscheiden(
      */
     const noetig = requiredDefense().mul(1.3)
     let versuche = 0
-    while (defensePower(planet.waveNumber + 1).lt(noetig) && versuche < 20) {
+    while (defensePower(Math.max(1, planet.waveNumber)).lt(noetig) && versuche < 20) {
       const gebaut = DEFENSES.some((d) => canBuildDefense(d.id) && buildDefense(d.id))
       if (!gebaut) break
       versuche++

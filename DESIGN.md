@@ -1480,33 +1480,59 @@ Ware wären zwei Systeme für dieselbe Sache.
   |---|---|---|---|
   | Aurora | 24,9 min | 15–25 | im Fenster |
   | Vesta | 38,4 min | 30–45 | im Fenster |
-  | Pyra | 196,4 min | 60–120 | **zu langsam** |
-  | Kryo | 141,9 min | 120–240 | im Fenster |
-  | Nimbus | 80,2 min | 120–240 | **zu schnell** |
+  | Pyra | 84,5 min | 60–120 | im Fenster |
+  | Kryo | 97,5 min | 120–240 | **zu schnell** |
+  | Nimbus | 63,5 min | 120–240 | **zu schnell** |
+
+  (Stand nach den beiden Korrekturen unten. Kryo und Nimbus sind durch die
+  behobene Wellen-Spirale nochmals schneller geworden — sie hatten von ihr
+  gezehrt.)
 
   Zur Obergrenze selbst: auf Vesta kostet voller Komfort 4,3 min (38,4 gegen
   42,7). Sie trivialisiert dort also nichts.
 
 ### Zwei Befunde aus dem ersten vollständigen Messlauf
 
-**Pyra hängt nicht an seiner eigenen Mechanik.** §11 gibt ihm „die eigene
-Industrie erstickt einen" als Thema. Gemessen entscheidet das nichts: den
-Schadstoffausstoß zu halbieren ändert die Dauer um **0,1 Minuten**
-(196,5 statt 196,4). Den Anoxendruck zu halbieren bringt ihn dagegen von
-196,4 auf **59,6 min**. Der Planet wird vollständig von den Anoxen bestimmt,
-und sein eigentliches Thema ist Kulisse. Entweder muss der Wäscher-Zweig
-härter zubeißen oder Pyra bekommt ein anderes Thema — eine Zahl zu drehen
-verschiebt nur, was ohnehin nicht wirkt.
+**Pyra hing nicht an seiner eigenen Mechanik.** §11 gibt ihm „die eigene
+Industrie erstickt einen" als Thema. Gemessen entschied das nichts: den
+Schadstoffausstoß zu halbieren änderte die Dauer um **0,1 Minuten**
+(196,5 statt 196,4), während der Anoxendruck sie verdreifachte. Sein Thema
+war Kulisse.
 
-> **Die Anoxen haben eine Weglaufschwelle, und die verstößt gegen §1.2.**
-> Zwischen `anoxenPressure` 0,90 und 0,95 verdoppelt sich Pyras Dauer:
+**Behoben in zwei Schritten, und die Reihenfolge war entscheidend.** Erst
+musste die Wellen-Spirale weg — solange die Anoxen alles bestimmten, war der
+Dreck nicht messbar, weil er im Rauschen verschwand. Danach reagiert der
+Planet sauber auf ihn:
+
+| `pollutionPerO2` | Dauer |
+|---|---|
+| 0,36 (vorher) | 61,5 min |
+| **0,72 (jetzt)** | **84,5 min** |
+| 1,44 | 118,8 min |
+| 2,88 | 116,8 min (gesättigt) |
+
+Verdoppelt auf **0,72** — achtmal so schmutzig wie Vesta. Damit kostet Pyras
+eigenes Thema 23 Minuten und ist die größte einzelne Bremse des Planeten,
+statt eine Behauptung im Kommentar. Ab 2,88 sättigt der Effekt, weil dann
+ohnehin nur noch gewaschen wird.
+
+> **Die Anoxen hatten eine Weglaufschwelle, und die verstieß gegen §1.2.**
+> Zwischen `anoxenPressure` 0,90 und 0,95 verdoppelte sich Pyras Dauer:
 > 86,0 → 183,3 min. Fünf Prozent Unterschied im Druck, Faktor zwei im
-> Ergebnis. Der Grund ist strukturell: Wellen wachsen geometrisch (Faktor
-> 1,28), Verteidigung wächst so schnell, wie man sie bezahlen kann. Wer
-> einmal zurückfällt, fällt weiter zurück — und §1.2 verlangt, dass
-> Rückschläge temporär bleiben. **Das ist ein Mechanikfehler, kein
-> Balancing-Fehler**, und deshalb ist hier bewusst keine Zahl geändert
-> worden.
+> Ergebnis. Der Grund war strukturell: Wellen wachsen geometrisch (Faktor
+> 1,28), Verteidigung wächst so schnell, wie man sie bezahlen kann — und eine
+> verlorene Welle legt Anlagen lahm, senkt also die Produktion, mit der man
+> die nächste bezahlen müsste.
+>
+> **Behoben, indem nur eskaliert, was überstanden ist.** Eine verlorene Welle
+> wiederholt sich in gleicher Stärke, statt die nächste stärkere nachzuziehen.
+> Der Rückschlag bleibt hart, aber er hat einen Boden — §1.2. Es passt auch
+> besser zu §7: der *Fortschritt* erzeugt die Bedrohung, und wer in einer
+> Welle feststeckt, macht keinen.
+>
+> Danach ist die Klippe verschwunden: 0,90 → 62,0 min, 0,95 → 61,4, 1,00 →
+> 61,5. Flach über den ganzen Bereich, und Pyra fällt bei vollem Druck von
+> 196,4 auf 61,5 min.
 
 **Nimbus lässt sich nicht über die Größe bremsen.** Sein `baseAtmosphere` zu
 erhöhen macht ihn *schneller* statt langsamer (3 M → 80,2 min, 4,5 M → 69,7,

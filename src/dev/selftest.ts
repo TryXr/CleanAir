@@ -518,6 +518,40 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       `${bettenVorher} → ${housingCapacity().toNumber()}`,
     )
 
+    /* --- Wellen eskalieren nur, was überstanden ist (§1.2) -----------------
+       Die Spirale, die Pyra unspielbar machte: Wellen wuchsen unabhängig vom
+       Ausgang, eine verlorene Welle senkte die Produktion, mit der man die
+       nächste bezahlen müsste. Gemessen war das eine Klippe — fünf Prozent
+       Anoxendruck, Faktor zwei in der Dauer.
+    --------------------------------------------------------------------- */
+    freshRun()
+    travelTo('pyra')
+    planet.waveNumber = 5
+    planet.wavePower = 1000
+    planet.waveRemaining = 1
+    planet.defenses = {}
+    // Ohne Verteidigung läuft die Welle ab, statt abgewehrt zu werden.
+    combatSystem(2)
+    check(
+      r,
+      'Verlorene Welle eskaliert nicht',
+      planet.waveNumber === 5,
+      `Welle ${planet.waveNumber} statt 5`,
+    )
+
+    // Und die Gegenrichtung: abgewehrt wird sehr wohl eskaliert. Dafür
+    // braucht es Türme — ohne Schaden endet eine Welle nur durch Ablauf.
+    planet.defenses = { oxitower: 20 }
+    planet.wavePower = 0.0001
+    planet.waveRemaining = 60
+    combatSystem(1)
+    check(
+      r,
+      'Abgewehrte Welle eskaliert',
+      planet.waveNumber === 6,
+      `Welle ${planet.waveNumber} statt 6`,
+    )
+
     /* --- Das Balancing-Werkzeug fasst den Spielstand nicht an --------------
        Dieselbe Gefahr wie beim Selbsttest, und in diesem Projekt schon
        zweimal eingetreten: ein Lauf, der den echten Stand überschreibt. Ein

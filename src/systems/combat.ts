@@ -126,7 +126,8 @@ export function defensePower(waveNumber = planet.waveNumber): Decimal {
 
 /** Kampfkraft der Welle, die als nächstes losbricht. */
 export function nextWavePower(): number {
-  return BASE_POWER * Math.pow(POWER_GROWTH, planet.waveNumber) * currentPlanetDef().anoxenPressure
+  const welle = Math.max(1, planet.waveNumber)
+  return BASE_POWER * Math.pow(POWER_GROWTH, welle - 1) * currentPlanetDef().anoxenPressure
 }
 
 /**
@@ -238,9 +239,19 @@ export function disabledShare(): number {
 
 // --- Tick -----------------------------------------------------------------
 
+/**
+ * Die Welle, die als nächstes ansteht — 1, solange noch keine kam.
+ *
+ * `waveNumber` zeigt seit dem Nachtrag zu M14 auf die *kommende* Welle, nicht
+ * auf die letzte gesehene. Der Unterschied ist die Eskalationsregel unten.
+ */
+function kommendeWelle(): number {
+  return Math.max(1, planet.waveNumber)
+}
+
 function startWave(): void {
   const def = currentPlanetDef()
-  planet.waveNumber += 1
+  planet.waveNumber = kommendeWelle()
   planet.wavePower = BASE_POWER * Math.pow(POWER_GROWTH, planet.waveNumber - 1) * def.anoxenPressure
   planet.waveRemaining = WAVE_DURATION
   planet.evacuated = false
@@ -259,8 +270,32 @@ function endWave(repelled: boolean): void {
   if (repelled) {
     meta.stats.wavesRepelled += 1
     addLog(`Welle ${planet.waveNumber} abgewehrt.`, 'good')
+    /*
+     * **Eskaliert wird nur, was überstanden ist** (Nachtrag zu M14).
+     *
+     * Vorher zählte die Welle unabhängig vom Ausgang hoch, und daraus wurde
+     * eine Spirale: Wellen wachsen geometrisch (Faktor 1,28), Verteidigung
+     * nur so schnell, wie man sie bezahlen kann — und eine verlorene Welle
+     * legt Anlagen lahm, senkt also die Produktion, mit der man die nächste
+     * bezahlen müsste. Wer einmal zurückfiel, fiel weiter zurück.
+     *
+     * Gemessen war das eine Klippe: zwischen `anoxenPressure` 0,90 und 0,95
+     * verdoppelte sich Pyras Dauer, 86,0 gegen 183,3 min. Fünf Prozent Druck,
+     * Faktor zwei im Ergebnis — und §1.2 verlangt, dass Rückschläge temporär
+     * bleiben.
+     *
+     * Jetzt wiederholt sich eine verlorene Welle in gleicher Stärke, bis sie
+     * steht. Der Rückschlag bleibt hart (die Welle richtet weiter an, was sie
+     * anrichtet), aber er hat einen Boden. Es passt auch besser zu §7: der
+     * *Fortschritt* erzeugt die Bedrohung — wer gerade nicht vorankommt, weil
+     * er in einer Welle feststeckt, soll sie auch nicht wachsen sehen.
+     */
+    planet.waveNumber += 1
   } else {
-    addLog(`Welle ${planet.waveNumber} zieht ab. Was sie angerichtet hat, bleibt vorerst.`, 'warn')
+    addLog(
+      `Welle ${planet.waveNumber} zieht ab. Was sie angerichtet hat, bleibt vorerst — und sie kommt in gleicher Stärke wieder.`,
+      'warn',
+    )
   }
 }
 
