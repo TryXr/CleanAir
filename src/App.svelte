@@ -12,6 +12,7 @@
   import { stableCount } from './systems/finale'
   import { hasForest } from './systems/forest'
   import { pendingCores } from './systems/prestige'
+  import { showsPlanetMap } from './systems/travel'
   import AchievementGrid from './ui/AchievementGrid.svelte'
   import AtmospherePanel from './ui/AtmospherePanel.svelte'
   import BuildPanel from './ui/BuildPanel.svelte'
@@ -61,8 +62,9 @@
   const showAchievements = $derived(meta.achievements.length > 0)
   const showMetaTree = $derived(meta.genesisCores.gt(0) || meta.metaUpgrades.length > 0)
   const showPrestige = $derived(planet.completed || meta.stats.runs > 0 || pendingCores().gte(1))
-  // Die Sternenkarte lohnt erst, wenn es überhaupt ein Ziel gibt.
-  const showMap = $derived(planet.rocketBuilt || meta.stats.runs > 0 || planet.completed)
+  // Die Sternenkarte lohnt erst, wenn es überhaupt ein Ziel gibt — die
+  // Bedingung selbst steht in travel.ts, damit der Selbsttest sie sieht.
+  const showMap = $derived(showsPlanetMap())
   /*
    * Das Ende zeigt sich ab der Hälfte — vorher wäre es ein Versprechen, mit
    * dem niemand etwas anfangen kann, und danach ist es das, worauf man

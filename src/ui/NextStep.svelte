@@ -40,7 +40,13 @@
      * dass der Selbsttest die Oberfläche nicht sieht.
      */
     if (def.maxPollution !== undefined && pollutionPercent() > def.maxPollution * 5) {
-      return 'Die Luft ist voller Schadstoffe. Solange sie stehen, bringt jedes O₂ nichts — wasch sie erst heraus.'
+      /*
+       * Der Nachsatz ist nicht Beiwerk. Ohne ihn steht hier „O₂ bringt
+       * nichts", während der Wäscher 2000 O₂ kostet und der Vorrat beim
+       * Ankommen auf null steht — der Hinweis verböte damit genau den Zug,
+       * den er verlangt. Gemeint war immer der *Anteil*, nicht der Vorrat.
+       */
+      return 'Die Luft ist voller Schadstoffe. Solange sie stehen, hebt kein O₂ den Anteil — setz welches frei, aber für den Wäscher.'
     }
 
     // Ganz am Anfang: es gibt genau eine sinnvolle Handlung.

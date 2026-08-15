@@ -222,7 +222,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 128 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 138 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -275,6 +275,18 @@ Laufzeitlogik, und eine Anlage, die nirgends verfügbar ist, steht in keiner
 Liste — sichtbar nur, wenn man alle Planeten durchgeht. Genau diesen Weg geht
 ein Mensch. **Anzeigetabellen gehören deshalb nach `data/`, nicht in die
 Komponente:** was nur die `.svelte`-Datei kennt, kann keine Prüfung sehen.
+
+> **Verfügbar ist nicht sichtbar.** Der zweite Durchgang durch die laufende
+> Oberfläche hat dieselbe Klasse noch einmal getroffen, eine Ebene tiefer:
+> `isAvailable()` sagt, ob eine Anlage auf diesem Planeten *existiert*,
+> `revealAt` sagt, ob sie schon *dasteht* — und es misst gegen `oxygenTotal`,
+> eine Eigenschaft des **Planeten**, die beim Ankommen bei null steht. Auf
+> Erebos, der mit 60 % Schadstoffen beginnt, war der Wäscher deshalb
+> unsichtbar, während der Hinweis oben zum Waschen aufforderte. Dieselbe
+> Verwechslung „Eigenschaft des aktiven Planeten statt des Durchlaufs" hatte
+> die Sternenkarte nach jedem Flug verschwinden lassen. Beide Bedingungen
+> heißen jetzt `isRevealed()` und `showsPlanetMap()` und stehen in `systems/`
+> — die Regel eine Zeile weiter oben, wörtlich genommen.
 
 ## Balancing prüfen statt schätzen
 

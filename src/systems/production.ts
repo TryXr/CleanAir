@@ -19,7 +19,7 @@ import { meta } from '../state/meta.svelte'
 import { affordableCount } from '../state/run.svelte'
 import { play } from '../engine/audio'
 import { achievementEffects } from './achievements'
-import { fireThrottle, n2Percent } from './atmosphere'
+import { fireThrottle, n2Percent, pollutionPercent } from './atmosphere'
 import { enforceStaffLimit, laborFactor } from './labor'
 import { storeMaterial } from './storage'
 import { eventEffects } from './eventEffects'
@@ -362,6 +362,45 @@ export function isAvailable(def: GeneratorDef, planetDef = currentPlanetDef()): 
        */
       return planetDef.materials.includes(out.material)
   }
+}
+
+/**
+ * Steht diese Anlage schon in der Liste?
+ *
+ * Normalerweise tropft das Angebot mit dem Fortschritt herein: `revealAt`
+ * misst gegen `oxygenTotal`, und das ist eine **Eigenschaft des Planeten**,
+ * die beim Ankommen bei null steht. Auf fünf Planeten stimmt das — man
+ * beginnt dort mit einer leeren Luft, und die Gegenmittel braucht man erst,
+ * wenn man sich selbst etwas eingebrockt hat.
+ *
+ * **Auf Erebos ist es genau falsch herum** (§19). Der Planet beginnt mit 60 %
+ * Schadstoffen und einem Puffer über dem Fenster; der Hinweis oben schickt
+ * einen sofort zum Waschen — und die Anlagenliste zeigte bis eben keinen
+ * Wäscher, weil auf Erebos noch kein einziges O₂ freigesetzt war. Der erste
+ * Zug, den das Spiel selbst empfiehlt, war mehrere Minuten lang gar nicht
+ * verfügbar, und der einzige Weg dorthin war der Klick-Knopf, den derselbe
+ * Hinweis als sinnlos bezeichnet.
+ *
+ * Die Regel deshalb: **ein Gegenmittel ist sichtbar, sobald das, wogegen es
+ * hilft, über seiner Grenze steht.** Das gilt planetenunabhängig und ändert
+ * anderswo nichts — dort fangen Schadstoffe und Puffer bei null an. Es macht
+ * die Liste aber auch auf Vesta oder Pyra ehrlich, falls der Dreck einmal
+ * schneller steigt als die Freigabeschwelle.
+ */
+export function isRevealed(def: GeneratorDef): boolean {
+  if (planet.oxygenTotal.gte(def.revealAt)) return true
+
+  const out = def.output
+  if (out.kind !== 'gas') return false
+
+  const planetDef = currentPlanetDef()
+  if (out.gas === 'scrub') {
+    return planetDef.maxPollution !== undefined && pollutionPercent() > planetDef.maxPollution
+  }
+  if (out.gas === 'vent') {
+    return planetDef.n2Window !== undefined && n2Percent() > planetDef.n2Window.max
+  }
+  return false
 }
 
 /*

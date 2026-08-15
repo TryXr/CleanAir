@@ -3,7 +3,14 @@ import './app.css'
 import App from './App.svelte'
 
 import { format, formatTime } from './engine/format'
-import { applyOffline, registerSystem, runTicks, startLoop, stopLoop } from './engine/loop'
+import {
+  applyOffline,
+  registerSystem,
+  reportsAbsence,
+  runTicks,
+  startLoop,
+  stopLoop,
+} from './engine/loop'
 import { isAudioReady, play as playSound, unlockAudio } from './engine/audio'
 import {
   SAVE_VERSION,
@@ -128,6 +135,11 @@ function creditAbsence(awayMs: number): void {
   const before = planet.oxygen
   const result = applyOffline(awayMs, settings.offlineEfficiency, settings.offlineMaxHours)
   if (result.ticks === 0) return
+
+  // Angerechnet ist angerechnet — erzählt wird erst, wenn die Abwesenheit
+  // etwas zu erzählen hat. Ein kurzer Blick in einen anderen Tab ist keine
+  // Nachricht, und 200 davon sind ein zugeschütteter Log (siehe loop.ts).
+  if (!reportsAbsence(result.elapsedSeconds)) return
 
   const gained = planet.oxygen.sub(before)
   addLog(

@@ -76,6 +76,32 @@ export function canTravelTo(id: string): boolean {
 }
 
 /**
+ * Lohnt die Sternenkarte überhaupt schon einen Reiter?
+ *
+ * Steht hier und nicht in App.svelte, weil eine Bedingung, die nur die
+ * `.svelte`-Datei kennt, von keiner Prüfung gesehen wird (CLAUDE.md). Die
+ * vorherige Fassung hing an `planet.rocketBuilt` — und das ist eine
+ * Eigenschaft des **aktiven** Planeten, keine des Durchlaufs. Wer Aurora
+ * abschloss, die Rakete baute und nach Vesta flog, verlor damit beim
+ * Ankommen die Karte: auf Vesta stand `rocketBuilt` wieder auf `false`,
+ * `completed` ebenfalls, und ohne einen Durchlauf im Rücken war der ganze
+ * Reiter „Imperium" weg. Der Rückflug — die eine Sache, auf der §16 aufbaut,
+ * weil kein Planet alle Materialien hat — war bis zur nächsten stabilen
+ * Atmosphäre unerreichbar.
+ *
+ * Die Frage ist deshalb nicht „hat dieser Planet eine Rakete gebaut", sondern
+ * „gibt es irgendwo ein Ziel oder den Weg zu einem": ein zweiter
+ * freigeschalteter Planet ist ein Ziel, eine bezahlbare Rakete der Weg
+ * dorthin. Letzteres steht ausdrücklich hier, weil die Karte der einzige Ort
+ * ist, an dem sich eine Rakete bauen lässt — hinge die Karte allein am
+ * Abschluss, wäre die in CLAUDE.md festgehaltene Entkopplung „Rakete ≠
+ * Abschluss" in der Oberfläche tot.
+ */
+export function showsPlanetMap(): boolean {
+  return run.unlocked.length > 1 || planet.completed || planet.rocketBuilt || canBuildRocket()
+}
+
+/**
  * Wechselt den aktiven Planeten. Ein noch nie besuchter Planet wird frisch
  * angelegt, ein bekannter genau so ausgepackt, wie man ihn verlassen hat —
  * mit laufenden Generatoren, Bevölkerung und halb gewachsenem Wald.

@@ -6,6 +6,7 @@ import { AURORA, PLANETS } from '../data/planets'
 import { ROCKETS } from '../data/rockets'
 import { findSound } from '../data/sounds'
 import { play } from '../engine/audio'
+import { reportsAbsence } from '../engine/loop'
 import {
   exportSave,
   importSave,
@@ -22,7 +23,7 @@ import {
   resetPlanet,
   serializePlanet,
 } from '../state/planet.svelte'
-import { materialAmount, run } from '../state/run.svelte'
+import { materialAmount, run, unlockPlanet } from '../state/run.svelte'
 import { atmosphereSystem, n2Percent, o2Percent, pollutionPercent } from '../systems/atmosphere'
 import { meta } from '../state/meta.svelte'
 import { achievementsSystem } from '../systems/achievements'
@@ -47,11 +48,12 @@ import {
   demolish,
   generatorCost,
   isAvailable,
+  isRevealed,
   productionSystem,
   supplyRate,
 } from '../systems/production'
 import { isStorageFull, materialCapacity, storeMaterial } from '../systems/storage'
-import { buildRocket, travelTo } from '../systems/travel'
+import { buildRocket, showsPlanetMap, travelTo } from '../systems/travel'
 
 /**
  * Selbsttest — die mechanische Klasse von Fehlern, ohne Spieltest.
@@ -186,6 +188,27 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     check(r, 'Rakete sperrt ohne auswärtiges Material', !ohneTitan)
     check(r, 'Rakete baut mit vollständigem Material', mitTitan)
     check(r, 'Gebaute Rakete schaltet den nächsten Planeten frei', run.unlocked.includes('kryo'))
+
+    /* --- Der Weg zurück --------------------------------------------------
+       Gefunden beim Durchklicken, nicht hier: die Sternenkarte hing an
+       `planet.rocketBuilt`, und das gehört dem **aktiven** Planeten. Wer
+       Aurora abschloss, die Rakete baute und nach Vesta flog, stand dort
+       ohne Karte — und damit ohne Rückflug, auf dem §16 vollständig
+       aufbaut. Genau diese Reihenfolge steht hier nach.
+    --------------------------------------------------------------------- */
+    freshRun()
+    run.unlocked = ['aurora']
+    const karteAmAnfang = showsPlanetMap()
+    planet.completed = true
+    const karteNachAbschluss = showsPlanetMap()
+    planet.rocketBuilt = true
+    unlockPlanet('vesta')
+    travelTo('vesta')
+    const karteNachAnkunft = showsPlanetMap()
+
+    check(r, 'Ohne Ziel keine Sternenkarte', !karteAmAnfang)
+    check(r, 'Abgeschlossener Planet zeigt die Karte', karteNachAbschluss)
+    check(r, 'Die Karte bleibt nach der Ankunft', karteNachAnkunft)
 
     /* --- Keine Sackgassen ------------------------------------------------
        Zwei Invarianten, die eine unspielbare Konstellation verhindern.
@@ -581,6 +604,15 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     check(r, 'Offline holt mehrere Meldungen nach', nachLauf > 1, `${nachLauf}`)
     check(r, 'Hochrechnung behält nur die letzten Befunde', meta.seedLog.length <= 8)
 
+    // Wiederholung ist bei fünf Zeilen je Ausgang eingebaut — zwei gleiche
+    // *nebeneinander* liest sich aber als Fehler. Genau das stand im Panel.
+    const doppelt = meta.seedLog.some((zeile, i) => {
+      if (i === 0) return false
+      const vorher = meta.seedLog[i - 1]!
+      return zeile.slice(zeile.indexOf(' ')) === vorher.slice(vorher.indexOf(' '))
+    })
+    check(r, 'Kein Befund steht zweimal hintereinander', !doppelt, meta.seedLog.join(' / '))
+
     const ersteBefunde = [...meta.seedLog].join('|')
     meta.capsulesResolved = 0
     meta.capsulesTaken = 0
@@ -608,6 +640,15 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     seedingSystem(1000)
     check(r, 'Ohne Aussaat rechnet nichts', meta.capsulesResolved === vorherResolved)
 
+    /* --- Abwesenheit meldet sich nicht bei jedem Tab-Wechsel ---------------
+       Auch das kam aus dem Durchklicken: ein Tab im Hintergrund schrieb alle
+       sechs Sekunden „5s abwesend", und nach zehn Minuten bestand der ganze
+       Log aus dieser Zeile. Angerechnet wird weiterhin ab fünf Sekunden —
+       nur erzählt wird es erst, wenn es etwas zu erzählen gibt.
+    --------------------------------------------------------------------- */
+    check(r, 'Kurzes Wegsehen schreibt nichts in den Log', !reportsAbsence(6))
+    check(r, 'Echte Abwesenheit meldet sich', reportsAbsence(3600))
+
     /* --- Erebos beginnt mit der falschen Atmosphäre (M15) ------------------
        Der ganze Planet steht und fällt mit seinem Startzustand. Wäre er leer,
        wäre es Nimbus mit anderen Zahlen — und die drei Gegenstücke, um die es
@@ -633,6 +674,19 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
      * es danach das Ventil. Ohne diese Eigenschaft wäre der Wäscher der
      * einzige nötige Griff und der Planet eine Fingerübung.
      */
+    /*
+     * Und dieselbe Reihenfolge muss in der **Liste** stehen, nicht nur in der
+     * Mechanik. Genau hier klaffte sie auseinander: der Hinweis oben schickte
+     * zum Waschen, und der Wäscher war nicht da, weil `revealAt` gegen
+     * `oxygenTotal` misst und das auf einem frisch betretenen Planeten bei
+     * null steht. Gefunden beim Durchklicken — bis dahin ist Erebos nur
+     * simuliert worden, und ein Simulant ruft orderGenerator() direkt auf.
+     */
+    const waescher = findGenerator('scrubber')!
+    const ventil = findGenerator('vent')!
+    check(r, 'Erebos zeigt den Wäscher ab der ersten Sekunde', isRevealed(waescher))
+    check(r, 'Das Ventil wartet noch — erst waschen', !isRevealed(ventil))
+
     planet.pollution = new Decimal(0)
     check(
       r,
@@ -640,6 +694,12 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       n2Percent() > 80,
       `N₂ ${n2Percent().toFixed(1)} %`,
     )
+    check(r, 'Jetzt zeigt die Liste das Ventil', isRevealed(ventil))
+
+    // Gegenprobe im Test selbst: anderswo tropft das Angebot weiter herein.
+    freshRun()
+    travelTo('vesta')
+    check(r, 'Anderswo bleibt der Wäscher zunächst verborgen', !isRevealed(waescher))
 
     /* --- Wellen eskalieren nur, was überstanden ist (§1.2) -----------------
        Die Spirale, die Pyra unspielbar machte: Wellen wuchsen unabhängig vom

@@ -7,6 +7,7 @@
     generatorCost,
     generatorRate,
     isAvailable,
+    isRevealed,
     maxAffordable,
   } from '../systems/production'
   import { buildRate, orderGenerator } from '../systems/construction'
@@ -50,9 +51,7 @@
       .join(', ')
   }
 
-  const visible = $derived(
-    GENERATORS.filter((g) => isAvailable(g) && planet.oxygenTotal.gte(g.revealAt)),
-  )
+  const visible = $derived(GENERATORS.filter((g) => isAvailable(g) && isRevealed(g)))
   const groups = $derived(
     GENERATOR_GROUPS.map((g) => ({
       ...g,

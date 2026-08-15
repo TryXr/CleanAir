@@ -135,6 +135,33 @@ export interface OfflineResult {
 }
 
 /**
+ * Ab wie vielen Sekunden Abwesenheit eine Meldung überhaupt etwas erzählt.
+ *
+ * **Angerechnet** wird deutlich früher — ab fünf Sekunden, sonst verlöre
+ * jeder Tab-Wechsel Zeit, weil `requestAnimationFrame` im Hintergrund
+ * stehenbleibt. **Erzählt** werden muss es deswegen aber nicht: der Log ist
+ * laut DESIGN.md §15 der Träger der Geschichte und hält nur 200 Einträge.
+ *
+ * Gemessen in der laufenden Oberfläche: ein Tab, der im Hintergrund lag, hat
+ * alle sechs Sekunden „5s abwesend — 2s angerechnet: +0 O₂." geschrieben.
+ * Nach zehn Minuten bestand der gesamte Log aus dieser einen Zeile — jedes
+ * Ereignis, jeder Sturm, jede Fertigmeldung war herausgeschoben. Ein
+ * Nebenläufer hatte damit den Erzählkanal des Spiels überschrieben.
+ */
+export const REPORT_ABSENCE_SECONDS = 60
+
+/**
+ * Ist diese Abwesenheit einen Eintrag im Ereignis-Log wert?
+ *
+ * Steht hier statt in main.ts, weil dort nichts liegt, was eine Prüfung
+ * anfassen kann — und die Entscheidung „was darf in den Log" ist genau die
+ * Sorte Regel, die sonst unbemerkt kippt.
+ */
+export function reportsAbsence(elapsedSeconds: number): boolean {
+  return elapsedSeconds >= REPORT_ABSENCE_SECONDS
+}
+
+/**
  * Rechnet die Abwesenheit nach. Gedrosselt und gedeckelt, damit
  * Wegbleiben nie die bessere Strategie ist als Spielen.
  */

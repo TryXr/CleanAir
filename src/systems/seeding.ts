@@ -79,7 +79,26 @@ export function seedingSystem(dt: number): void {
     const name = worldName(rng.int(0, 999), rng.int(0, 999))
     const traegt = rng.chance(TAKE_CHANCE)
     const zeilen = traegt ? GELUNGEN : GESCHEITERT
-    const text = `${name} ${zeilen[rng.int(0, zeilen.length - 1)]}`
+
+    /*
+     * Nie zweimal hintereinander derselbe Befund.
+     *
+     * Fünf Zeilen je Ausgang, zwölf Kapseln — Wiederholung ist eingebaut, und
+     * das ist in Ordnung. Zwei *aufeinanderfolgende* gleiche Zeilen sind es
+     * nicht: im Panel stehen die letzten acht untereinander, und zweimal „Die
+     * Flechten haben den Nordhang genommen." liest sich als Fehler, nicht als
+     * Zufall. Genau so stand es beim ersten Blick auf das fertige Panel da.
+     *
+     * Ein Schritt weiter im selben Vorrat statt eines neuen Wurfs: der Befund
+     * bleibt damit vollständig aus dem Seed ableitbar, und die Zusage aus §19
+     * — derselbe Stand meldet dieselben Welten — gilt unverändert.
+     */
+    let zeile = rng.int(0, zeilen.length - 1)
+    const zuletzt = meta.seedLog[meta.seedLog.length - 1]
+    if (zuletzt !== undefined && zuletzt.endsWith(zeilen[zeile]!)) {
+      zeile = (zeile + 1) % zeilen.length
+    }
+    const text = `${name} ${zeilen[zeile]!}`
 
     meta.capsulesResolved += 1
     if (traegt) meta.capsulesTaken += 1
