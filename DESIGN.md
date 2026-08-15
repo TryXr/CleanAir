@@ -1318,6 +1318,34 @@ Puffer hängt am Cracker, der Cracker an Titan, und Titan gibt es nur auf
 Vesta. Ohne mitgebrachtes Material blieb der Planet bei 75,7 % N₂ stehen —
 genau der Zwang zum Rückflug, den §16 gemeint hat.
 
+### Nachtrag zu M13: die Liste ist der einzige Weg
+
+Beim ersten echten Spieltest nach M13 stellte sich heraus, dass Kondensator
+und Keimkammer **seit M5 nicht baubar** waren. Nicht zu teuer, nicht zu spät
+freigeschaltet — schlicht nicht in der Anlagenliste. Die Tabelle, die dort die
+Gruppen bildet, hatte für `supply` nie eine Zeile, und was keine Gruppe hat,
+verschwindet lautlos. Auf Aurora macht das den zentralen Loop aus §17
+unspielbar: die Rationen reichen zwölf Minuten, danach fällt die Sättigung auf
+den Boden, und es gibt keinen Weg zu eigener Versorgung.
+
+Acht Meilensteine, 89 grüne Prüfungen und mehrere Balancing-Läufe haben das
+nicht gesehen, weil sie alle `orderGenerator()` direkt aufrufen. Sie bauten
+Keimkammern über einen Weg, den ein Mensch nie hat.
+
+Die Lehre ist nicht „besser hinsehen", sondern eine Zuständigkeit:
+
+- **Anzeigetabellen sind Daten und gehören nach `data/`.** Was nur die
+  `.svelte`-Datei kennt, kann keine Prüfung sehen. `GENERATOR_GROUPS` steht
+  jetzt neben den Generatoren.
+- **Vollständigkeit erzwingt der Compiler.** Der Gruppenschlüssel ist aus
+  `Output` abgeleitet statt von Hand aufgezählt; eine neue Ausgabeart ohne
+  Zeile lässt den Typecheck scheitern und nennt die fehlende Art. Dasselbe
+  gilt für die Zweige des Forschungsbaums.
+- **Den Rest prüft der Selbsttest.** Ob eine Anlage auf irgendeinem Planeten
+  überhaupt verfügbar ist, hängt an `isAvailable()` und damit an Laufzeit­
+  logik — dafür geht die Prüfung alle fünf Planeten durch, so wie ein Spieler
+  es täte.
+
 ### Offene Fragen dieses Kurswechsels
 
 - **Was wird aus dem Klick-Knopf?** Weniger dringend als gedacht: O₂ ist auf
@@ -1332,11 +1360,6 @@ genau der Zwang zum Rückflug, den §16 gemeint hat.
   Anzeigefrage, keine Regelfrage.
 - **Haben Bewohner Namen?** Bei Dutzenden wäre es möglich und stärkt §1.4
   („Zahlen erzählen eine Geschichte"), kostet aber UI.
-- **Der Arbeitskraft-Multiplikator** (`1 + √siedler / 40`) ist bei zwölf
-  Bewohnern praktisch wirkungslos und gehört ersetzt. Seit M13 ist er
-  zusätzlich *falsch*: Hände wirken jetzt über Plätze, ein zweiter globaler
-  Bonus auf dieselbe Sache ist genau die Doppelung, die CLAUDE.md verbietet.
-  Ersatzlos streichen geht aber erst mit der zweiten Hälfte von M13 — auf
-  Vesta steht er bei 24 000 Siedlern auf Faktor 4,9, und ihn vorher zu
-  entfernen würde die alten Planeten unspielbar machen, bevor sie
-  umgestellt sind.
+- ~~**Der Arbeitskraft-Multiplikator** (`1 + √siedler / 40`) gehört
+  ersetzt.~~ **Erledigt in der zweiten Hälfte von M13:** ersatzlos gestrichen,
+  Hände wirken nur noch über Plätze.

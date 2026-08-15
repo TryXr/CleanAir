@@ -76,6 +76,60 @@ export type Output =
 
 export type SupplyKind = 'food' | 'water'
 
+/**
+ * Der Schlüssel, unter dem eine Anlage in der Anlagenliste einsortiert wird:
+ * bei Gas die Gasart, sonst die Ausgabeart.
+ *
+ * Bewusst aus `Output` abgeleitet und nicht von Hand aufgezählt — eine neue
+ * Ausgabeart erweitert damit automatisch diesen Typ, und die Tabelle darunter
+ * wird rot, bis sie einen Eintrag dafür hat.
+ */
+export type GeneratorGroup = Exclude<Output['kind'], 'gas'> | GasKind
+
+/** Gruppenschlüssel eines Generators — Gasart oder Ausgabeart. */
+export function groupOf(def: GeneratorDef): GeneratorGroup {
+  return def.output.kind === 'gas' ? def.output.gas : def.output.kind
+}
+
+/**
+ * Die Gruppen der Anlagenliste — **Reihenfolge und Sichtbarkeit zugleich.**
+ *
+ * Diese Tabelle stand bis M13 in ui/GeneratorList.svelte, und `supply` fehlte
+ * dort acht Meilensteine lang. Eine Anlage ohne Gruppe fällt lautlos aus der
+ * Liste: Kondensator und Keimkammer waren seit M5 über die Oberfläche nicht
+ * baubar, während 89 grüne Prüfungen und jeder Balancing-Lauf sie fröhlich
+ * über orderGenerator() bauten — einen Weg, den ein Mensch nie hat.
+ *
+ * Deshalb steht sie jetzt hier: Daten gehören nach data/, und nur von hier aus
+ * kann der Selbsttest überhaupt sehen, was die Oberfläche zeigt.
+ */
+export const GENERATOR_GROUPS = [
+  { key: 'o2', title: 'Sauerstoff', hint: 'füllt Vorrat und Luft' },
+  { key: 'n2', title: 'Puffer', hint: 'verdünnt die Mischung' },
+  { key: 'scrub', title: 'Reinigung', hint: 'baut Schadstoffe ab' },
+  { key: 'vent', title: 'Abblasen', hint: 'senkt den N₂-Puffer' },
+  { key: 'plant', title: 'Wald', hint: 'Bäume atmen für dich' },
+  { key: 'fell', title: 'Holzernte', hint: 'kostet Atmosphäre' },
+  { key: 'material', title: 'Abbau', hint: 'füllt das globale Lager' },
+  { key: 'craft', title: 'Verarbeitung', hint: 'braucht Nachschub von der Stufe davor' },
+  { key: 'supply', title: 'Versorgung', hint: 'Nahrung und Wasser für die Kolonie' },
+  { key: 'housing', title: 'Wohnraum', hint: 'ohne Betten kommt niemand' },
+  { key: 'storage', title: 'Lager', hint: 'hebt die Grenze des Regals' },
+] as const satisfies readonly { key: GeneratorGroup; title: string; hint: string }[]
+
+/*
+ * Vollständigkeit auf Compiler-Ebene.
+ *
+ * `satisfies` prüft nur, dass jeder Eintrag *erlaubt* ist — nicht, dass keiner
+ * fehlt. Genau das war die Lücke. Bleibt eine Gruppenart ohne Zeile, ist
+ * `FehlendeGruppe` nicht mehr `never` und diese Zuweisung schlägt fehl, mit
+ * der fehlenden Art im Fehlertext.
+ */
+type AbgedeckteGruppen = (typeof GENERATOR_GROUPS)[number]['key']
+type FehlendeGruppe = Exclude<GeneratorGroup, AbgedeckteGruppen>
+const _jedeGruppeHatEineZeile: [FehlendeGruppe] extends [never] ? true : FehlendeGruppe = true
+void _jedeGruppeHatEineZeile
+
 export interface GeneratorDef {
   id: string
   name: string

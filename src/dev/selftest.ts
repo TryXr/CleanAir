@@ -1,5 +1,5 @@
 import Decimal from 'break_infinity.js'
-import { GENERATORS, findGenerator } from '../data/generators'
+import { GENERATOR_GROUPS, GENERATORS, findGenerator, groupOf } from '../data/generators'
 import { AURORA, PLANETS } from '../data/planets'
 import { ROCKETS } from '../data/rockets'
 import { findSound } from '../data/sounds'
@@ -186,6 +186,33 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       )
       check(r, `${def.name}: O₂-Anlage ab Sekunde eins verfügbar`, o2Quellen.length > 0)
     }
+
+    /*
+     * Und die Sackgasse, die acht Meilensteine überlebt hat: eine Anlage, die
+     * es im Datenmodell gibt, aber in **keiner** Anlagenliste auftaucht.
+     *
+     * Die Gruppe hat seit M13 der Compiler (GENERATOR_GROUPS), die zweite
+     * Hälfte kann er nicht sehen: `isAvailable` ist Laufzeitlogik, und eine
+     * Anlage, die auf keinem der fünf Planeten verfügbar ist, steht nirgends
+     * — sichtbar nur, wenn man alle Planeten durchgeht. Genau diesen Weg geht
+     * ein Mensch, und genau ihn ging bisher keine Prüfung.
+     */
+    const bekannteGruppen = new Set<string>(GENERATOR_GROUPS.map((g) => g.key))
+    const ohneGruppe = GENERATORS.filter((g) => !bekannteGruppen.has(groupOf(g)))
+    check(
+      r,
+      'Jede Anlage fällt in eine Gruppe der Anlagenliste',
+      ohneGruppe.length === 0,
+      ohneGruppe.map((g) => `${g.name} (${groupOf(g)})`).join(', '),
+    )
+
+    const nirgends = GENERATORS.filter((g) => !PLANETS.some((p) => isAvailable(g, p)))
+    check(
+      r,
+      'Jede Anlage ist auf mindestens einem Planeten verfügbar',
+      nirgends.length === 0,
+      nirgends.map((g) => g.name).join(', '),
+    )
 
     // Jede Rakete muss aus Material baubar sein, das irgendwo im Spiel vorkommt.
     const alleVorkommen = new Set(PLANETS.flatMap((p) => p.materials))

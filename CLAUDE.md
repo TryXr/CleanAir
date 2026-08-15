@@ -179,7 +179,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 89 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 91 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -212,16 +212,26 @@ ob sich ein Planet zäh statt langsam anfühlt — dafür gibt es nur Spielen.
 **Und er sieht die Oberfläche nicht.** Jede Prüfung und jeder Balancing-Lauf
 ruft `orderGenerator()` direkt auf und geht damit an der Anlagenliste vorbei.
 Ein Fehler, der nur dort sitzt, bleibt für sie unsichtbar — gemessen acht
-Meilensteine lang: in [GeneratorList.svelte](src/ui/GeneratorList.svelte)
-entscheidet die Tabelle `GROUPS`, welche Anlagen überhaupt angezeigt werden,
-und `supply` hatte dort nie einen Eintrag. Kondensator und Keimkammer waren
-seit M5 nicht baubar, während 89 Prüfungen grün meldeten und die Simulationen
-munter Keimkammern bauten — über einen Weg, den ein Mensch nie hat.
+Meilensteine lang: eine Tabelle entschied, welche Anlagen überhaupt angezeigt
+werden, und `supply` hatte dort nie einen Eintrag. Kondensator und Keimkammer
+waren seit M5 nicht baubar, während 89 Prüfungen grün meldeten und die
+Simulationen munter Keimkammern bauten — über einen Weg, den ein Mensch nie
+hat.
 
 > **Eine neue `Output`-Art braucht immer zwei Einträge:** die Behandlung in
-> der Logik *und* eine Zeile in `GROUPS`. Der Compiler erzwingt nur das erste.
-> Die Union zwingt jeden Switch, den neuen Fall zu behandeln; `GROUPS` ist
-> eine ungetypte Datenliste, und was dort fehlt, verschwindet lautlos.
+> der Logik *und* eine Zeile in `GENERATOR_GROUPS`. Beides erzwingt jetzt der
+> Compiler — die Tabelle steht seit dem Nachtrag zu M13 in
+> [data/generators.ts](src/data/generators.ts), ihr Schlüsseltyp ist aus
+> `Output` abgeleitet, und eine fehlende Zeile lässt den Typecheck mit der
+> fehlenden Art im Fehlertext scheitern. Dasselbe Muster steht über
+> `BRANCHES` in [data/research.ts](src/data/research.ts).
+
+Was der Compiler *nicht* sehen kann, prüft der Selbsttest: dass jede Anlage
+auf mindestens einem der fünf Planeten verfügbar ist. `isAvailable()` ist
+Laufzeitlogik, und eine Anlage, die nirgends verfügbar ist, steht in keiner
+Liste — sichtbar nur, wenn man alle Planeten durchgeht. Genau diesen Weg geht
+ein Mensch. **Anzeigetabellen gehören deshalb nach `data/`, nicht in die
+Komponente:** was nur die `.svelte`-Datei kennt, kann keine Prüfung sehen.
 
 ## Balancing prüfen statt schätzen
 

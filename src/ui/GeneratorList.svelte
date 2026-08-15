@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { GENERATORS, type GeneratorDef } from '../data/generators'
+  import { GENERATOR_GROUPS, GENERATORS, groupOf, type GeneratorDef } from '../data/generators'
   import { findMaterial } from '../data/materials'
   import { format, formatInt, formatRate, formatTime } from '../engine/format'
   import {
@@ -16,36 +16,6 @@
   import { session, type BuyAmount } from '../state/session.svelte'
 
   const AMOUNTS: BuyAmount[] = [1, 10, 'max']
-
-  /** Gruppenschlüssel eines Generators — Gasart oder Ausgabeart. */
-  function groupOf(def: GeneratorDef): string {
-    return def.output.kind === 'gas' ? def.output.gas : def.output.kind
-  }
-
-  const GROUPS: { key: string; title: string; hint: string }[] = [
-    { key: 'o2', title: 'Sauerstoff', hint: 'füllt Vorrat und Luft' },
-    { key: 'n2', title: 'Puffer', hint: 'verdünnt die Mischung' },
-    { key: 'scrub', title: 'Reinigung', hint: 'baut Schadstoffe ab' },
-    { key: 'vent', title: 'Abblasen', hint: 'senkt den N₂-Puffer' },
-    { key: 'plant', title: 'Wald', hint: 'Bäume atmen für dich' },
-    { key: 'fell', title: 'Holzernte', hint: 'kostet Atmosphäre' },
-    { key: 'material', title: 'Abbau', hint: 'füllt das globale Lager' },
-    { key: 'craft', title: 'Verarbeitung', hint: 'braucht Nachschub von der Stufe davor' },
-    /*
-     * `supply` hat hier **acht Meilensteine lang gefehlt** — seit die
-     * Versorgungsanlagen in M5 dazukamen. Ohne Eintrag filtert `groups` sie
-     * lautlos aus der Liste: Kondensator und Keimkammer waren über die
-     * Oberfläche schlicht nicht baubar, obwohl beide `revealAt: 0` haben.
-     *
-     * Auf Aurora heißt das, dass die Rationen nach zwölf Minuten leer sind
-     * und der Spieler nichts dagegen tun kann. Kein Selbsttest konnte das
-     * sehen: alle Prüfungen und alle Balancing-Läufe rufen orderGenerator()
-     * direkt auf und gehen an der Liste vorbei. Gefunden beim Spielen.
-     */
-    { key: 'supply', title: 'Versorgung', hint: 'Nahrung und Wasser für die Kolonie' },
-    { key: 'housing', title: 'Wohnraum', hint: 'ohne Betten kommt niemand' },
-    { key: 'storage', title: 'Lager', hint: 'hebt die Grenze des Regals' },
-  ]
 
   /**
    * Wie lange dieses Stück bei der aktuellen Kolonne dauert (M11).
@@ -84,7 +54,10 @@
     GENERATORS.filter((g) => isAvailable(g) && planet.oxygenTotal.gte(g.revealAt)),
   )
   const groups = $derived(
-    GROUPS.map((g) => ({ ...g, items: visible.filter((def) => groupOf(def) === g.key) })).filter(
+    GENERATOR_GROUPS.map((g) => ({
+      ...g,
+      items: visible.filter((def) => groupOf(def) === g.key),
+    })).filter(
       (g) => g.items.length > 0,
     ),
   )

@@ -308,9 +308,12 @@ export function upgradeCost(id: string): Decimal {
  * Gehört hierher und nicht nur in die UI: sonst könnte ein Konsolenaufruf —
  * oder später ein Auto-Käufer — einen Steinbruch auf einem Planeten bauen,
  * der gar keinen Stein hat, und der würde dann fröhlich fördern.
+ *
+ * Der Planet ist überschreibbar, damit der Selbsttest alle fünf durchsehen
+ * kann, ohne für jede Frage hinzureisen — eine Anlage, die nirgendwo verfügbar
+ * ist, steht in keiner Liste und ist damit tote Datenzeile.
  */
-export function isAvailable(def: GeneratorDef): boolean {
-  const planetDef = currentPlanetDef()
+export function isAvailable(def: GeneratorDef, planetDef = currentPlanetDef()): boolean {
   // Eine ausdrückliche Bindung schlägt jede Ableitung aus der Ausgabe.
   if (def.planets && !def.planets.includes(planetDef.id)) return false
 

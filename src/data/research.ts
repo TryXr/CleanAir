@@ -10,11 +10,22 @@
  */
 export type ResearchBranch = 'atmo' | 'bio' | 'ind'
 
-export const BRANCHES: readonly { id: ResearchBranch; name: string; hint: string }[] = [
+/**
+ * Die Zweige des Baums — wie bei den Anlagengruppen zugleich Reihenfolge und
+ * **Sichtbarkeit**: ui/ResearchTree.svelte zeigt nur, was hier eine Zeile hat.
+ * Ein Zweig ohne Eintrag ließe seine Knoten lautlos verschwinden, genau wie
+ * `supply` es acht Meilensteine lang in der Anlagenliste tat.
+ */
+export const BRANCHES = [
   { id: 'atmo', name: 'Atmosphärentechnik', hint: 'Produktion, Puffer, Stabilität' },
   { id: 'bio', name: 'Biologie', hint: 'Menschen, Lebenserhaltung, Wissen' },
   { id: 'ind', name: 'Industrie', hint: 'Kosten, Klick, Arbeitskraft' },
-]
+] as const satisfies readonly { id: ResearchBranch; name: string; hint: string }[]
+
+/* Vollständigkeit auf Compiler-Ebene — siehe GENERATOR_GROUPS. */
+type FehlenderZweig = Exclude<ResearchBranch, (typeof BRANCHES)[number]['id']>
+const _jederZweigHatEineZeile: [FehlenderZweig] extends [never] ? true : FehlenderZweig = true
+void _jederZweigHatEineZeile
 
 /** Wirkung *einer* Stufe. Stufen multiplizieren bzw. addieren sich auf. */
 export type ResearchEffect =
