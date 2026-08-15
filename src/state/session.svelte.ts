@@ -17,6 +17,15 @@ export const session = $state({
    * dort landen, wo das Spiel passiert, nicht in der Statistik von gestern.
    */
   tab: 'planet' as TabId,
+
+  /**
+   * Gewählte Truppgröße je Bergungsziel (M18).
+   *
+   * Steht hier und nicht im Spielstand, weil es keine Entscheidung ist, die
+   * Bestand hat: der Trupp selbst liegt auf dem Planeten, dieser Regler ist
+   * nur die Stellung, in der man ihn zuletzt gesehen hat.
+   */
+  crew: {} as Record<string, number>,
 })
 
 export type TabId = 'planet' | 'kolonie' | 'aufbau' | 'fortschritt' | 'imperium' | 'system'

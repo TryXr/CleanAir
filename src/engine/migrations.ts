@@ -264,6 +264,16 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
    */
   16: (s) => s,
 
+  /**
+   * M18: Bergung (§20.2).
+   *
+   * Nichts umzurechnen — `expeditions`, `salvageRuns` und `salvageDepletion`
+   * lesen sich aus einem alten Save als leer, und das ist der richtige
+   * Zustand: wer vor M18 gespielt hat, hat niemanden draußen. Der Eintrag
+   * steht trotzdem hier, aus demselben Grund wie 15 und 16.
+   */
+  17: (s) => s,
+
   14: (s) => {
     const planet = (s.planet ?? {}) as SaveShape
     const sites = Array.isArray(planet.sites) ? planet.sites : []

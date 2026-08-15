@@ -5,6 +5,7 @@ import { DEFENSES } from '../data/defenses'
 import { EVENTS } from '../data/events'
 import { GENERATORS } from '../data/generators'
 import { GOODS } from '../data/goods'
+import { SALVAGE } from '../data/salvage'
 import { UPGRADES } from '../data/upgrades'
 import { readDecimal, readNumber, readString, writeDecimal } from '../engine/serialize'
 
@@ -53,6 +54,34 @@ export interface BuildSite {
    * tun. Fortschritt, den man sieht, ist der halbe Unterschied.
    */
   progress: number
+}
+
+/**
+ * Ein Trupp, der gerade draußen ist (M18, §20.2).
+ *
+ * Planetenlokal wie alles andere: wer auf Kryo im Eisfeld gräbt, gräbt dort
+ * weiter, während man auf Aurora steht — und ist beim Rückflug immer noch
+ * unterwegs. Genau das macht das Weggehen zu einer Entscheidung mit Nachhall
+ * statt zu einem Knopf.
+ */
+export interface Expedition {
+  /** Ziel-id aus data/salvage.ts. */
+  target: string
+  /** Wie viele Leute draußen sind. Sie fehlen so lange an jeder Arbeit. */
+  crew: number
+  /** Sekunden bis zur Rückkehr. */
+  remaining: number
+  /** Gesamtdauer dieses Anlaufs — für den Balken, und weil ein Zwischenfall sie verlängert. */
+  total: number
+  /**
+   * Ist unterwegs etwas schiefgegangen?
+   *
+   * Steht schon beim Losschicken fest (der Würfel hängt am Ziel und am
+   * wievielten Anlauf, nicht an der Uhr) und wird erst bei der Rückkehr
+   * erzählt. Ein Zwischenfall tötet niemanden — er hält den Trupp länger
+   * draußen und kostet die Hälfte der Beute (§1.2).
+   */
+  mishap: boolean
 }
 
 /**
@@ -155,6 +184,17 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
     /** Laufende Ereignisse und die Zeit bis zum nächsten. */
     events: [] as ActiveEvent[],
     nextEventIn: FIRST_EVENT_DELAY,
+
+    /* --- Bergung (M18, §20.2) ---------------------------------------------
+       Drei Zahlen je Ziel, und alle drei planetenlokal: wer gerade draußen
+       ist, wie oft ein Ziel schon angelaufen wurde (das steuert, welcher Satz
+       der Vorgeschichte als Nächstes kommt) und wie erschöpft es ist.
+    -------------------------------------------------------------------- */
+    expeditions: [] as Expedition[],
+    /** Ziel-id -> abgeschlossene Anläufe. */
+    salvageRuns: {} as Record<string, number>,
+    /** Ziel-id -> 0…1 Erschöpfung. Erholt sich von selbst. */
+    salvageDepletion: {} as Record<string, number>,
 
     /* --- Anoxen (§7) ------------------------------------------------------
        Planetenlokal, damit eine Belagerung auf Pyra nicht mit nach Kryo
@@ -276,6 +316,9 @@ export function serializePlanet() {
     bound: writeDecimal(planet.bound),
     events: planet.events.map((e) => ({ ...e })),
     nextEventIn: planet.nextEventIn,
+    expeditions: planet.expeditions.map((e) => ({ ...e })),
+    salvageRuns: { ...planet.salvageRuns },
+    salvageDepletion: { ...planet.salvageDepletion },
     defenses: { ...planet.defenses },
     disabled: { ...planet.disabled },
     threat: planet.threat,
@@ -403,4 +446,32 @@ export function deserializePlanet(raw: unknown): void {
       reacted: e.reacted === true,
     }))
     .filter((e) => e.remaining > 0)
+
+  // Trupps (M18). Dieselbe Vorsicht wie bei Baustellen: unbekannte Ziele
+  // fliegen raus, und ein Trupp ohne Leute ist kein Trupp.
+  const savedExpeditions = Array.isArray(s.expeditions) ? s.expeditions : []
+  planet.expeditions = savedExpeditions
+    .map((raw) => (raw ?? {}) as Record<string, unknown>)
+    .filter((e) => SALVAGE.some((t) => t.id === e.target))
+    .map((e) => ({
+      target: readString(e.target, ''),
+      crew: Math.max(0, Math.floor(readNumber(e.crew, 0))),
+      remaining: Math.max(0, readNumber(e.remaining, 0)),
+      total: Math.max(1, readNumber(e.total, 1)),
+      mishap: e.mishap === true,
+    }))
+    .filter((e) => e.crew > 0)
+
+  const savedRuns = (s.salvageRuns ?? {}) as Record<string, unknown>
+  const savedDepletion = (s.salvageDepletion ?? {}) as Record<string, unknown>
+  const runs: Record<string, number> = {}
+  const depletion: Record<string, number> = {}
+  for (const t of SALVAGE) {
+    const n = Math.floor(readNumber(savedRuns[t.id], 0))
+    if (n > 0) runs[t.id] = n
+    const d = Math.min(1, Math.max(0, readNumber(savedDepletion[t.id], 0)))
+    if (d > 0) depletion[t.id] = d
+  }
+  planet.salvageRuns = runs
+  planet.salvageDepletion = depletion
 }

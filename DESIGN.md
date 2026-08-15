@@ -1785,9 +1785,9 @@ Drei Regeln, die das System klein halten:
 
 ## 20. Kurswechsel IV: Der lange Weg
 
-> **Entwurf. Noch nicht gebaut.** Alles unterhalb dieser Zeile ist Plan, kein
-> Zustand des Spiels. Wer in CLAUDE.md nachliest, was das Spiel *kann*, findet
-> hier nichts davon.
+> **Teilweise gebaut.** §20.2 (Bergung) steht seit M18. §20.1 (Baupläne) und
+> §20.3 (Bauwerke) sind weiterhin Entwurf — wer dort etwas voraussetzt, liest
+> einen Plan und keinen Zustand.
 
 ### Der Befund
 
@@ -1901,6 +1901,27 @@ Drei Regeln halten es im Rahmen:
 > **3. Das Risiko hängt am Planeten, nicht am Würfel allein.** Wo Anoxen
 > sitzen, ist ein Trupp draußen in Gefahr. Damit bekommt §7 eine zweite
 > Berührungsfläche, ohne dass ein neues System nötig wäre.
+
+**Gebaut in M18, und zwei Dinge sind dabei anders geworden als hier geplant:**
+
+- **Fundstücke gibt es noch nicht.** Sie sind die Währung der Bauwerke, und
+  die stehen noch nicht. Eine Währung ohne Ausgabe wäre ein Zähler, der
+  hochläuft und nichts bedeutet — sie kommen mit §20.3. Der Ertrag besteht
+  bis dahin aus Material und Vorgeschichte, und auf Erebos ist genau das schon
+  die Rechtfertigung des Systems.
+- **Ein Zwischenfall verlängert, statt zu binden.** Geplant war „die Leute
+  kommen angeschlagen zurück und fehlen eine Weile". Gebaut ist: der Trupp
+  ist **überfällig**, bleibt die Hälfte der Zeit länger draußen und bringt die
+  Hälfte mit. Das ist derselbe Preis — Hände, die fehlen — ohne einen zweiten
+  Zustand, und es hat einen Moment, den man mitbekommt: die Zeile „der Trupp
+  ist überfällig" fällt, wenn die Uhr eigentlich abgelaufen wäre.
+
+> **Der Preis ist gemessen und nicht behauptet.** Mit einem Simulanten, der
+> jede freie Hand rausschickt, fiel Vesta von 38,5 auf **163,4 min** — Bergung
+> kann einen Planeten kosten. Mit der Regel, die ein Mensch anwendet („erst
+> wenn jeder Platz besetzt ist und ein voller Trupp übrig bleibt"), stehen
+> alle sechs Planeten unverändert im Fenster. Beides gehört zusammen: ein
+> optionales System darf wehtun, aber es darf keinen Planeten erzwingen.
 
 ---
 

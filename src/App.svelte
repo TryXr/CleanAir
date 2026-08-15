@@ -12,6 +12,7 @@
   import { stableCount } from './systems/finale'
   import { hasForest } from './systems/forest'
   import { pendingCores } from './systems/prestige'
+  import { revealedTargets } from './systems/salvage'
   import { showsPlanetMap } from './systems/travel'
   import AchievementGrid from './ui/AchievementGrid.svelte'
   import AtmospherePanel from './ui/AtmospherePanel.svelte'
@@ -31,6 +32,7 @@
   import PlanetView from './ui/PlanetView.svelte'
   import PopulationPanel from './ui/PopulationPanel.svelte'
   import PrestigePanel from './ui/PrestigePanel.svelte'
+  import SalvagePanel from './ui/SalvagePanel.svelte'
   import StaffPanel from './ui/StaffPanel.svelte'
   import StatusRail from './ui/StatusRail.svelte'
   import ResearchTree from './ui/ResearchTree.svelte'
@@ -59,6 +61,9 @@
   const showResearch = $derived(
     meta.research.gt(0) || Object.keys(meta.researchNodes).length > 0 || planet.settlers.gt(0),
   )
+  // Bergung erscheint, sobald hier überhaupt etwas zu finden ist — die
+  // Bedingung selbst steht in systems/salvage.ts, damit sie prüfbar bleibt.
+  const showSalvage = $derived(revealedTargets().length > 0)
   const showAchievements = $derived(meta.achievements.length > 0)
   const showMetaTree = $derived(meta.genesisCores.gt(0) || meta.metaUpgrades.length > 0)
   const showPrestige = $derived(planet.completed || meta.stats.runs > 0 || pendingCores().gte(1))
@@ -183,6 +188,13 @@
         <SupplyPanel />
       </Panel>
 
+      <!-- Bergung steht bei der Kolonie und nicht beim Aufbau: der Preis
+           eines Trupps sind Hände, und die verteilt man hier. -->
+      {#if showSalvage}
+        <Panel title="Bergung" hint="Hände, die woanders fehlen">
+          <SalvagePanel />
+        </Panel>
+      {/if}
     {/if}
 
     {#if session.tab === 'aufbau'}

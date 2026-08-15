@@ -26,6 +26,13 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M18 ist angefangen: **Bergung** (§20.2) steht — ein Trupp zieht los, ist eine
+Weile weg und bringt Material und einen Satz Vorgeschichte mit. Der Preis sind
+ausdrücklich **Hände** und nicht Zeit: wer draußen ist, fehlt an jeder Anlage,
+und die Buchhaltung dafür sitzt in `unassigned()` und nicht in einem zweiten
+Zähler. **§20.1 (Baupläne) und §20.3 (Bauwerke) sind noch Entwurf** — wer dort
+etwas voraussetzt, liest einen Plan und keinen Zustand.
+
 M17 ist fertig: **Nach dem Ende läuft die Hochrechnung** (§19). Keine
 Funkverbindung — der Epilog sagt, dass man nicht erfährt, welche Kapseln
 ankommen, also zeigt das Spiel ein *Modell* und keine Nachrichten. Die Zahl
@@ -222,7 +229,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 138 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 155 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -237,7 +244,10 @@ dass eine Verarbeitung ohne Eingang nichts liefert, dass das Rezeptverhältnis
 exakt stimmt, dass ein volles Ausgangslager keinen Eingang mehr frisst und
 dass die Kette im selben Tick bis zur letzten Stufe durchläuft. Seit M13, dass
 eine O₂-Anlage mit Plätzen unbesetzt nichts liefert und besetzt mehr bringt,
-als der Atem der Zugewiesenen kostet.
+als der Atem der Zugewiesenen kostet. Seit M18, dass ein Bergungstrupp
+wirklich Hände bindet, dass er sie beim Zurückrufen sofort wieder freigibt,
+dass ein Ziel sich erschöpft *und* erholt, und dass Erebos über die Bergung an
+Material kommt, das der Planet nicht führt.
 
 Der Test sichert den Zustand vorher und stellt ihn danach wieder her — und
 sperrt seit M11 zusätzlich das Speichern, solange er läuft. Vorher schrieb

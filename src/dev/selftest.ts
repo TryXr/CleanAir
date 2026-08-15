@@ -39,8 +39,17 @@ import {
 import { contentment } from '../systems/contentment'
 import { finaleBlocker, seedUniverse } from '../systems/finale'
 import { seedingSystem } from '../systems/seeding'
+import {
+  depletionOf,
+  recallCrew,
+  revealedTargets,
+  runsOn,
+  salvageSystem,
+  sendCrew,
+} from '../systems/salvage'
+import { findSalvage } from '../data/salvage'
 import { craftBlocker, craftingSystem } from '../systems/crafting'
-import { assign, assignBuilder, handFactor, unassign } from '../systems/labor'
+import { assign, assignBuilder, crewAway, handFactor, unassign, unassigned } from '../systems/labor'
 import { housingCapacity, o2ConsumptionRate, populationSystem } from '../systems/population'
 import {
   clickGain,
@@ -895,6 +904,127 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       planet.sites[0]?.art === 'ware' && planet.sites[0]?.id === 'balken',
       JSON.stringify(planet.sites[0] ?? null),
     )
+
+    /* --- Bergung (M18, §20.2) ---------------------------------------------
+       Der ganze Sinn steht und fällt mit einem Satz: **der Preis sind Hände.**
+       Ein Trupp, der nicht aus der Arbeitsleistung verschwindet, ist ein
+       Geschenk mit Wartezeit davor — und das wäre genau der Grind, den §20
+       ausschließt.
+    --------------------------------------------------------------------- */
+    freshRun()
+    travelTo('aurora')
+    planet.oxygenTotal = new Decimal(1e6)
+    planet.settlers = new Decimal(20)
+    planet.satiety = 1
+    run.materials = {}
+
+    const landefaehre = findSalvage('lander')!
+    check(r, 'Aurora hat ein Bergungsziel', revealedTargets().some((t) => t.id === 'lander'))
+
+    const freiVorher = unassigned().toNumber()
+    const losgeschickt = sendCrew('lander', 5)
+    check(r, 'Trupp lässt sich losschicken', losgeschickt)
+    check(
+      r,
+      'Ein Trupp bindet Hände',
+      unassigned().toNumber() === freiVorher - 5,
+      `${freiVorher} → ${unassigned().toNumber()}`,
+    )
+    check(r, 'Zweiter Trupp zum selben Ziel geht nicht', !sendCrew('lander', 5))
+
+    // Vor der Rückkehr darf nichts im Lager liegen.
+    salvageSystem(landefaehre.duration - 5)
+    check(r, 'Unterwegs bringt der Trupp nichts', materialAmount('platten').eq(0))
+
+    salvageSystem(30)
+    check(r, 'Bergung liefert Material', materialAmount('platten').gt(0), materialAmount('platten').toString())
+    check(
+      r,
+      'Der Trupp kommt zurück',
+      unassigned().toNumber() === freiVorher,
+      `${unassigned().toNumber()} statt ${freiVorher}`,
+    )
+    check(r, 'Der Anlauf ist gezählt', runsOn('lander') === 1)
+
+    // Erschöpfung: derselbe Trupp bringt beim zweiten Mal weniger.
+    const ersteBeute = materialAmount('platten').toNumber()
+    check(r, 'Das Ziel ist erschöpft', depletionOf('lander') > 0, `${depletionOf('lander')}`)
+    sendCrew('lander', 5)
+    salvageSystem(landefaehre.duration + 1)
+    const zweiteBeute = materialAmount('platten').toNumber() - ersteBeute
+    check(
+      r,
+      'Ein zweiter Anlauf bringt weniger',
+      zweiteBeute < ersteBeute,
+      `${ersteBeute} → ${zweiteBeute}`,
+    )
+
+    // Und der Rückweg: das Ziel erholt sich, sonst wäre es eine Liste zum Abhaken.
+    const leerVorher = depletionOf('lander')
+    salvageSystem(600)
+    check(
+      r,
+      'Ein erschöpftes Ziel erholt sich',
+      depletionOf('lander') < leerVorher,
+      `${leerVorher} → ${depletionOf('lander')}`,
+    )
+
+    // Ohne freie Leute kein Trupp — sonst stünden Zuweisung und Bergung
+    // nebeneinander statt gegeneinander.
+    freshRun()
+    travelTo('aurora')
+    planet.oxygenTotal = new Decimal(1e6)
+    planet.settlers = new Decimal(2)
+    check(r, 'Ohne freie Leute kein Trupp', !sendCrew('lander', 5))
+
+    /*
+     * Erebos führt kein eigenes Material (§19) — und genau deshalb ist die
+     * Bergung dort die Rechtfertigung des ganzen Systems: sie ist der einzige
+     * Weg, hier an Stoff zu kommen, ohne zu fliegen.
+     */
+    freshRun()
+    travelTo('erebos')
+    planet.oxygenTotal = new Decimal(1e6)
+    planet.settlers = new Decimal(30)
+    planet.satiety = 1
+    run.materials = {}
+    sendCrew('vorgaenger', 8)
+    salvageSystem(findSalvage('vorgaenger')!.duration * 2 + 1)
+    check(
+      r,
+      'Erebos liefert Material, das der Planet nicht führt',
+      materialAmount('titan').gt(0),
+      materialAmount('titan').toString(),
+    )
+
+    // Rückholung: die Hände müssen sofort wieder da sein, sonst ist ein
+    // Trupp bei einer Hungersnot eine Sackgasse.
+    freshRun()
+    travelTo('aurora')
+    planet.oxygenTotal = new Decimal(1e6)
+    planet.settlers = new Decimal(20)
+    const vorAbzug = unassigned().toNumber()
+    sendCrew('lander', 6)
+    recallCrew('lander')
+    check(r, 'Abgezogene Leute sind sofort wieder da', unassigned().toNumber() === vorAbzug)
+    check(r, 'Ein Abbruch zählt nicht als Anlauf', runsOn('lander') === 0)
+
+    /* Und durch den Save: ein Trupp bleibt unterwegs. */
+    freshRun()
+    travelTo('aurora')
+    planet.oxygenTotal = new Decimal(1e6)
+    planet.settlers = new Decimal(20)
+    sendCrew('lander', 4)
+    const truppBlob = exportSave()
+    freshRun()
+    importSave(truppBlob)
+    check(
+      r,
+      'Save erhält den laufenden Trupp',
+      planet.expeditions[0]?.target === 'lander' && planet.expeditions[0]?.crew === 4,
+      JSON.stringify(planet.expeditions[0] ?? null),
+    )
+    check(r, 'Ein gespeicherter Trupp bindet weiter Hände', crewAway() === 4)
 
     /* --- Das Lager ist endlich (M11, §17) ---------------------------------
        Ohne Grenze war Abbau nur eine Frage der Zeit. Mit Grenze muss der

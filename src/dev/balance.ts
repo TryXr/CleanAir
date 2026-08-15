@@ -33,6 +33,7 @@ import {
 } from '../systems/combat'
 import { comfortNeeded, contentment } from '../systems/contentment'
 import { reseedEvents } from '../systems/events'
+import { activeExpedition, revealedTargets, sendCrew } from '../systems/salvage'
 import { buyResearch, canBuyResearch } from '../systems/research'
 import {
   assignBuilder,
@@ -127,12 +128,31 @@ import { travelTo } from '../systems/travel'
  * denen ein Mensch den ersten Wäscher bezahlt. Die Sperre hängt jetzt daran,
  * ob überhaupt schon gewaschen wird.
  *
+ * Ein **fünftes** Mal, direkt bei der ersten Messung der Bergung (M18): mit
+ * `bergung: true` fiel Vesta von 38,5 auf **163,4 min**. Es sah aus, als sei
+ * das System zu teuer — tatsächlich war es wieder der Simulant. Er schickte
+ * los, sobald `minCrew` freie Leute dastanden, und zog sie damit ab, *bevor*
+ * die nächste Anlage besetzt war: eine frisch gebaute Nitratgrube fand keine
+ * Hände mehr, weil dieselben Hände alle sieben Minuten wieder unterwegs
+ * waren. Mit „erst wenn jeder Platz besetzt ist und ein **voller** Trupp
+ * übrig bleibt" steht Vesta wieder bei 38,5.
+ *
+ * **Die 163,4 sind trotzdem der wichtigste Messwert des Meilensteins**: sie
+ * belegen, dass der Preis der Bergung echt ist. Wer jede freie Hand
+ * rausschickt, verliert seinen Planeten — genau das war die Absicht (§20.2),
+ * und ohne diese Zahl wäre es eine Behauptung geblieben.
+ *
+ * Mit der vernünftigen Regel kostet Bergung fast nichts: Aurora, Vesta, Pyra,
+ * Kryo und Erebos unverändert, Nimbus 150,7 statt 151,7. Das ist der richtige
+ * Befund für ein **optionales** System — es darf sich lohnen, es darf wehtun,
+ * aber es darf keinen Planeten erzwingen.
+ *
  * **Die Lehre für die nächste Balancing-Frage:** bevor eine Zahl in `data/`
  * angefasst wird, prüfen, ob der Simulant überhaupt alle Systeme benutzt, die
  * ein Mensch benutzen würde — und ob eine Regel, die er befolgt, auf *diesem*
  * Planeten dasselbe bedeutet wie auf dem, für den sie geschrieben wurde.
- * Viermal hintereinander war das die Ursache, und jedes Mal sah es zuerst
- * nach einem kaputten Planeten aus.
+ * Fünfmal hintereinander war das die Ursache, und jedes Mal sah es zuerst
+ * nach einem kaputten Planeten oder einem zu teuren System aus.
  *
  * ### Was ein zweiter Anlauf auf Pyra ergeben hat
  *
@@ -164,6 +184,14 @@ export interface BalanceOptions {
   clicks?: number
   /** Baut der simulierte Spieler Zufriedenheits-Anlagen? */
   komfort?: boolean
+  /**
+   * Schickt er Trupps zur Bergung los (M18, §20.2)?
+   *
+   * Standardmäßig aus, damit die gemessenen Dauern der sechs Planeten
+   * vergleichbar bleiben. Eingeschaltet kostet Bergung Hände und bringt
+   * Material — welche Richtung überwiegt, ist eine Messung und keine Meinung.
+   */
+  bergung?: boolean
   /** Wie viel Material er mitbringt. Ohne Fracht ist Pyra unlösbar (§16). */
   fracht?: number
   /** Abbruch nach so vielen Spielminuten. */
@@ -253,6 +281,7 @@ export interface BalanceResult {
 const STANDARD: Required<BalanceOptions> = {
   clicks: 1,
   komfort: false,
+  bergung: false,
   fracht: 50000,
   maxMinuten: 300,
   schritt: 1,
@@ -649,6 +678,45 @@ function entscheiden(
      */
     if (ueberZiel(g)) continue
     while (canAssign(g.id) && unassigned().toNumber() > reserve) assign(g.id, 1)
+  }
+
+  /*
+   * Bergung — **zuletzt und nur mit Überschuss** (M18, §20.2).
+   *
+   * Die Stelle ist die Aussage: erst stehen die Plätze und die Baukolonne,
+   * und wer dann noch übrig ist, geht raus. Andersherum wäre gemessen
+   * worden, was ein Spieler tut, der seine Anlagen leerräumt, um Material zu
+   * holen, das er ohne Anlagen nicht braucht.
+   *
+   * Standardmäßig **aus**: die sechs Planeten stehen ohne Bergung im Fenster
+   * (§18-Nachtrag), und diese Zahlen sollen vergleichbar bleiben. Wer wissen
+   * will, was das System kostet oder bringt, schaltet es zu — genau wie
+   * `komfort`.
+   */
+  if (opts.bergung) {
+    /*
+     * **Nur wenn wirklich niemand gebraucht wird.**
+     *
+     * Der erste Anlauf schickte los, sobald `minCrew` freie Leute dastanden —
+     * und ruinierte Vesta: 163,4 Minuten statt 38,5. Der Grund war nicht das
+     * System, sondern der Simulant. Er zog die Leute ab, *bevor* die nächste
+     * Anlage besetzt war: eine neu gebaute Nitratgrube fand keine Hände mehr,
+     * weil dieselben Hände alle sieben Minuten wieder unterwegs waren. Ein
+     * Mensch schickt einen Trupp los, wenn Leute herumstehen — nicht, wenn
+     * gerade zufällig welche zwischen zwei Zuweisungen frei sind.
+     *
+     * Zwei Bedingungen bilden das ab: **jeder Platz ist besetzt**, und es
+     * bleibt danach ein **voller Trupp** übrig. Wer weniger fordert, misst
+     * einen Spieler, der seine eigene Kolonie ausräumt.
+     */
+    const allesBesetzt = !listen.mitPlaetzen.some((g) => canAssign(g.id))
+    if (allesBesetzt) {
+      for (const ziel of revealedTargets()) {
+        if (activeExpedition(ziel.id)) continue
+        const frei = Math.floor(unassigned().toNumber() - reserve)
+        if (frei >= ziel.maxCrew) sendCrew(ziel.id, ziel.maxCrew)
+      }
+    }
   }
 }
 

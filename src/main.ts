@@ -36,6 +36,7 @@ import * as population from './systems/population'
 import * as prestige from './systems/prestige'
 import * as production from './systems/production'
 import * as research from './systems/research'
+import * as salvage from './systems/salvage'
 import * as travel from './systems/travel'
 import { atmosphereSystem, resetAtmosphereNotices } from './systems/atmosphere'
 import { achievementsSystem } from './systems/achievements'
@@ -47,6 +48,7 @@ import { eventsSystem } from './systems/events'
 import { populationSystem, resetPopulationNotices } from './systems/population'
 import { productionSystem } from './systems/production'
 import { resetStorageNotices } from './systems/storage'
+import { salvageSystem } from './systems/salvage'
 import { AURORA, PLANETS } from './data/planets'
 import { EVENTS } from './data/events'
 import { GENERATORS } from './data/generators'
@@ -77,6 +79,8 @@ import { settings } from './state/settings.svelte'
    4. bau          — nach der Produktion: eine Anlage, die in diesem Tick
                      fertig wird, liefert erst im nächsten. Andersherum
                      produzierte sie, bevor sie stand.
+   4b. bergung     — vor der Bevölkerung: ein zurückkehrender Trupp gibt Hände
+                     frei, und enforceStaffLimit() räumt gleich danach auf.
    5. bevölkerung  — atmet weg, was eben entstanden ist.
    6. atmosphäre   — bewertet zuletzt den fertigen Zustand des Ticks und
                      entscheidet über Brände und den Stabilitäts-Timer.
@@ -94,6 +98,14 @@ registerSystem('ereignisse', eventsSystem)
 registerSystem('produktion', productionSystem)
 registerSystem('verarbeitung', craftingSystem)
 registerSystem('bau', constructionSystem)
+/*
+ * Bergung nach dem Bau und vor der Bevölkerung (M18, §20.2).
+ *
+ * Die Stelle ist nicht beliebig: ein zurückkehrender Trupp gibt Hände frei,
+ * und `enforceStaffLimit()` in der Bevölkerung räumt danach auf. Andersherum
+ * würde eine Rückkehr eine Sekunde lang nicht zählen.
+ */
+registerSystem('bergung', salvageSystem)
 registerSystem('bevölkerung', populationSystem)
 registerSystem('atmosphäre', atmosphereSystem)
 registerSystem('anoxen', combatSystem)
@@ -225,6 +237,7 @@ if (import.meta.env.DEV) {
       population,
       prestige,
       research,
+      salvage,
       events,
       forest,
       labor,

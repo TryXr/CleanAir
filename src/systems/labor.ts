@@ -116,11 +116,30 @@ export function laborFactor(def: GeneratorDef): number {
 // --- Zuweisen -------------------------------------------------------------
 
 /**
+ * Leute, die gerade draußen bergen (M18, §20.2).
+ *
+ * Steht hier und nicht in systems/salvage.ts, damit die Buchhaltung an
+ * **einer** Stelle bleibt: `unassigned()` ist die Wahrheit darüber, wer noch
+ * greifbar ist, und ein Trupp, der dort fehlt, wäre eine zweite Rechnung
+ * daneben. Es liest nur den Zustand, es gibt also keinen Ring zwischen den
+ * beiden Systemen.
+ */
+export function crewAway(): number {
+  let sum = 0
+  for (const e of planet.expeditions) sum += e.crew
+  return sum
+}
+
+/**
  * Bewohner, die weder an einer Anlage stehen noch auf der Baustelle noch von
- * einem Bau verschluckt sind.
+ * einem Bau verschluckt sind — und nicht gerade unterwegs.
  */
 export function unassigned(): Decimal {
-  const frei = planet.settlers.sub(planet.bound).sub(totalStaff()).sub(planet.builders)
+  const frei = planet.settlers
+    .sub(planet.bound)
+    .sub(totalStaff())
+    .sub(planet.builders)
+    .sub(crewAway())
   return frei.lt(0) ? new Decimal(0) : frei
 }
 
@@ -195,7 +214,9 @@ export function enforceStaffLimit(): void {
   if (next) planet.staff = next
 
   // Danach erst die Gesamtzahl prüfen — sonst räumt man doppelt.
-  const verfuegbar = planet.settlers.sub(planet.bound)
+  // Ein Trupp draußen zählt wie verbaute Menschen: er ist nicht greifbar und
+  // lässt sich auch nicht abziehen, also schrumpft der Rest.
+  const verfuegbar = planet.settlers.sub(planet.bound).sub(crewAway())
   let gesamt = totalStaff().add(planet.builders)
   if (gesamt.lte(verfuegbar)) return
 
