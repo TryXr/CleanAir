@@ -31,6 +31,7 @@
 17. [Kurswechsel II: Die Kolonie](#17-kurswechsel-ii-die-kolonie)
 18. [Kurswechsel III: Zufriedenheit und die Werkstatt](#18-kurswechsel-iii-zufriedenheit-und-die-werkstatt)
 19. [Das Ende](#19-das-ende)
+20. [Kurswechsel IV: Der lange Weg](#20-kurswechsel-iv-der-lange-weg)
 
 ---
 
@@ -1779,3 +1780,227 @@ Drei Regeln, die das System klein halten:
 - **Es ist reproduzierbar.** Der Zufall hängt am Zeitpunkt der Aussaat, nicht
   an der Uhr: derselbe Spielstand meldet immer dieselben Welten. Ein Reload,
   der andere Befunde erzeugt, wäre ein Zufallsgenerator mit Text.
+
+---
+
+## 20. Kurswechsel IV: Der lange Weg
+
+> **Entwurf. Noch nicht gebaut.** Alles unterhalb dieser Zeile ist Plan, kein
+> Zustand des Spiels. Wer in CLAUDE.md nachliest, was das Spiel *kann*, findet
+> hier nichts davon.
+
+### Der Befund
+
+Gespielt, nicht hergeleitet: **man arbeitet auf nichts hin.** Auf jedem
+Planeten steht nach wenigen Minuten der vollständige Katalog offen, und von da
+an besteht das Spiel aus vielen kleinen Käufen derselben Form — bezahlen,
+warten, ein Zähler geht um eins hoch. Es gibt im ganzen Spiel kein einziges
+Ding, das teuer genug wäre, um es sich *vorzunehmen*.
+
+Drei Ursachen, alle drei hausgemacht:
+
+1. **Nichts ist verschlossen.** `revealAt` misst gegen `oxygenTotal`, und das
+   ist eine Eigenschaft des Planeten. Ein paar hundert O₂ später ist alles da,
+   was dieser Planet zu bieten hat. Der Fortschritt ist damit eine
+   Aufwärmphase von Minuten, nicht ein Bogen über Stunden.
+2. **Die Kostenkurve löscht jeden Meilenstein.** Bei ×1,08 bis ×1,20 ist das
+   nächste Stück immer „dasselbe, etwas teurer". Ein Ziel entsteht so nie.
+3. **Nichts ist einzigartig.** Es gibt kein Gebäude, von dem es genau eines
+   gibt. Alles ist eine Stückzahl — und `×10` und `Max` löschen auch noch den
+   Moment, in dem man einem Ding beim Entstehen zusieht.
+
+Dazu ein loses Ende, das genau hier hineingehört: **Werkzeug verspricht in
+seiner Beschreibung „Wer es in der Hand hat, schafft das Doppelte" und tut
+mechanisch nichts.** Es ist Zutat für ein Badehaus und für die Aussaat, sonst
+nichts.
+
+### Die Antwort in drei Teilen
+
+Ein Ziel, ein Weg dorthin, und ein Grund, warum der Weg dauert. Einzeln ist
+jeder Teil eine halbe Lösung: ein Ziel ohne Weg ist eine Wand, ein Weg ohne
+Ziel ist Beschäftigung.
+
+---
+
+### 20.1 Baupläne — nicht alles ist von Anfang an da
+
+Eine Anlage lässt sich erst bauen, wenn ihr **Bauplan** bekannt ist. Der
+Startsatz ist klein und deckt genau das, was Aurora zum Anfangen braucht:
+Elektrolyse-Zelle, Kondensator, Keimkammer, Wohnmodul. Alles Weitere wird
+verdient.
+
+**Baupläne liegen in `meta`.** Sie sind damit die dritte Sorte dauerhaften
+Fortschritts neben Kernen und Forschung — einmal verdient, für immer da. Das
+ist keine Bequemlichkeit, sondern §1.2: ein Durchlauf-Reset, der Wissen
+zurücknimmt, macht aus dem Neuanfang eine Strafe.
+
+Drei Quellen, und jede erzählt etwas anderes:
+
+| Quelle | Was sie freischaltet | Warum dort |
+|---|---|---|
+| **Forschung** | Die Apparate — Photolyse, Prozessor, Cracker | Was man versteht, kann man bauen |
+| **Bergung** (20.2) | Die schweren Sachen — Sublimator, Wäscher, Ventil | Was man findet, kann man nachbauen |
+| **Erfolge** | Die Sonderfälle — Badehaus, Lagerhalle | Wer etwas geschafft hat, hat sich etwas verdient |
+
+> **Die Sackgassenprüfung wird zur Pflicht.** Der Selbsttest kennt bereits
+> „Keine Sackgassen" für die Planeten. Mit Bauplänen wird daraus eine schärfere
+> Frage: **ist jeder Planet mit dem Startsatz plus allem, was bis dorthin
+> erreichbar war, lösbar?** Das ist eine Prüfung mit Gegenprobe und keine
+> Hoffnung. Ohne sie baut sich dieser Abschnitt eine Wand, die niemand mehr
+> findet — genau die Fehlerklasse, an der dieses Projekt schon achtmal
+> vorbeigelaufen ist.
+
+---
+
+### 20.2 Bergung — wofür Bewohner sonst noch da sind
+
+Ein **Trupp** wird losgeschickt: 3 bis 12 Leute, 5 bis 30 Minuten. Sie fehlen
+so lange in der Arbeitsleistung.
+
+**Der Preis sind Hände, und deshalb ist es eine Entscheidung.** Das ist
+dieselbe Klammer wie bei der Werkstatt in §18: dieselbe Kolonne kann in
+derselben Zeit ein Haus bauen, Werkzeug machen — oder losziehen. Ein Grind,
+dessen Preis nur Zeit ist, ist Wartezeit; ein Grind, dessen Preis ein Verzicht
+ist, ist Spiel.
+
+**Ziele stehen in `data/`, eines bis drei je Planet**, und sie sind der Ort,
+an dem dieses Spiel endlich seine Vorgeschichte erzählen darf:
+
+| Planet | Ziel | Was dort liegt |
+|---|---|---|
+| Aurora | Die erste Landefähre | Werkzeug, Platten — und wer vier Leute in Kapseln hierher schickte |
+| Vesta | Der Vermessungsmast | Holz, Titan, die Karten des Vorgängertrupps |
+| Pyra | Die Schwefelbrüche | Obsidian, Schwefel — und wie viele dort geblieben sind |
+| Kryo | Das Eisfeld | Eis, Helium, eine Sonde, die nie gemeldet hat |
+| Nimbus | Die Wolkenstation | Helium, Bauteile, ein abgebrochenes Protokoll |
+| Erebos | **Die Anlagen des Vorgängers** | Alles Übrige — und die Notizen, von denen §19 sagt, er habe keine hinterlassen |
+
+Der Ertrag hat drei Sorten:
+
+- **Material**, ausdrücklich auch solches, **das der Planet nicht führt**. Das
+  ist der Punkt, an dem Bergung mehr ist als ein zweiter Steinbruch: sie ist
+  der einzige Weg, auf Erebos an Material zu kommen, ohne zu fliegen.
+- **Fundstücke** — selten, nicht herstellbar, und die Währung der Bauwerke
+  (20.3). Sie sind der Grund, warum man ein Ziel ein zwölftes Mal anläuft.
+- **Fragmente** für den Log. Kein Material, keine Zahl, nur ein Satz. §1.4
+  sagt, das Spiel erzählt über Anlagen und Zahlen; hier erzählt es zum ersten
+  Mal über einen Fund.
+
+Drei Regeln halten es im Rahmen:
+
+> **1. Ein Ziel erschöpft sich — und erholt sich.** Der Ertrag pro Anlauf
+> sinkt und wächst über Minuten zurück. Ohne diesen Boden ist Bergung ein
+> Automat, den man einmal einrichtet und nie wieder ansieht; mit einer harten
+> Grenze wäre sie eine Liste zum Abhaken. Beides ist kein Spiel.
+>
+> **2. Niemand stirbt.** Ein schiefgegangener Anlauf bringt Leute **gebunden**
+> zurück, nicht gar nicht: sie fehlen eine Weile und kommen wieder. §1.2 gilt
+> auch hier, und `settlersLost` bleibt das, was es ist — die Folge einer Welle,
+> nicht die eines Ausflugs.
+>
+> **3. Das Risiko hängt am Planeten, nicht am Würfel allein.** Wo Anoxen
+> sitzen, ist ein Trupp draußen in Gefahr. Damit bekommt §7 eine zweite
+> Berührungsfläche, ohne dass ein neues System nötig wäre.
+
+---
+
+### 20.3 Bauwerke — das Ding, auf das man hinarbeitet
+
+**Ein Bauwerk pro Planet. Genau eines.** Es wird nicht gekauft, sondern in
+**vier Etappen** errichtet: Fundament, Rohbau, Hülle, Inbetriebnahme. Jede
+Etappe hat ihre eigene Rechnung und ihre eigenen Arbeitersekunden, und die
+Anzeige sagt jederzeit, welche gerade läuft und was noch fehlt.
+
+Fünf Eigenschaften, jede eine Absage an eine der drei Ursachen oben:
+
+**Es kostet null O₂.** Material, Fundstücke und Arbeitszeit. Das führt §17 zu
+Ende und trennt es sauber von jedem Generator.
+
+**Es kostet Werkzeug — und mehr Werkzeug baut schneller.** Werkzeug über der
+geforderten Menge senkt die Arbeitersekunden der Etappe. Damit löst die
+Beschreibung endlich ihr Versprechen ein, und die Werkstatt bekommt einen
+Zweck jenseits eines einzelnen Badehauses.
+
+**Es steht in derselben Reihe** (`BuildSite.art = 'bauwerk'`). Dieselbe
+Kolonne, dieselbe Zeit — wer am Bauwerk baut, baut gerade kein Haus.
+
+**Jede Etappe verlangt Material von auswärts.** Damit wird die Hin- und
+Rückreise aus §16 zur Tätigkeit im Mittelspiel statt nur zur Bedingung im
+Finale.
+
+**Und die Wirkung ist kein Beschleuniger.** Das ist die Fessel, die sich
+dieses Projekt selbst angelegt hat und die hier am wichtigsten ist: über dem
+O₂-Fenster gibt es kein Zurück, also darf eine Belohnung nicht auf den Ausstoß
+wirken. Jedes Bauwerk nimmt stattdessen ein **Risiko** weg oder verlängert die
+**Reichweite**:
+
+| Planet | Bauwerk | Wirkung |
+|---|---|---|
+| Aurora | **Der Wetterturm** | Der Stabilitäts-Timer fällt bei einem Ausrutscher nicht auf null, sondern *pausiert* |
+| Vesta | **Die Saatbank** | Biomasse zählt dauerhaft mehr → mehr Kapseln (§18: der einzige sichere Ort für einen Bonus) |
+| Pyra | **Der Aschefang** | Deckelt den Schadstoffanteil nach oben — er kann nicht mehr davonlaufen |
+| Kryo | **Die Zisterne** | Die Sättigung fällt nicht unter einen Boden; Hunger bremst, kippt aber nicht |
+| Nimbus | **Der Fahrstuhl** | Hebt die Lagergrenze für alle Materialien des Durchlaufs |
+
+**Erebos bekommt keines, und das ist die Pointe.** Dort baut man kein Denkmal,
+dort räumt man auf — das Bauwerk dieses Planeten ist die Aussaat, die es schon
+gibt. Rückwirkend wird das Finale damit vom Einzelstück zum letzten Mitglied
+einer Familie: dieselbe Form, dieselbe Reihe, dieselbe Art zu bezahlen.
+
+**Die Etappen sind auf der Planetenansicht sichtbar.** Der Canvas zeichnet
+bereits Geländepunkte, die mit der Biomasse ergrünen; eine Silhouette an
+fester Position, die mit jeder Etappe wächst, ist wenig Arbeit und der
+eigentliche Lohn. Ein Ziel, das man nur als Fortschrittsbalken kennt, ist eine
+Zahl; eines, das am Horizont steht, ist ein Bauwerk.
+
+**Der Bauplan ist `meta`, das Bauwerk ist der Planet.** Dieselbe Trennung wie
+Forschung gegen Anlagen: was man einmal gelernt hat, bleibt; was auf einem
+Planeten steht, fällt mit dem Durchlauf.
+
+---
+
+### Was das mit dem Balancing macht
+
+Seit dem Nachtrag zu M17 stehen **alle sechs Planeten im Fenster** (§18).
+Jeder der drei Teile oben verschiebt das, und zwar in verschiedene Richtungen:
+
+- **Baupläne** verlängern die frühen Planeten, weil weniger zur Verfügung
+  steht. Am stärksten trifft es Aurora und Vesta — die beiden mit dem engsten
+  Zielfenster.
+- **Bergung** verlängert alles, solange sie Hände kostet, und verkürzt es,
+  sobald ihr Ertrag zählt. Welche Richtung überwiegt, ist eine Messung und
+  keine Meinung.
+- **Bauwerke** machen einen Planeten **langsamer** — Bauzeit, die anderswo
+  fehlt. Das ist derselbe Effekt, den M14 beim Komfort gemessen hat, und dort
+  war er größer als erwartet.
+
+> **Reihenfolge: bauen, dann messen, dann Zahlen festschreiben.** Für jeden
+> Teil eine eigene Option in [dev/balance.ts](src/dev/balance.ts) — `plaene`,
+> `bergung`, `bauwerk` — wie `komfort` es vormacht, und `compare()` über
+> mehrere Startwerte. Wer die Zieldauern aus §13 vorher anpasst, misst
+> anschließend die eigene Erwartung.
+
+### Drei Fallen, die dieser Entwurf ausdrücklich vermeidet
+
+1. **Grind ist keine Wartezeit.** Jeder lange Weg hier kostet **Hände** und
+   damit einen Verzicht. Ein Ziel, das nur Zeit kostet, füllt man mit einem
+   zweiten Tab.
+2. **Kein Beschleuniger als Belohnung.** Die Bauwerkswirkungen nehmen Risiko
+   oder geben Reichweite. Der Kasten in CLAUDE.md steht dort, weil verschenkte
+   Zufriedenheit Vesta einmal unlösbar gemacht hat.
+3. **Kein dauerhafter Verlust.** Baupläne bleiben, geborgene Leute kommen
+   wieder, ein erschöpftes Ziel erholt sich.
+
+### Offen
+
+- **Wie viele Fundstücke kostet ein Bauwerk?** Erst messbar, wenn Bergung
+  läuft. Die Zahl entscheidet, ob ein Bauwerk ein Nachmittag oder ein
+  Wochenende ist.
+- **Darf ein Trupp reisen?** Ein Trupp, der von Kryo aus Aurora bergen kann,
+  entwertet die Rakete. Vermutlich nein — aber es ist die naheliegendste
+  Erweiterung und gehört deshalb hier notiert, bevor sie jemand aus Versehen
+  einbaut.
+- **Was passiert mit `revealAt`?** Baupläne und Freigabeschwellen sind zwei
+  Schlösser an derselben Tür. Wahrscheinlich ersetzt der Bauplan die Schwelle,
+  wo es einen gibt — sonst wartet man zweimal auf dasselbe.
+
