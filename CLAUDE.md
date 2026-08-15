@@ -26,6 +26,14 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M17 ist fertig: **Nach dem Ende läuft die Hochrechnung** (§19). Keine
+Funkverbindung — der Epilog sagt, dass man nicht erfährt, welche Kapseln
+ankommen, also zeigt das Spiel ein *Modell* und keine Nachrichten. Die Zahl
+der Kapseln hängt an der Biomasse und damit an der Zufriedenheit: das ist der
+Kreis, den M14 offengelassen hatte. Nicht verbesserbar, offline mitlaufend,
+und der Zufall hängt am Zeitpunkt der Aussaat — derselbe Stand meldet immer
+dieselben Welten.
+
 M16 ist fertig: **Das Spiel hat ein Ende** (§19). „Die Aussaat" verlangt alle
 sechs stabilen Atmosphären und von jedem Planeten Material — und **nimmt
 nichts weg**: kein Reset, kein Overlay, der Epilog bleibt als Panel lesbar.
@@ -214,7 +222,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 119 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 126 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in

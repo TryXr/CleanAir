@@ -1730,3 +1730,35 @@ einem anderen Spiel. Es endet auf einer Messung, nicht auf einem Triumph:
 Und die Anoxen bleiben ausdrücklich unbesiegt. Sie waren zuerst da (§7); ein
 Ende, das sie wegräumt, würde die einzige Position im Spiel verraten, die
 nicht die des Spielers ist.
+
+### Was nach dem Ende kommt (M17)
+
+Ein Ende, hinter dem nichts ist, macht aus einem Idle-Spiel einen Abspann. Die
+Aussaat bekommt deshalb einen **Nachhall** — aber einen, der dem Epilog nicht
+widerspricht.
+
+> Dort steht: *„Du wirst nicht erfahren, welche davon ankommen."*
+
+Also gibt es keine Funkverbindung. Was das Panel zeigt, ist eine
+**Hochrechnung**: die Notizen rechnen weiter, während die Kapseln fliegen. Alle
+90 Sekunden Spielzeit fällt ein Befund, ein Drittel davon trägt. Die Welten
+bekommen Namen wie Katalognummern — „Kes-9", „Amaru-4" —, weil eine Zahl
+allein nichts erzählt (§1.4): „37 Welten erreicht" ist Statistik, „Tanis-4
+stumm. Vermutlich zu kalt." ist eine Geschichte.
+
+**Wie weit die Aussaat reicht, entscheidet sich beim Abflug** und nie wieder:
+die Zahl der Kapseln hängt an der Biomasse des Durchlaufs — und damit über §18
+an der Zufriedenheit. Das schließt den Kreis, den M14 offengelassen hatte:
+Komfort zahlt nicht auf Tempo ein, sondern darauf, **wie weit man reicht**.
+
+Drei Regeln, die das System klein halten:
+
+- **Es läuft offline mit** (Regel 1, registriertes System). Dreihundert Jahre
+  vergehen nicht, während man zusieht — der Nachlauf holt mehrere Befunde auf
+  einmal nach, nicht einen.
+- **Es ist nicht verbesserbar.** Die Trefferquote steht fest. Wer mehr Treffer
+  will, schickt mehr Kapseln, und diese Schraube sitzt *vor* dem Abflug. Sonst
+  wäre die Aussaat ein weiteres System zum Optimieren statt ein Nachhall.
+- **Es ist reproduzierbar.** Der Zufall hängt am Zeitpunkt der Aussaat, nicht
+  an der Uhr: derselbe Spielstand meldet immer dieselben Welten. Ein Reload,
+  der andere Befunde erzeugt, wäre ein Zufallsgenerator mit Text.

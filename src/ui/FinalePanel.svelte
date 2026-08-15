@@ -14,8 +14,10 @@
   import { meta } from '../state/meta.svelte'
   import { materialAmount } from '../state/run.svelte'
   import { finaleBlocker, seedUniverse, stableCount } from '../systems/finale'
+  import { capsulesUnderway } from '../systems/seeding'
 
   const stehen = $derived(stableCount())
+  const unterwegs = $derived(capsulesUnderway())
   const blocker = $derived(finaleBlocker())
   const bereit = $derived(blocker === null)
 
@@ -37,6 +39,25 @@
       Ausgesät am {new Date(meta.finaleAt).toLocaleDateString('de-DE')} — und das Spiel läuft weiter,
       falls du es willst.
     </p>
+
+    <!-- Keine Funkverbindung, sondern ein Modell: der Epilog sagt, dass du
+         nicht erfahren wirst, welche ankommen. Die Notizen rechnen weiter. -->
+    <h3>Hochrechnung</h3>
+    <dl class="zaehler">
+      <div><dt>Kapseln unterwegs</dt><dd class="num">{formatInt(unterwegs)}</dd></div>
+      <div><dt>ausgewertet</dt><dd class="num">{formatInt(meta.capsulesResolved)} / {formatInt(meta.capsules)}</dd></div>
+      <div><dt>tragen</dt><dd class="num accent">{formatInt(meta.capsulesTaken)}</dd></div>
+    </dl>
+
+    {#if meta.seedLog.length > 0}
+      <ul class="befunde">
+        {#each meta.seedLog as zeile (zeile)}
+          <li>{zeile}</li>
+        {/each}
+      </ul>
+    {:else}
+      <p class="signatur">Noch kein Befund. Das Modell rechnet weiter, auch wenn du zusiehst.</p>
+    {/if}
   </div>
 {:else}
   <p class="lead">{FINALE.hint}</p>
@@ -150,5 +171,59 @@
     margin-top: 20px;
     font-size: 11px;
     color: var(--muted);
+  }
+
+  h3 {
+    margin: 26px 0 10px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .zaehler {
+    display: grid;
+    gap: 5px;
+    margin: 0 0 14px;
+  }
+
+  .zaehler div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    border-bottom: 1px dotted var(--line-soft);
+    padding-bottom: 4px;
+  }
+
+  .zaehler dt {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .zaehler dd {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .zaehler dd.accent {
+    color: var(--o2);
+  }
+
+  .befunde {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+
+  .befunde li {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-dim);
+    padding-left: 12px;
+    border-left: 1px solid var(--line-soft);
   }
 </style>

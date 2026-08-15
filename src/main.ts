@@ -32,6 +32,7 @@ import * as research from './systems/research'
 import * as travel from './systems/travel'
 import { atmosphereSystem, resetAtmosphereNotices } from './systems/atmosphere'
 import { achievementsSystem } from './systems/achievements'
+import { seedingSystem } from './systems/seeding'
 import { combatSystem } from './systems/combat'
 import { constructionSystem } from './systems/construction'
 import { craftingSystem } from './systems/crafting'
@@ -90,6 +91,8 @@ registerSystem('bevölkerung', populationSystem)
 registerSystem('atmosphäre', atmosphereSystem)
 registerSystem('anoxen', combatSystem)
 registerSystem('achievements', achievementsSystem)
+// Ganz am Ende der Kette: die Aussaat hört auf niemanden mehr.
+registerSystem('aussaat', seedingSystem)
 
 /* --- Start --------------------------------------------------------------- */
 

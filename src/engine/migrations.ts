@@ -256,6 +256,14 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
    */
   15: (s) => s,
 
+  /**
+   * M17: die Hochrechnung nach der Aussaat (§19).
+   *
+   * Ebenfalls nichts umzurechnen: die Zähler lesen sich aus einem alten Save
+   * als null, und wer nie ausgesät hat, hat auch keine Kapseln unterwegs.
+   */
+  16: (s) => s,
+
   14: (s) => {
     const planet = (s.planet ?? {}) as SaveShape
     const sites = Array.isArray(planet.sites) ? planet.sites : []

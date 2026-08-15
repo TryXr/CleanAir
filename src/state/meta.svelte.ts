@@ -37,6 +37,22 @@ export const meta = $state({
    */
   finaleReached: false,
   finaleAt: 0,
+
+  /**
+   * Die Hochrechnung nach der Aussaat (M17, §19).
+   *
+   * `capsules` steht beim Aussäen fest und hängt daran, wie gut die Kolonien
+   * gelebt haben — es ist die einzige Stelle, an der die Qualität eines
+   * Durchlaufs am Ende sichtbar wird. Der Rest zählt hoch, solange das Spiel
+   * läuft, und `log` behält nur die letzten Befunde: eine Liste, die
+   * unbegrenzt wächst, bläht irgendwann den Spielstand auf.
+   */
+  capsules: 0,
+  capsulesResolved: 0,
+  capsulesTaken: 0,
+  /** Sekunden auf die nächste Meldung. */
+  capsuleProgress: 0,
+  seedLog: [] as string[],
   /** Gesamte gespielte Zeit in Sekunden, inkl. angerechneter Offline-Zeit. */
   totalPlaytime: 0,
   firstStarted: Date.now(),
@@ -85,6 +101,11 @@ export function serializeMeta() {
     planetsCompleted: meta.planetsCompleted,
     finaleReached: meta.finaleReached,
     finaleAt: meta.finaleAt,
+    capsules: meta.capsules,
+    capsulesResolved: meta.capsulesResolved,
+    capsulesTaken: meta.capsulesTaken,
+    capsuleProgress: meta.capsuleProgress,
+    seedLog: [...meta.seedLog],
     totalPlaytime: meta.totalPlaytime,
     firstStarted: meta.firstStarted,
     stats: {
@@ -133,6 +154,13 @@ export function deserializeMeta(raw: unknown): void {
   meta.planetsCompleted = readInt(s.planetsCompleted, 0)
   meta.finaleReached = s.finaleReached === true
   meta.finaleAt = readNumber(s.finaleAt, 0)
+  meta.capsules = readInt(s.capsules, 0)
+  meta.capsulesResolved = readInt(s.capsulesResolved, 0)
+  meta.capsulesTaken = readInt(s.capsulesTaken, 0)
+  meta.capsuleProgress = readNumber(s.capsuleProgress, 0)
+  // Nur Zeichenketten, und höchstens so viele, wie das System selbst behält.
+  const savedLog = Array.isArray(s.seedLog) ? s.seedLog : []
+  meta.seedLog = savedLog.filter((z): z is string => typeof z === 'string').slice(-8)
   meta.totalPlaytime = readNumber(s.totalPlaytime, 0)
   meta.firstStarted = readNumber(s.firstStarted, Date.now())
 

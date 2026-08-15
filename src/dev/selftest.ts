@@ -36,6 +36,7 @@ import {
 } from '../systems/construction'
 import { contentment } from '../systems/contentment'
 import { finaleBlocker, seedUniverse } from '../systems/finale'
+import { seedingSystem } from '../systems/seeding'
 import { craftBlocker, craftingSystem } from '../systems/crafting'
 import { assign, assignBuilder, handFactor, unassign } from '../systems/labor'
 import { housingCapacity, o2ConsumptionRate, populationSystem } from '../systems/population'
@@ -558,6 +559,53 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     meta.finaleReached = false
     importSave(blobFinale)
     check(r, 'Save erhält die Aussaat', meta.finaleReached)
+
+    /* --- Die Hochrechnung danach (M17) ------------------------------------
+       Sie darf nur nach der Aussaat laufen, muss offline nachholen können und
+       muss bei gleichem Spielstand dieselben Welten melden — sonst ist sie
+       ein Zufallsgenerator mit Text statt eines Modells.
+    --------------------------------------------------------------------- */
+    check(r, 'Aussaat schickt Kapseln los', meta.capsules > 0, `${meta.capsules}`)
+    meta.capsulesResolved = 0
+    meta.capsulesTaken = 0
+    meta.capsuleProgress = 0
+    meta.seedLog = []
+
+    seedingSystem(10)
+    check(r, 'Ohne Zeit keine Meldung', meta.capsulesResolved === 0)
+
+    // Ein langer Nachlauf muss mehrere Meldungen bringen, nicht eine.
+    seedingSystem(1000)
+    const nachLauf = meta.capsulesResolved
+    check(r, 'Offline holt mehrere Meldungen nach', nachLauf > 1, `${nachLauf}`)
+    check(r, 'Hochrechnung behält nur die letzten Befunde', meta.seedLog.length <= 8)
+
+    const ersteBefunde = [...meta.seedLog].join('|')
+    meta.capsulesResolved = 0
+    meta.capsulesTaken = 0
+    meta.capsuleProgress = 0
+    meta.seedLog = []
+    seedingSystem(1000)
+    check(
+      r,
+      'Gleicher Stand meldet dieselben Welten',
+      meta.seedLog.join('|') === ersteBefunde,
+      meta.seedLog[0] ?? '',
+    )
+
+    // Und irgendwann ist Schluss: mehr Meldungen als Kapseln gibt es nicht.
+    seedingSystem(100000)
+    check(
+      r,
+      'Nie mehr Meldungen als Kapseln',
+      meta.capsulesResolved === meta.capsules,
+      `${meta.capsulesResolved} von ${meta.capsules}`,
+    )
+
+    meta.finaleReached = false
+    const vorherResolved = meta.capsulesResolved
+    seedingSystem(1000)
+    check(r, 'Ohne Aussaat rechnet nichts', meta.capsulesResolved === vorherResolved)
 
     /* --- Erebos beginnt mit der falschen Atmosphäre (M15) ------------------
        Der ganze Planet steht und fällt mit seinem Startzustand. Wäre er leer,

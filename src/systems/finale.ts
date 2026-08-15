@@ -4,7 +4,8 @@ import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { canAffordMaterials, spendMaterials } from '../state/run.svelte'
-import { planetSummaries } from './travel'
+import { capsulesFor } from './seeding'
+import { planetSummaries, totalBiomass } from './travel'
 
 /**
  * Das Finale (M16, DESIGN.md §19).
@@ -53,6 +54,16 @@ export function seedUniverse(): boolean {
   spendMaterials(FINALE.materialCost)
   meta.finaleReached = true
   meta.finaleAt = Date.now()
+  /*
+   * Wie weit die Aussaat reicht, entscheidet sich **hier** und nie wieder —
+   * aus der Biomasse des Durchlaufs, in die seit §18 die Zufriedenheit
+   * einzahlt. Wer seine Kolonien gut leben ließ, schickt mehr Kapseln.
+   */
+  meta.capsules = capsulesFor(totalBiomass().toNumber())
+  meta.capsulesResolved = 0
+  meta.capsulesTaken = 0
+  meta.capsuleProgress = 0
+  meta.seedLog = []
   play('rocket')
   addLog(
     'Die Kapseln sind unterwegs. Von hier an rechnet jemand anders weiter.',
