@@ -1440,8 +1440,38 @@ Ware wären zwei Systeme für dieselbe Sache.
 ### Offene Fragen dieses Kurswechsels
 
 - **Wie hoch darf die Obergrenze wirklich?** 200 % verdoppelt die Ausbeute
-  jeder Handarbeit. Ob das die späten Planeten trivialisiert, sagt nur eine
-  Simulation über Kryo und Nimbus.
+  jeder Handarbeit. Ein erster Messversuch nach M14 hat die Frage **nicht**
+  beantwortet, aber drei Dinge gezeigt, die vorher nicht klar waren:
+
+  | Planet | Hebel | ohne Komfort | mit Komfort |
+  |---|---|---|---|
+  | Vesta | N₂ | 37,6 min | 45–47 min |
+  | Kryo | N₂ | 163,2 min | 194,2 min |
+  | Nimbus | O₂ | 123,0 min | 78–80 min |
+
+  **Erstens:** auf den N₂-Planeten macht voller Komfort den Planeten
+  *langsamer*, nicht schneller — die Bauzeit und das O₂ für die
+  Komfortbauten kosten mehr, als die doppelten Hände einbringen. Das ist
+  dieselbe Falle wie bei Auroras Wohnraum vor M13 („mit gebautem Wohnraum
+  langsamer als ohne") und der Punkt, an dem die Zahlen am ehesten nicht
+  stimmen.
+
+  **Zweitens:** Zufriedenheit beschleunigt auch das **Bauen**, weil
+  `buildRate()` seit M11 an `handFactor()` hängt. Sie ist damit kein Hebel
+  auf Handarbeit, sondern ein Tempohebel auf fast alles. Das war so nicht
+  entworfen und ist die eigentliche Frage hinter der Obergrenze.
+
+  **Drittens, und deshalb steht die Frage weiter offen:** Nimbus' 123 → 80
+  min lassen sich *nicht* der Obergrenze zuschreiben. Bei halber
+  Zufriedenheit (Handleistung 148 %) steht dort 78,1 min, bei voller 80,2 —
+  der Unterschied kommt aus der Reihenfolge in der Bauschlange, nicht aus dem
+  Bonus. Auch die Gegenprobe über die Rate der Schwebefarm (600 → 350) ändert
+  nur 1,2 min. Der Simulant ist für diese Frage schlicht zu grob; sein
+  Rauschen ist größer als der gesuchte Effekt.
+
+  **Nächster Schritt ist deshalb kein Zahlendreh, sondern ein
+  Balancing-Werkzeug**, das die Planeten reproduzierbar durchspielt, statt
+  eine Heuristik pro Frage neu zu schreiben.
 - **Bringt der sechste Planet eine neue Mechanik oder den Abschluss?** §11
   verlangt eine neue; ein Finale, das nur das Vorhandene bündelt, wäre der
   ehrlichere Schluss. Beides ist vertretbar, entschieden ist es nicht.
