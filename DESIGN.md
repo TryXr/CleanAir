@@ -1785,9 +1785,11 @@ Drei Regeln, die das System klein halten:
 
 ## 20. Kurswechsel IV: Der lange Weg
 
-> **Teilweise gebaut.** §20.2 (Bergung) steht seit M18, §20.3 (Bauwerke) seit
-> M19. **§20.1 (Baupläne) ist weiterhin Entwurf** — wer dort etwas
-> voraussetzt, liest einen Plan und keinen Zustand.
+> **Gebaut.** §20.2 (Bergung) seit M18, §20.3 (Bauwerke) seit M19, §20.1
+> (Baupläne) seit M20 — letzterer in deutlich engerem Zuschnitt als hier
+> entworfen. Der Nachtrag am Ende von §20.1 sagt, warum, und mit welchen
+> Zahlen. **Der Entwurf steht bewusst unverändert darüber:** er ist der
+> Gedankengang, der Nachtrag ist die Messung.
 
 ### Der Befund
 
@@ -1849,6 +1851,60 @@ Drei Quellen, und jede erzählt etwas anderes:
 > Hoffnung. Ohne sie baut sich dieser Abschnitt eine Wand, die niemand mehr
 > findet — genau die Fehlerklasse, an der dieses Projekt schon achtmal
 > vorbeigelaufen ist.
+
+**Gebaut in M20 — und der Entwurf oben war zu ehrgeizig. Gemessen, nicht
+diskutiert:**
+
+Der erste Anlauf hat verschlossen, was der Entwurf vorschlägt: die Apparate
+(Photolyse, Prozessor, Cracker) hinter Forschung, die schweren Sachen hinter
+Bergung. Das Ergebnis war die Wand, vor der dieser Abschnitt selbst warnt:
+
+| Planet | vorher | Baupläne wie entworfen |
+|---|---|---|
+| Aurora | 24,9 min | 49,9 min |
+| Vesta | 38,5 min | 66,1 min |
+| Kryo | 129,6 min | **schließt nicht ab** |
+| Erebos | 176,7 min | **schließt nicht ab** |
+
+Kryo und Erebos endeten mit zu viel O₂ und zu wenig N₂ — der Cracker fehlte,
+und ohne Puffer schließt sich die Falle aus §4, aus der es kein Zurück gibt.
+
+**Zweiter Anlauf: Atmosphärenkette wieder frei, Wirtschaft verschlossen.**
+Alle sechs schlossen wieder ab, aber Vesta stand bei 121,1 statt 38,5. Der
+Grund war ein anderer und schlimmer: `sawmill` und `dome` hingen an der
+Bergung, und wer nicht bergen geht, bekommt sie **nie**. Damit wäre Bergung
+Pflicht geworden — genau das, was M18 ausdrücklich ausschließt.
+
+**Was übrig bleibt, ist eine engere und ehrlichere Regel:**
+
+> **Ein Schloss gehört nur an das, was ein Planet nicht braucht.**
+>
+> Die Atmosphärenkette ist das *Ziel* des Spiels, nicht sein Inhaltsverzeichnis
+> — ein Schloss dort ist eine Wand. Die Gegenmittel (Wäscher, Ventil) sind die
+> Gegenstücke aus §1.2 und dürfen erst recht keines bekommen. Auch Wohnraum,
+> Versorgung und die Materialketten der Planeten tragen: sie stehen offen.
+>
+> Verschlossen bleiben fünf Anlagen, die eine Kolonie **bequemer** machen und
+> nicht **möglich**: Gemeinschaftsraum, Badehaus, Walzpresse, Lagerhalle,
+> Baumschule. Damit stehen alle sechs Planeten wieder exakt auf ihren
+> gemessenen Zeiten — die Sperren kosten nur den, der sie aufmacht.
+
+Und die zweite Regel, die aus dem zweiten Anlauf folgt:
+
+> **Jeder Bauplan muss ohne Bergung erreichbar sein.** Bergung darf ihn früher
+> liefern, nie exklusiv. Sonst ist ein optionales System die Voraussetzung für
+> ein anderes, und „optional" ist eine Behauptung.
+
+**Verschlossen heißt sichtbar.** Eine gesperrte Anlage steht mit ihrem Namen,
+ihrer Beschreibung und der Quelle ihres Bauplans in der Liste, nur ausgegraut.
+Auf etwas hinarbeiten kann man nur, was man sieht; eine Anlage, die einfach
+fehlt, ist keine Aufgabe, sondern eine Lücke.
+
+**Die Migration rechnet um, statt zu vergessen.** Wer mit einem alten Stand
+lädt, hat die verschlossenen Anlagen längst gebaut — alles, was auf dem
+aktiven oder einem eingelagerten Planeten steht, gilt deshalb als bekannt.
+Niemand soll vor einem Schloss stehen, dessen Schlüssel er vor Stunden
+verdient hat.
 
 ---
 

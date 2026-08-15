@@ -192,6 +192,14 @@ export interface GeneratorDef {
   buildWork: number
   /** Ab wie viel jemals freigesetztem O₂ der Generator sichtbar wird. */
   revealAt: number
+  /**
+   * Braucht diese Anlage einen Bauplan (M20, §20.1)?
+   *
+   * Ohne das Feld ist sie immer bekannt — das ist der Startsatz und alles,
+   * was einen Planeten in Gang bringt. Wo es steht, ersetzt der Bauplan die
+   * Freigabeschwelle: zwei Schlösser an derselben Tür hieße zweimal warten.
+   */
+  needsBlueprint?: true
 
   /**
    * Arbeitsplätze pro Stück (§17).
@@ -374,6 +382,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
   ---------------------------------------------------------------------- */
   {
     id: 'commons',
+    needsBlueprint: true,
     name: 'Gemeinschaftsraum',
     description:
       'Ein Tisch, an dem alle Platz haben, und Licht, das nicht nach Arbeit aussieht. Man merkt es erst, wenn es ihn gibt.',
@@ -388,6 +397,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
   },
   {
     id: 'bathhouse',
+    needsBlueprint: true,
     name: 'Badehaus',
     description:
       'Heißes Wasser, das niemand rationiert. Der erste Luxus, den sich die Kolonie leistet — und der erste, den keiner mehr hergibt.',
@@ -452,6 +462,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
   },
   {
     id: 'press',
+    needsBlueprint: true,
     name: 'Walzpresse',
     description:
       'Barren rein, Platten raus. Die Halle bebt im Takt, und man hört sie durch den ganzen Krater.',
@@ -633,6 +644,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
   ---------------------------------------------------------------------- */
   {
     id: 'depot',
+    needsBlueprint: true,
     name: 'Lagerhalle',
     description:
       'Regale bis unters Dach, halb in den Fels getrieben. Was hier keinen Platz findet, bleibt liegen und verwittert.',
@@ -660,6 +672,7 @@ export const GENERATORS: readonly GeneratorDef[] = [
   ---------------------------------------------------------------------- */
   {
     id: 'nursery',
+    needsBlueprint: true,
     name: 'Baumschule',
     description: 'Setzlinge unter Folie. Jeder angewachsene Baum atmet für dich mit.',
     output: { kind: 'plant' },

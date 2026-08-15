@@ -6,6 +6,7 @@ import { format } from '../engine/format'
 import { findMaterial } from '../data/materials'
 import { addLog } from '../state/log.svelte'
 import { currentPlanetDef, planet } from '../state/planet.svelte'
+import { grantFromSalvage } from './blueprints'
 import { crewAway, unassigned } from './labor'
 import { storeMaterial } from './storage'
 
@@ -182,6 +183,8 @@ function resolve(expedition: (typeof planet.expeditions)[number]): void {
   }
 
   planet.salvageRuns = { ...planet.salvageRuns, [target.id]: run + 1 }
+  // Was man findet, kann man nachbauen (M20, §20.1).
+  grantFromSalvage(target.id)
   planet.salvageDepletion = {
     ...planet.salvageDepletion,
     // Anteilig vom Rest, nicht absolut: so ist ein Ziel nie ganz leer und

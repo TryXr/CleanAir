@@ -58,6 +58,8 @@ export interface ResearchDef {
   effect: ResearchEffect
   /** Erst sichtbar, wenn alle genannten Knoten mindestens Stufe 1 haben. */
   requires?: readonly string[]
+  /** Baupläne, die dieser Knoten ab der genannten Stufe freigibt (M20). */
+  blueprints?: readonly { level: number; id: string }[]
   /** Nur auf Planeten, die diese Mechanik führen. */
   needs?: 'nitrogen' | 'pollution'
 }
@@ -174,6 +176,10 @@ export const RESEARCH: readonly ResearchDef[] = [
     baseCost: 50,
     costGrowth: 2.7,
     effect: { kind: 'buildCost', reduction: 0.12 },
+    blueprints: [
+      { level: 1, id: 'press' },
+      { level: 3, id: 'depot' },
+    ],
   },
   {
     id: 'ind-global',

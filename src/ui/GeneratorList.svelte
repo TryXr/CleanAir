@@ -10,6 +10,7 @@
     isRevealed,
     maxAffordable,
   } from '../systems/production'
+  import { blueprintSource, isUnlocked } from '../systems/blueprints'
   import { buildRate, orderGenerator } from '../systems/construction'
   import { craftBlocker, effectiveCraftRate } from '../systems/crafting'
   import { generatorCount, pendingUnits, planet } from '../state/planet.svelte'
@@ -52,13 +53,24 @@
   }
 
   const visible = $derived(GENERATORS.filter((g) => isAvailable(g) && isRevealed(g)))
+
+  /**
+   * Verschlossene Anlagen stehen **sichtbar** in der Liste (M20, §20.1).
+   *
+   * Auf etwas hinarbeiten kann man nur, was man sieht. Der Unterschied
+   * zwischen „gibt es hier nicht" und „kannst du noch nicht" ist für den
+   * Spieler der ganze Punkt — eine Anlage, die einfach fehlt, ist keine
+   * Aufgabe, sondern eine Lücke.
+   */
+  const verschlossen = $derived(
+    GENERATORS.filter((g) => isAvailable(g) && g.needsBlueprint && !isUnlocked(g.id)),
+  )
   const groups = $derived(
     GENERATOR_GROUPS.map((g) => ({
       ...g,
       items: visible.filter((def) => groupOf(def) === g.key),
-    })).filter(
-      (g) => g.items.length > 0,
-    ),
+      gesperrt: verschlossen.filter((def) => groupOf(def) === g.key),
+    })).filter((g) => g.items.length > 0 || g.gesperrt.length > 0),
   )
 
   /** Wie viele Stück ein Klick kauft — bei „Max" abhängig vom Guthaben. */
@@ -217,10 +229,39 @@
         </button>
       </li>
     {/each}
+
+    {#each group.gesperrt as def (def.id)}
+      <li class="locked">
+        <div class="info">
+          <div class="line">
+            <span class="name">{def.name}</span>
+            <span class="lock">Bauplan fehlt</span>
+          </div>
+          <p class="desc">{def.description}</p>
+          <p class="quelle">Zu haben aus: {blueprintSource(def.id)}</p>
+        </div>
+      </li>
+    {/each}
   </ul>
 {/each}
 
 <style>
+  .locked {
+    opacity: 0.55;
+  }
+
+  .lock {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .quelle {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--o2-dim);
+  }
+
   .toolbar {
     display: flex;
     align-items: center;

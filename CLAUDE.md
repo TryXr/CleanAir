@@ -26,6 +26,20 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M20 ist fertig: **Baupläne** (§20.1) — fünf Anlagen brauchen erst einen Plan,
+und der liegt in `meta`, überlebt also den Durchlauf-Reset. Der Zuschnitt ist
+**gemessen und nicht entworfen**: die ehrgeizige Fassung aus §20.1 machte Kryo
+und Erebos unlösbar und Aurora doppelt so lang.
+
+> **Ein Schloss gehört nur an das, was ein Planet nicht braucht.** Die
+> Atmosphärenkette ist das *Ziel* des Spiels — ein Schloss dort ist eine Wand.
+> Gegenmittel (Wäscher, Ventil), Wohnraum, Versorgung und die Materialketten
+> stehen offen. Verschlossen sind Gemeinschaftsraum, Badehaus, Walzpresse,
+> Lagerhalle und Baumschule: Dinge, die eine Kolonie **bequemer** machen, nicht
+> **möglich**. Und: **jeder Bauplan muss ohne Bergung erreichbar sein** — sie
+> darf ihn früher liefern, nie exklusiv, sonst ist ein optionales System die
+> Voraussetzung für ein anderes.
+
 M19 ist fertig: **Bauwerke** (§20.3) — eines pro Planet, vier Etappen, null
 O₂, in derselben Bauschlange wie ein Haus. Ihre Wirkungen nehmen ausdrücklich
 **Risiko** weg oder geben **Reichweite**; kein einziger Produktionsbonus, weil
@@ -39,8 +53,7 @@ M18 steht: **Bergung** (§20.2) — ein Trupp zieht los, ist eine
 Weile weg und bringt Material und einen Satz Vorgeschichte mit. Der Preis sind
 ausdrücklich **Hände** und nicht Zeit: wer draußen ist, fehlt an jeder Anlage,
 und die Buchhaltung dafür sitzt in `unassigned()` und nicht in einem zweiten
-Zähler. **§20.1 (Baupläne) ist noch Entwurf** — wer dort etwas voraussetzt,
-liest einen Plan und keinen Zustand.
+Zähler.
 
 M17 ist fertig: **Nach dem Ende läuft die Hochrechnung** (§19). Keine
 Funkverbindung — der Epilog sagt, dass man nicht erfährt, welche Kapseln
@@ -238,7 +251,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 173 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 184 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -259,7 +272,8 @@ dass ein Ziel sich erschöpft *und* erholt, und dass Erebos über die Bergung an
 Material kommt, das der Planet nicht führt. Seit M19, dass eine Etappe nicht
 sofort dasteht, dass **erst die letzte** Etappe die Wirkung freischaltet, dass
 ein ortsgebundenes Bauwerk aus der Ferne nichts tut und der Fahrstuhl sehr
-wohl.
+wohl. Seit M20 die **Sackgassenprüfung**: jeder Bauplan hat eine Quelle, kein
+Gegenmittel hat ein Schloss, und jeder Planet kommt ohne Bauplan in Gang.
 
 > **Eine Gegenprobe, die grün bleibt, ist kein bestandener Test.** Die Prüfung
 > „ein ortsgebundenes Bauwerk wirkt nicht von fern" blieb beim Ausbau des

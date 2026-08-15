@@ -3,6 +3,7 @@ import { RESEARCH, findResearch, type ResearchDef } from '../data/research'
 import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
+import { grantFromResearch } from './blueprints'
 import { usesNitrogen, usesPollution } from '../state/planet.svelte'
 
 /**
@@ -149,6 +150,8 @@ export function buyResearch(id: string): boolean {
   const level = researchLevel(id) + 1
   meta.researchNodes = { ...meta.researchNodes, [id]: level }
   addLog(`${def.name} auf Stufe ${level} erforscht.`, 'good')
+  // Was man versteht, kann man bauen (M20, §20.1).
+  grantFromResearch(id, level)
   play('research')
   return true
 }

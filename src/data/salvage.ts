@@ -81,6 +81,9 @@ export interface SalvageTarget {
    */
   fragments: readonly string[]
 
+  /** Baupläne, die der erste erfolgreiche Anlauf mitbringt (M20). */
+  blueprints?: readonly string[]
+
   /** Ab wie viel jemals freigesetztem O₂ das Ziel sichtbar wird. */
   revealAt: number
 }
@@ -88,6 +91,7 @@ export interface SalvageTarget {
 export const SALVAGE: readonly SalvageTarget[] = [
   {
     id: 'lander',
+    blueprints: ['depot'],
     planets: ['aurora'],
     name: 'Die erste Landefähre',
     description:
@@ -187,6 +191,7 @@ export const SALVAGE: readonly SalvageTarget[] = [
   },
   {
     id: 'wolkenstation',
+    blueprints: ['bathhouse'],
     planets: ['nimbus'],
     name: 'Die Wolkenstation',
     description:

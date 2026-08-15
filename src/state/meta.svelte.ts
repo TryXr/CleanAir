@@ -1,5 +1,6 @@
 import Decimal from 'break_infinity.js'
 import { ACHIEVEMENTS } from '../data/achievements'
+import { GENERATORS } from '../data/generators'
 import { META_UPGRADES } from '../data/metaUpgrades'
 import { RESEARCH } from '../data/research'
 import { readDecimal, readInt, readNumber, writeDecimal } from '../engine/serialize'
@@ -19,6 +20,15 @@ export const meta = $state({
 
   /** ids gekaufter Meta-Upgrades. Der Baum aus DESIGN.md §6. */
   metaUpgrades: [] as string[],
+
+  /**
+   * Bekannte Baupläne (M20, §20.1).
+   *
+   * Die dritte Sorte dauerhaften Fortschritts neben Kernen und Forschung:
+   * einmal verdient, für immer da. Ein Durchlauf-Reset, der Wissen
+   * zurücknimmt, macht aus dem Neuanfang eine Strafe (§1.2).
+   */
+  blueprints: [] as string[],
   /** Forschungsknoten -> erreichte Stufe. Der Tech-Baum aus §10. */
   researchNodes: {} as Record<string, number>,
   /** ids freigeschalteter Achievements. Jedes trägt einen dauerhaften Bonus (§10). */
@@ -96,6 +106,7 @@ export function serializeMeta() {
     credits: writeDecimal(meta.credits),
     research: writeDecimal(meta.research),
     metaUpgrades: [...meta.metaUpgrades],
+    blueprints: [...meta.blueprints],
     researchNodes: { ...meta.researchNodes },
     achievements: [...meta.achievements],
     planetsCompleted: meta.planetsCompleted,
@@ -132,6 +143,11 @@ export function deserializeMeta(raw: unknown): void {
   meta.research = readDecimal(s.research, 0)
   // Nur bekannte ids übernehmen, damit ein Save aus einer Version mit
   // anderem Baum keine Geister-Knoten einschleppt.
+  const savedBlueprints = Array.isArray(s.blueprints) ? s.blueprints : []
+  // Nur bekannte Anlagen-ids: ein Save aus einer Version mit anderen Anlagen
+  // soll keine Geister-Baupläne einschleppen.
+  meta.blueprints = GENERATORS.filter((g) => savedBlueprints.includes(g.id)).map((g) => g.id)
+
   const savedUpgrades = Array.isArray(s.metaUpgrades) ? s.metaUpgrades : []
   meta.metaUpgrades = META_UPGRADES.filter((u) => savedUpgrades.includes(u.id)).map((u) => u.id)
 

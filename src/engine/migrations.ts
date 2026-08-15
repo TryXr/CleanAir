@@ -284,6 +284,36 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
    */
   18: (s) => s,
 
+  /**
+   * M20: Baupläne (§20.1).
+   *
+   * **Hier ist ausnahmsweise etwas umzurechnen.** Ein alter Stand hat die
+   * verschlossenen Anlagen längst gebaut — wer nach dieser Version lädt,
+   * darf nicht plötzlich vor einem Schloss stehen, dessen Schlüssel er vor
+   * Stunden verdient hat. Alles, was irgendwo steht, gilt deshalb als
+   * bekannt: auf dem aktiven Planeten und in jedem eingelagerten.
+   */
+  19: (s) => {
+    const bekannt = new Set<string>(Array.isArray(s.meta && (s.meta as SaveShape).blueprints) ? ((s.meta as SaveShape).blueprints as string[]) : [])
+
+    const sammle = (roh: unknown): void => {
+      const gen = ((roh ?? {}) as SaveShape).generators
+      if (!gen || typeof gen !== 'object') return
+      for (const [id, n] of Object.entries(gen as Record<string, unknown>)) {
+        if (typeof n === 'number' && n > 0) bekannt.add(id)
+      }
+    }
+
+    sammle(s.planet)
+    const run = (s.run ?? {}) as SaveShape
+    for (const stored of Object.values((run.planets ?? {}) as Record<string, unknown>)) sammle(stored)
+
+    const meta = (s.meta ?? {}) as SaveShape
+    meta.blueprints = [...bekannt]
+    s.meta = meta
+    return s
+  },
+
   14: (s) => {
     const planet = (s.planet ?? {}) as SaveShape
     const sites = Array.isArray(planet.sites) ? planet.sites : []

@@ -33,6 +33,7 @@ import {
   buildRate,
   cancelSite,
   constructionSystem,
+  orderBlocker,
   orderGenerator,
   orderGood,
 } from '../systems/construction'
@@ -49,6 +50,12 @@ import {
 } from '../systems/salvage'
 import { findSalvage } from '../data/salvage'
 import { landmarkFor } from '../data/landmarks'
+import {
+  grantBlueprint,
+  knowsBlueprint,
+  unreachableBlueprints,
+} from '../systems/blueprints'
+import { buyResearch } from '../systems/research'
 import {
   canOrderStage,
   landmarkDone,
@@ -521,6 +528,10 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     travelTo('vesta')
     planet.oxygen = new Decimal(1e9)
     run.materials = { stein: new Decimal(500) }
+    // Die Wohnkuppel liegt seit M20 hinter einem Bauplan. Diese Prüfung meint
+    // den Abbruch und nicht das Schloss — also wird es aufgeschlossen, statt
+    // die Prüfung auf eine andere Anlage umzubiegen.
+    grantBlueprint('dome', 'Prüfung.')
     const o2Vorher = planet.oxygen.toNumber()
     const steinVorher = materialAmount('stein').toNumber()
     orderGenerator('dome', 4)
@@ -1034,6 +1045,101 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       JSON.stringify(planet.expeditions[0] ?? null),
     )
     check(r, 'Ein gespeicherter Trupp bindet weiter Hände', crewAway() === 4)
+
+    /* --- Baupläne (M20, §20.1) --------------------------------------------
+       §20.1 verlangt die Sackgassenprüfung ausdrücklich als Pflicht, nicht
+       als Hoffnung: „ist jeder Planet mit dem Startsatz plus allem, was bis
+       dorthin erreichbar war, lösbar?" Vollständig beweisen kann das nur ein
+       Balancing-Lauf — was hier steht, sind die Invarianten, ohne die er gar
+       nicht erst laufen kann.
+    --------------------------------------------------------------------- */
+    freshRun()
+    meta.blueprints = []
+
+    check(
+      r,
+      'Jeder Bauplan hat eine Quelle',
+      unreachableBlueprints().length === 0,
+      unreachableBlueprints().join(', '),
+    )
+
+    /*
+     * **Ein Gegenmittel bekommt nie ein Schloss.** Wäscher und Ventil sind die
+     * Gegenstücke aus §1.2 — ohne sie ist Überschuss ein dauerhafter Schaden.
+     * Auf Erebos beginnt der Planet mit 60 % Schadstoffen; wer dort erst
+     * forschen müsste, bevor er waschen darf, steht vor einer Tür, die nur von
+     * innen aufgeht.
+     */
+    const gegenmittel = GENERATORS.filter(
+      (g) => g.output.kind === 'gas' && (g.output.gas === 'scrub' || g.output.gas === 'vent'),
+    )
+    check(
+      r,
+      'Gegenmittel brauchen keinen Bauplan',
+      gegenmittel.every((g) => !g.needsBlueprint),
+      gegenmittel.filter((g) => g.needsBlueprint).map((g) => g.id).join(', '),
+    )
+
+    /*
+     * Und der Anfang jedes Planeten: ohne Bauplan muss überall mindestens ein
+     * O₂-Erzeuger, eine Versorgung und — wo Menschen leben — ein Wohnraum
+     * stehen. Sonst kommt man dort gar nicht erst in Gang.
+     */
+    const offeneSackgassen: string[] = []
+    for (const def of PLANETS) {
+      const offen = GENERATORS.filter((g) => isAvailable(g, def) && !g.needsBlueprint)
+      const hatO2 = offen.some((g) => g.output.kind === 'gas' && g.output.gas === 'o2')
+      const hatVersorgung = offen.some((g) => g.output.kind === 'supply')
+      const hatWohnraum = offen.some((g) => g.output.kind === 'housing')
+      if (!hatO2) offeneSackgassen.push(`${def.id}: kein O₂`)
+      if (def.allowsPopulation && !hatVersorgung) offeneSackgassen.push(`${def.id}: keine Versorgung`)
+      if (def.allowsPopulation && !hatWohnraum) offeneSackgassen.push(`${def.id}: kein Wohnraum`)
+    }
+    check(
+      r,
+      'Jeder Planet kommt ohne Bauplan in Gang',
+      offeneSackgassen.length === 0,
+      offeneSackgassen.join(' · '),
+    )
+
+    // Und das Schloss selbst: verschlossen heißt unsichtbar *und* unbaubar.
+    const presse = findGenerator('press')!
+    travelTo('aurora')
+    planet.oxygenTotal = new Decimal(1e9)
+    planet.oxygen = new Decimal(1e9)
+    run.materials = { erz: new Decimal(1e6), eisen: new Decimal(1e6) }
+    check(r, 'Ohne Bauplan nicht sichtbar', !isRevealed(presse))
+    check(r, 'Ohne Bauplan nicht bestellbar', !orderGenerator('press', 1))
+    check(r, 'Und der Grund steht dran', orderBlocker(presse, 1) === 'Bauplan fehlt')
+
+    grantBlueprint('press', 'Prüfung.')
+    check(r, 'Mit Bauplan sichtbar', isRevealed(presse))
+    check(r, 'Mit Bauplan bestellbar', orderGenerator('press', 1))
+
+    /*
+     * Baupläne überleben den Durchlauf-Reset. Sie liegen in `meta`, weil ein
+     * Neuanfang, der Wissen zurücknimmt, eine Strafe wäre (§1.2).
+     */
+    const blob20 = exportSave()
+    meta.blueprints = []
+    importSave(blob20)
+    check(r, 'Save erhält die Baupläne', knowsBlueprint('press'))
+
+    // Und die drei Quellen tragen wirklich ein.
+    freshRun()
+    meta.blueprints = []
+    meta.research = new Decimal(1e6)
+    buyResearch('ind-cost')
+    check(r, 'Forschung gibt ihren Bauplan heraus', knowsBlueprint('press'))
+
+    freshRun()
+    meta.blueprints = []
+    travelTo('aurora')
+    planet.oxygenTotal = new Decimal(1e6)
+    planet.settlers = new Decimal(20)
+    sendCrew('lander', 5)
+    salvageSystem(findSalvage('lander')!.duration * 2 + 1)
+    check(r, 'Bergung gibt ihren Bauplan heraus', knowsBlueprint('depot'))
 
     /* --- Bauwerke (M19, §20.3) --------------------------------------------
        Das erste Ding im Spiel, von dem es genau eines gibt. Geprüft wird die

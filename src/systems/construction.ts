@@ -6,6 +6,7 @@ import { addLog } from '../state/log.svelte'
 import { generatorCount, planet, type BuildSite } from '../state/planet.svelte'
 import { canAffordMaterials, materialAmount, spendMaterials } from '../state/run.svelte'
 import { findLandmark } from '../data/landmarks'
+import { isUnlocked } from './blueprints'
 import { completeStage, nextStage, stageWork } from './landmarks'
 import { handFactor, unassigned } from './labor'
 import { generatorCost, isAvailable } from './production'
@@ -114,6 +115,9 @@ export function secondsUntilDone(index: number): number {
 export function orderBlocker(def: GeneratorDef, amount: number): string | null {
   if (amount < 1) return 'keine Menge'
   if (!isAvailable(def)) return `${def.name} gibt es hier nicht`
+  // Auch hier und nicht nur in der Anzeige: sonst baut ein Konsolenaufruf
+  // oder der Simulant an dem Schloss vorbei, das §20.1 gerade eingebaut hat.
+  if (!isUnlocked(def.id)) return 'Bauplan fehlt'
   if (planet.oxygen.lt(generatorCost(def, amount))) return 'zu wenig O₂'
   if (!canAffordMaterials(def.materialCost, amount)) return 'zu wenig Material'
   const people = (def.populationCost ?? 0) * amount

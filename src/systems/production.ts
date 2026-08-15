@@ -19,6 +19,7 @@ import { meta } from '../state/meta.svelte'
 import { affordableCount } from '../state/run.svelte'
 import { play } from '../engine/audio'
 import { achievementEffects } from './achievements'
+import { isUnlocked } from './blueprints'
 import { fireThrottle, n2Percent, pollutionPercent } from './atmosphere'
 import { enforceStaffLimit, laborFactor } from './labor'
 import { storeMaterial } from './storage'
@@ -388,6 +389,17 @@ export function isAvailable(def: GeneratorDef, planetDef = currentPlanetDef()): 
  * schneller steigt als die Freigabeschwelle.
  */
 export function isRevealed(def: GeneratorDef): boolean {
+  /*
+   * **Der Bauplan ersetzt die Freigabeschwelle** (M20, §20.1).
+   *
+   * Beides zugleich wäre zweimal warten auf dasselbe: erst genug O₂
+   * freisetzen, dann noch den Plan verdienen. Wo ein Bauplan gilt, gilt nur
+   * er — und sobald er da ist, steht die Anlage sofort in der Liste. Das ist
+   * auch die ehrlichere Meldung: „Bauplan: Photolyse-Farm" und dann eine
+   * Zeile, die man nicht findet, wäre schlimmer als gar keine Meldung.
+   */
+  if (def.needsBlueprint) return isUnlocked(def.id)
+
   if (planet.oxygenTotal.gte(def.revealAt)) return true
 
   const out = def.output

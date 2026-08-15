@@ -31,6 +31,7 @@ import * as finale from './systems/finale'
 import * as crafting from './systems/crafting'
 import * as forest from './systems/forest'
 import * as labor from './systems/labor'
+import * as blueprints from './systems/blueprints'
 import * as landmarks from './systems/landmarks'
 import * as storage from './systems/storage'
 import * as population from './systems/population'
@@ -243,6 +244,7 @@ if (import.meta.env.DEV) {
       forest,
       labor,
       landmarks,
+      blueprints,
       construction,
       storage,
       combat,

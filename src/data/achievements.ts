@@ -47,6 +47,8 @@ export interface AchievementDef {
   effect: AchievementEffect
   /** Bonus als Text, damit die UI ihn nicht selbst formulieren muss. */
   reward: string
+  /** Baupläne, die dieser Erfolg mitbringt (M20, §20.1). */
+  blueprints?: readonly string[]
 }
 
 export const ACHIEVEMENTS: readonly AchievementDef[] = [
@@ -71,6 +73,7 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   },
   {
     id: 'first-world',
+    blueprints: ['commons'],
     name: 'Eine Welt, die atmet',
     description: 'Einen Planeten stabil bekommen.',
     condition: { kind: 'planetsCompleted', atLeast: 1 },
@@ -105,6 +108,7 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   },
   {
     id: 'forester',
+    blueprints: ['nursery'],
     name: 'Förster',
     description: '10.000 Bäume gleichzeitig stehen haben.',
     condition: { kind: 'trees', atLeast: 10000 },

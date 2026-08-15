@@ -3,6 +3,7 @@ import { ACHIEVEMENTS, type Condition } from '../data/achievements'
 import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
+import { grantFromAchievement } from './blueprints'
 import { planet } from '../state/planet.svelte'
 import { materialAmount, run } from '../state/run.svelte'
 
@@ -160,6 +161,8 @@ export function achievementsSystem(_dt: number): void {
 
     meta.achievements = [...meta.achievements, def.id]
     addLog(`${def.name} — ${def.reward}.`, 'good')
+    // Wer etwas geschafft hat, hat sich etwas verdient (M20, §20.1).
+    grantFromAchievement(def.id)
     play('achievement')
   }
 }
