@@ -73,6 +73,16 @@ export type Output =
    * verbraucht auch nur halb so viel Eisen.
    */
   | { kind: 'craft'; material: string; input: MaterialCost }
+  /**
+   * Zufriedenheit (M14, §18). `baseRate` zählt Komfortpunkte pro Stück —
+   * eine Menge, keine Rate, wie bei `housing` und `storage`.
+   *
+   * Diese Anlagen haben bewusst **keine** Arbeitsplätze: ein Bad läuft nicht,
+   * es steht. Die Trennung „Plätze hat nur Handarbeit" aus M10 bleibt damit
+   * unangetastet — Zufriedenheit ist das Ergebnis von Arbeit, die beim *Bau*
+   * geleistet wurde, nicht von Arbeit, die dauerhaft gebunden bleibt.
+   */
+  | { kind: 'amenity' }
 
 export type SupplyKind = 'food' | 'water'
 
@@ -114,6 +124,7 @@ export const GENERATOR_GROUPS = [
   { key: 'craft', title: 'Verarbeitung', hint: 'braucht Nachschub von der Stufe davor' },
   { key: 'supply', title: 'Versorgung', hint: 'Nahrung und Wasser für die Kolonie' },
   { key: 'housing', title: 'Wohnraum', hint: 'ohne Betten kommt niemand' },
+  { key: 'amenity', title: 'Zufriedenheit', hint: 'dieselben Hände schaffen mehr' },
   { key: 'storage', title: 'Lager', hint: 'hebt die Grenze des Regals' },
 ] as const satisfies readonly { key: GeneratorGroup; title: string; hint: string }[]
 
@@ -351,6 +362,42 @@ export const GENERATORS: readonly GeneratorDef[] = [
     baseRate: 4,
     buildWork: 20,
     revealAt: 60,
+  },
+
+  /* --- Zufriedenheit (M14, §18) -----------------------------------------
+     Der Weg, dieselben Menschen mehr leisten zu lassen. Beide Bauten kosten
+     Werkstattgüter und damit Material von *zwei* Planeten — Zufriedenheit
+     ist die erste Sache im Spiel, die man ohne Rückflug nicht bekommt.
+
+     Bewusst ohne Arbeitsplätze und ohne populationCost: ein Bad bindet keine
+     Hände, es steht. Sonst wäre der Bonus zur Hälfte wieder aufgefressen.
+  ---------------------------------------------------------------------- */
+  {
+    id: 'commons',
+    name: 'Gemeinschaftsraum',
+    description:
+      'Ein Tisch, an dem alle Platz haben, und Licht, das nicht nach Arbeit aussieht. Man merkt es erst, wenn es ihn gibt.',
+    output: { kind: 'amenity' },
+    baseCost: 900,
+    /** Flach wie beim Flechtenfeld: knapp soll das Gut sein, nicht das O₂. */
+    costGrowth: 1.08,
+    materialCost: { balken: 4 },
+    baseRate: 6,
+    buildWork: 45,
+    revealAt: 400,
+  },
+  {
+    id: 'bathhouse',
+    name: 'Badehaus',
+    description:
+      'Heißes Wasser, das niemand rationiert. Der erste Luxus, den sich die Kolonie leistet — und der erste, den keiner mehr hergibt.',
+    output: { kind: 'amenity' },
+    baseCost: 2400,
+    costGrowth: 1.08,
+    materialCost: { balken: 6, werkzeug: 2 },
+    baseRate: 14,
+    buildWork: 90,
+    revealAt: 3000,
   },
 
   /* --- Die Eisenkette (M12, §17) ----------------------------------------

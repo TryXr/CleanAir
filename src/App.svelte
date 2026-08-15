@@ -28,11 +28,13 @@
   import PopulationPanel from './ui/PopulationPanel.svelte'
   import PrestigePanel from './ui/PrestigePanel.svelte'
   import StaffPanel from './ui/StaffPanel.svelte'
+  import StatusRail from './ui/StatusRail.svelte'
   import ResearchTree from './ui/ResearchTree.svelte'
   import StatsPanel from './ui/StatsPanel.svelte'
   import SupplyPanel from './ui/SupplyPanel.svelte'
   import TopBar from './ui/TopBar.svelte'
   import UpgradeGrid from './ui/UpgradeGrid.svelte'
+  import WorkshopPanel from './ui/WorkshopPanel.svelte'
 
   let transfer = $state('')
 
@@ -132,6 +134,12 @@
 </nav>
 
 <main>
+  <!-- Links das Dauerhafte, in der Mitte der gewählte Reiter, rechts das
+       Laufende. Die Übersicht steht bewusst zuerst im DOM: sie ist das, was
+       man zuerst liest — und bei schmalem Fenster rutscht sie dadurch nach
+       oben statt ans Ende. -->
+  <StatusRail />
+
   <div class="column">
     <NextStep />
 
@@ -177,6 +185,15 @@
       <Panel title="Anlagen">
         <GeneratorList />
       </Panel>
+
+      <!-- Die Werkstatt steht bei den Anlagen und nicht bei der Kolonie:
+           bestellt wird hier, gewirkt wird über die Bauten, die diese Güter
+           kosten. -->
+      {#if showPopulation}
+        <Panel title="Werkstatt" hint="Material und Arbeitszeit, kein O₂">
+          <WorkshopPanel />
+        </Panel>
+      {/if}
 
       <Panel title="Verbesserungen">
         <UpgradeGrid />
@@ -341,6 +358,27 @@
     margin: 0 auto;
     padding: 6px 20px 60px;
     align-items: start;
+  }
+
+  /*
+   * Die Übersicht kostet die Mitte keinen Platz, solange keiner da ist:
+   * unterhalb von 1320 px legt sie sich als Band über die volle Breite, und
+   * das bisherige Layout bleibt Zeile für Zeile, wie es war. Ihre eigene
+   * Form (Band oder Spalte) regelt StatusRail.svelte am selben Grenzwert.
+   */
+  main > :global(.rail) {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 1320px) {
+    main {
+      grid-template-columns: 216px minmax(0, 1fr) 320px;
+      max-width: 1440px;
+    }
+
+    main > :global(.rail) {
+      grid-column: auto;
+    }
   }
 
   .column {

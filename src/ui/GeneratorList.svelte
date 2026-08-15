@@ -104,6 +104,13 @@
         ? `Wohnraum für ${formatInt(total)}`
         : `Wohnraum für ${formatInt(def.baseRate)} pro Stück`
     }
+    if (out.kind === 'amenity') {
+      // Komfortpunkte, keine Rate — deshalb bewusst ohne „/s".
+      const total = generatorCount(def.id) * def.baseRate
+      return count > 0
+        ? `${formatInt(total)} Komfort`
+        : `${formatInt(def.baseRate)} Komfort pro Stück`
+    }
     if (out.kind === 'storage') {
       const total = generatorCount(def.id) * def.baseRate
       return count > 0

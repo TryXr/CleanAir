@@ -230,6 +230,34 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
     s.planet = planet
     return s
   },
+
+  /**
+   * M14: Zufriedenheit und die Werkstatt (§18).
+   *
+   * Die Bestellreihe trägt seit M14 ein `art`-Feld, weil dort jetzt auch
+   * Werkstattgüter stehen. Alles, was ein alter Stand enthält, ist eine
+   * Anlage — die Werkstatt gab es noch nicht.
+   *
+   * Zufriedenheit selbst braucht **kein** Feld: sie wird aus den stehenden
+   * Anlagen abgeleitet (systems/contentment.ts). Ein gespeicherter Wert
+   * könnte mit dem Save auseinanderlaufen und bräuchte ein eigenes
+   * Gegenstück; der abgeleitete hat beides nicht.
+   */
+  14: (s) => {
+    const planet = (s.planet ?? {}) as SaveShape
+    const sites = Array.isArray(planet.sites) ? planet.sites : []
+    planet.sites = sites.map((raw) => ({ ...((raw ?? {}) as object), art: 'anlage' }))
+    s.planet = planet
+
+    // Eingelagerte Planeten führen ihre eigene Reihe — sie gehören mit.
+    const run = (s.run ?? {}) as SaveShape
+    const planets = (run.planets ?? {}) as Record<string, SaveShape>
+    for (const stored of Object.values(planets)) {
+      const gelagert = Array.isArray(stored?.sites) ? stored.sites : []
+      if (stored) stored.sites = gelagert.map((raw) => ({ ...((raw ?? {}) as object), art: 'anlage' }))
+    }
+    return s
+  },
 }
 
 export interface MigrationResult {

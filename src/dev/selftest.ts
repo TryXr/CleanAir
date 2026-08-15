@@ -25,9 +25,16 @@ import { atmosphereSystem, n2Percent } from '../systems/atmosphere'
 import { meta } from '../state/meta.svelte'
 import { achievementsSystem } from '../systems/achievements'
 import { combatSystem } from '../systems/combat'
-import { buildRate, cancelSite, constructionSystem, orderGenerator } from '../systems/construction'
+import {
+  buildRate,
+  cancelSite,
+  constructionSystem,
+  orderGenerator,
+  orderGood,
+} from '../systems/construction'
+import { contentment } from '../systems/contentment'
 import { craftBlocker, craftingSystem } from '../systems/crafting'
-import { assign, assignBuilder, unassign } from '../systems/labor'
+import { assign, assignBuilder, handFactor, unassign } from '../systems/labor'
 import { housingCapacity, o2ConsumptionRate, populationSystem } from '../systems/population'
 import {
   clickGain,
@@ -318,8 +325,21 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
        verhungert — Versorgungsmangel senkt die Leistung, tötet aber nicht.
     --------------------------------------------------------------------- */
     freshRun()
-    check(r, 'Aurora startet mit Mannschaft', planet.settlers.eq(10), planet.settlers.toString())
+    check(r, 'Aurora startet mit Mannschaft', planet.settlers.eq(4), planet.settlers.toString())
     check(r, 'Aurora startet mit Rationen', planet.food.gt(0) && planet.water.gt(0))
+    /*
+     * Die Rationen hängen an der Kopfzahl, nicht an einer festen Menge: sonst
+     * verschwindet mit einer kleineren Mannschaft auch das Überlebensproblem,
+     * mit dem Aurora seit §17 anfängt. Zehn Minuten sind die Untergrenze zum
+     * Verstehen, dreißig wären eine Einladung zum Nichtstun.
+     */
+    const reichweite = planet.food.div(planet.settlers.mul(AURORA.foodPerCapita)).toNumber()
+    check(
+      r,
+      'Auroras Rationen reichen 10 bis 20 Minuten',
+      reichweite > 600 && reichweite < 1200,
+      `${Math.round(reichweite)} s`,
+    )
 
     /*
      * Geprüft wird an der Keimkammer, nicht an der Elektrolyse: seit der
@@ -495,6 +515,89 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       'Gebauter Wohnraum hebt die Kapazität',
       housingCapacity().toNumber() > bettenVorher,
       `${bettenVorher} → ${housingCapacity().toNumber()}`,
+    )
+
+    /* --- Zufriedenheit und Werkstatt (M14, §18) ---------------------------
+       Zwei Fehler, die hier möglich sind und beim Lesen nicht auffallen: ein
+       Bonus, der auch ohne Bewohner gilt, und ein Zuwachs, der die
+       Zufriedenheit *nicht* verdünnt — dann wäre sie einmal gebaut und für
+       immer voll, und das eingebaute Gegenstück wäre keins.
+    --------------------------------------------------------------------- */
+    freshRun()
+    planet.settlers = new Decimal(10)
+    planet.satiety = 1
+    const handOhne = handFactor()
+    check(r, 'Ohne Komfort ist die Handleistung unverändert', Math.abs(handOhne - 1) < 0.001, `${handOhne}`)
+
+    planet.generators = { commons: 5 }
+    const handMit = handFactor()
+    check(
+      r,
+      'Zufriedenheit hebt die Handleistung',
+      handMit > handOhne,
+      `${handOhne.toFixed(2)} → ${handMit.toFixed(2)}`,
+    )
+    check(r, 'Handleistung bleibt unter dem Doppelten', handMit <= 2.0001, `${handMit}`)
+
+    const zufriedenKlein = contentment()
+    planet.settlers = new Decimal(60)
+    check(
+      r,
+      'Zuwachs verdünnt die Zufriedenheit',
+      contentment() < zufriedenKlein,
+      `${zufriedenKlein.toFixed(2)} → ${contentment().toFixed(2)}`,
+    )
+
+    // Ein unbewohnter Planet hat keine zufriedenen Menschen, sondern keine.
+    planet.settlers = new Decimal(0)
+    check(r, 'Ohne Bewohner keine Zufriedenheit', contentment() === 0)
+
+    /* Die Werkstatt: Material sofort weg, Ware erst durch Arbeit. */
+    freshRun()
+    run.materials = { holz: new Decimal(40) }
+    const holzVorher = materialAmount('holz').toNumber()
+    const wareBestellt = orderGood('balken', 3)
+    check(r, 'Werkstatt nimmt die Bestellung an', wareBestellt)
+    check(r, 'Werkstatt bucht Material sofort ab', materialAmount('holz').toNumber() < holzVorher)
+    check(r, 'Ware liegt nicht sofort im Lager', materialAmount('balken').eq(0))
+    check(r, 'Werkstattstück steht in derselben Reihe', planet.sites[0]?.art === 'ware')
+
+    planet.settlers = new Decimal(6)
+    planet.satiety = 1
+    assignBuilder(3)
+    for (let i = 0; i < 300; i++) constructionSystem(1)
+    check(
+      r,
+      'Arbeit liefert die Ware',
+      materialAmount('balken').eq(3),
+      materialAmount('balken').toString(),
+    )
+
+    // Und der Abbruch gibt genau das zurück, was hineinging.
+    freshRun()
+    run.materials = { holz: new Decimal(40) }
+    const vorAbbruch = materialAmount('holz').toNumber()
+    orderGood('balken', 5)
+    cancelSite(0)
+    check(
+      r,
+      'Abbruch erstattet die Ware-Bestellung vollständig',
+      Math.abs(materialAmount('holz').toNumber() - vorAbbruch) < 0.01,
+      `${vorAbbruch} → ${materialAmount('holz').toNumber()}`,
+    )
+
+    /* Und durch den Save: eine Ware-Baustelle darf nicht zur Anlage werden. */
+    freshRun()
+    run.materials = { holz: new Decimal(40) }
+    orderGood('balken', 2)
+    const wareBlob = exportSave()
+    freshRun()
+    importSave(wareBlob)
+    check(
+      r,
+      'Save erhält die Ware-Baustelle',
+      planet.sites[0]?.art === 'ware' && planet.sites[0]?.id === 'balken',
+      JSON.stringify(planet.sites[0] ?? null),
     )
 
     /* --- Das Lager ist endlich (M11, §17) ---------------------------------

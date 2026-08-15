@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { findGenerator } from '../data/generators'
   import { formatInt, formatTime } from '../engine/format'
   import {
     buildRate,
     cancelSite,
     secondsUntilDone,
+    siteName,
     siteProgress,
   } from '../systems/construction'
   import { assignBuilder, canAssignBuilder, unassignBuilder, unassigned } from '../systems/labor'
@@ -61,41 +61,43 @@
 {:else}
   <ul>
     {#each sites as site, i (i)}
-      {@const def = findGenerator(site.id)}
-      {#if def}
-        {@const anteil = siteProgress(site)}
-        <li class:active={i === 0}>
-          <div class="info">
-            <div class="line">
-              <span class="name">{def.name}</span>
-              {#if site.remaining > 1}
-                <span class="left num">×{site.remaining}</span>
-              {/if}
-              <span class="eta num">{formatTime(secondsUntilDone(i))}</span>
-            </div>
-            <div class="bar" aria-hidden="true">
-              <div class="fill" style:width="{Math.round(anteil * 100)}%"></div>
-            </div>
-            <span class="state num">
-              {#if i === 0}
-                {Math.round(anteil * 100)} % am nächsten Stück
-              {:else}
-                wartet
-              {/if}
-            </span>
+      {@const anteil = siteProgress(site)}
+      <li class:active={i === 0}>
+        <div class="info">
+          <div class="line">
+            <span class="name">{siteName(site)}</span>
+            <!-- Anlage oder Ware: dieselbe Reihe, dieselbe Kolonne — aber man
+                 muss sehen, wofür die Hände gerade draufgehen. -->
+            {#if site.art === 'ware'}
+              <span class="tag">Werkstatt</span>
+            {/if}
+            {#if site.remaining > 1}
+              <span class="left num">×{site.remaining}</span>
+            {/if}
+            <span class="eta num">{formatTime(secondsUntilDone(i))}</span>
           </div>
+          <div class="bar" aria-hidden="true">
+            <div class="fill" style:width="{Math.round(anteil * 100)}%"></div>
+          </div>
+          <span class="state num">
+            {#if i === 0}
+              {Math.round(anteil * 100)} % am nächsten Stück
+            {:else}
+              wartet
+            {/if}
+          </span>
+        </div>
 
-          <!-- Abbrechen erstattet die noch nicht gebauten Stück vollständig.
-               Ein Fehlklick auf „Max" darf keine Strafe sein. -->
-          <button
-            class="cancel"
-            onclick={() => cancelSite(i)}
-            title="Abbrechen — offene Stück werden erstattet"
-          >
-            Abbrechen
-          </button>
-        </li>
-      {/if}
+        <!-- Abbrechen erstattet die noch nicht gebauten Stück vollständig.
+             Ein Fehlklick auf „Max" darf keine Strafe sein. -->
+        <button
+          class="cancel"
+          onclick={() => cancelSite(i)}
+          title="Abbrechen — offene Stück werden erstattet"
+        >
+          Abbrechen
+        </button>
+      </li>
     {/each}
   </ul>
 {/if}
@@ -204,6 +206,16 @@
   .left {
     font-size: 12px;
     color: var(--o2);
+  }
+
+  .tag {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--warn);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: 1px 7px;
   }
 
   .eta {

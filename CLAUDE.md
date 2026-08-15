@@ -26,6 +26,20 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M14 ist fertig: **Zufriedenheit ist der zweite Faktor auf dieselben Hände**
+(§18). Sie hebt die Handleistung von 100 % auf bis zu 200 % — der heutige
+Wert ist der *Startwert*, nicht die Obergrenze, damit keine der fünf
+Zieldauern aus §13 ungültig wird. Sie ist **abgeleitet, nicht gespeichert**:
+Komfort zählt pro Kopf, also verdünnt jeder neue Mensch sie von selbst, und
+das geforderte Gegenstück ist eingebaut statt angehängt. Sättigung und
+Zufriedenheit treffen sich ausschließlich in `handFactor()` — wer einen
+dritten Einfluss auf Hände hat, schreibt ihn dorthin.
+
+Dazu die **Werkstatt**: Güter kosten Material und Arbeitszeit, kein O₂, und
+stehen in **derselben Reihe** wie ein Hausbau (`BuildSite.art`). Dieselbe
+Kolonne kann in derselben Zeit ein Haus bauen oder Werkzeug machen — zwei
+getrennte Warteschlangen hätten die Entscheidung wegdefiniert.
+
 M13 ist fertig: **Jeder Planet hat einen Hand-Hebel an seiner eigenen
 Engstelle.** Eine O₂-Anlage mit Plätzen hebt die M10-Trennung „Maschine gegen
 Handarbeit" nicht auf — die Apparate laufen weiter von selbst —, sondern
@@ -179,7 +193,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 91 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 104 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in

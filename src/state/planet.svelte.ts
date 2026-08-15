@@ -4,6 +4,7 @@ import { ABILITIES } from '../data/abilities'
 import { DEFENSES } from '../data/defenses'
 import { EVENTS } from '../data/events'
 import { GENERATORS } from '../data/generators'
+import { GOODS } from '../data/goods'
 import { UPGRADES } from '../data/upgrades'
 import { readDecimal, readNumber, readString, writeDecimal } from '../engine/serialize'
 
@@ -31,7 +32,16 @@ export const FIRST_EVENT_DELAY = 150
  * dort weiter, während man auf Pyra steht.
  */
 export interface BuildSite {
-  /** Generator-id. */
+  /**
+   * Was hier entsteht (M14, §18).
+   *
+   * Anlagen und Werkstattgüter teilen sich **eine** Reihe und **eine**
+   * Kolonne. Das ist die Entscheidung, um die es geht: dieselben Hände können
+   * in derselben Zeit ein Haus bauen oder Werkzeug machen, nicht beides.
+   * Zwei getrennte Warteschlangen hätten die Wahl wegdefiniert.
+   */
+  art: 'anlage' | 'ware'
+  /** Generator-id oder Rezept-id, je nach `art`. */
   id: string
   /** Wie viele Stück aus dieser Bestellung noch entstehen sollen. */
   remaining: number
@@ -357,12 +367,19 @@ export function deserializePlanet(raw: unknown): void {
   const savedSites = Array.isArray(s.sites) ? s.sites : []
   planet.sites = savedSites
     .map((raw) => (raw ?? {}) as Record<string, unknown>)
-    .filter((site) => GENERATORS.some((def) => def.id === site.id))
     .map((site) => ({
+      // Ohne Angabe eine Anlage: so lasen sich Saves vor M14, und ein
+      // fehlendes Feld darf keine Baustelle verschlucken.
+      art: readString(site.art, 'anlage') === 'ware' ? ('ware' as const) : ('anlage' as const),
       id: readString(site.id, ''),
       remaining: Math.max(0, Math.floor(readNumber(site.remaining, 0))),
       progress: Math.max(0, readNumber(site.progress, 0)),
     }))
+    .filter((site) =>
+      site.art === 'ware'
+        ? GOODS.some((g) => g.id === site.id)
+        : GENERATORS.some((def) => def.id === site.id),
+    )
     .filter((site) => site.remaining > 0)
 
   planet.builders = Math.max(0, Math.floor(readNumber(s.builders, 0)))

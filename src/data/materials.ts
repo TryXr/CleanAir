@@ -102,6 +102,30 @@ export const MATERIALS: readonly MaterialDef[] = [
     description: 'Aus der Hochatmosphäre abgezapft. Wiegt nichts und ist überall knapp außer hier.',
     short: 'He',
   },
+
+  /* --- Werkstattgüter (M14, §18) -----------------------------------------
+     Die zweite Ebene über der Eisenkette: nichts davon kommt aus dem Boden,
+     und nichts davon entsteht nebenbei. Güter kosten Material *und*
+     Arbeitszeit und sind ihrerseits Baustoff für alles, was die Kolonie
+     erträglich macht.
+
+     Kein Planet hat beide Eingänge — Holz gibt es auf Vesta, Eisen auf
+     Aurora. Wer Zufriedenheit will, fliegt.
+  --------------------------------------------------------------------- */
+  {
+    id: 'balken',
+    name: 'Balken',
+    description: 'Zugesägt und gehobelt. Ein Baum wird zu etwas, worauf ein Dach liegen kann.',
+    short: 'Ba',
+    singular: 'Balken',
+  },
+  {
+    id: 'werkzeug',
+    name: 'Werkzeug',
+    description: 'Geschmiedet, gehärtet, mit einem Griff aus Holz. Verdoppelt, was dieselben Hände schaffen.',
+    short: 'Wz',
+    singular: 'Werkzeug',
+  },
 ]
 
 export function findMaterial(id: string): MaterialDef | undefined {

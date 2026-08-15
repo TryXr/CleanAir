@@ -4,6 +4,7 @@ import {
   findGenerator,
   type GasKind,
   type GeneratorDef,
+  type Output,
   type SupplyKind,
 } from '../data/generators'
 import { UPGRADES, findUpgrade } from '../data/upgrades'
@@ -61,11 +62,15 @@ interface Multipliers {
   global: Decimal
   /** Zusätzlich je nach Gasart — hier wirken Forschung und Techniker. */
   byGas: Record<GasKind, Decimal>
-  /** Zusätzlich je nach Ausgabeart. */
-  byKind: Record<
-    'plant' | 'fell' | 'material' | 'supply' | 'housing' | 'storage' | 'craft',
-    Decimal
-  >
+  /**
+   * Zusätzlich je nach Ausgabeart.
+   *
+   * Der Schlüssel ist aus `Output` abgeleitet statt aufgezählt: eine neue
+   * Ausgabeart bekommt so nicht stillschweigend den Faktor `undefined`,
+   * sondern lässt den Typecheck scheitern — dasselbe Muster wie bei
+   * GENERATOR_GROUPS.
+   */
+  byKind: Record<Exclude<Output['kind'], 'gas'>, Decimal>
   perGenerator: Record<string, Decimal>
 }
 
@@ -99,6 +104,10 @@ function collectMultipliers(): Multipliers {
       housing: new Decimal(1),
       storage: new Decimal(1),
       craft: new Decimal(1),
+      // Komfort ist wie Wohnraum eine Menge, keine Rate — und darf aus
+      // demselben Grund nicht multipliziert werden: ein Brand soll kein
+      // Badehaus halbieren.
+      amenity: new Decimal(1),
     },
     perGenerator: {},
   }
@@ -336,7 +345,8 @@ export function isAvailable(def: GeneratorDef, planetDef = currentPlanetDef()): 
       return planetDef.forestCapacity > 0 && planetDef.materials.includes('holz')
     case 'supply':
     case 'housing':
-      // Versorgung und Wohnraum gibt es nur, wo überhaupt jemand wohnt.
+    case 'amenity':
+      // Versorgung, Wohnraum und Komfort gibt es nur, wo jemand wohnt.
       return planetDef.allowsPopulation
     case 'storage':
       // Eine Lagerhalle, wo nichts gefördert wird, wäre eine Zeile ohne

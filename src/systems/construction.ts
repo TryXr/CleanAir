@@ -1,5 +1,6 @@
 import Decimal from 'break_infinity.js'
 import { findGenerator, type GeneratorDef } from '../data/generators'
+import { findGood, type GoodDef } from '../data/goods'
 import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { generatorCount, planet, type BuildSite } from '../state/planet.svelte'
@@ -48,11 +49,29 @@ export function activeSite(): BuildSite | undefined {
   return planet.sites[0]
 }
 
+/**
+ * Arbeitersekunden für *ein* Stück dieser Bestellung — Anlage oder Ware.
+ *
+ * Die eine Stelle, an der die Reihe beide Sorten auseinanderhält. Alles
+ * andere in diesem System rechnet nur noch mit dieser Zahl und muss den
+ * Unterschied nicht kennen.
+ */
+export function siteWork(site: BuildSite): number {
+  if (site.art === 'ware') return findGood(site.id)?.work ?? 0
+  return findGenerator(site.id)?.buildWork ?? 0
+}
+
+/** Wie das, was hier entsteht, in der Oberfläche heißt. */
+export function siteName(site: BuildSite): string {
+  const name = site.art === 'ware' ? findGood(site.id)?.name : findGenerator(site.id)?.name
+  return name ?? site.id
+}
+
 /** 0…1 — Fortschritt am aktuellen Stück der vordersten Baustelle. */
 export function siteProgress(site: BuildSite): number {
-  const def = findGenerator(site.id)
-  if (!def || def.buildWork <= 0) return 1
-  return Math.min(1, site.progress / def.buildWork)
+  const work = siteWork(site)
+  if (work <= 0) return 1
+  return Math.min(1, site.progress / work)
 }
 
 /**
@@ -67,9 +86,7 @@ export function secondsUntilDone(index: number): number {
   let work = 0
   for (let i = 0; i <= index && i < planet.sites.length; i++) {
     const site = planet.sites[i]!
-    const def = findGenerator(site.id)
-    if (!def) continue
-    work += def.buildWork * site.remaining - site.progress
+    work += siteWork(site) * site.remaining - site.progress
   }
   return work / rate
 }
@@ -110,7 +127,35 @@ export function orderGenerator(id: string, amount: number): boolean {
 
   // Ersetzen statt schieben — Svelte bemerkt ein push() auf einem $state-Array
   // zwar, aber die Ersetzung hält es einheitlich mit dem übrigen Code.
-  planet.sites = [...planet.sites, { id, remaining: amount, progress: 0 }]
+  planet.sites = [...planet.sites, { art: 'anlage', id, remaining: amount, progress: 0 }]
+  play('buy')
+  return true
+}
+
+/**
+ * Was einer Werkstatt-Bestellung im Weg steht — oder `null`.
+ *
+ * Kein O₂ in der Liste, und das ist Absicht: Güter kosten Material und
+ * Arbeitszeit (§18). O₂ als Währung ist der Weg, von dem §17 wegführt — ein
+ * neues System sollte ihn nicht wieder einführen.
+ */
+export function goodBlocker(def: GoodDef, amount: number): string | null {
+  if (amount < 1) return 'keine Menge'
+  if (!canAffordMaterials(def.input, amount)) return 'zu wenig Material'
+  return null
+}
+
+/**
+ * Bestellt Werkstattgüter. Material sofort weg, das Stück entsteht durch
+ * Arbeit — dieselbe Reihe, dieselbe Kolonne wie beim Bauen.
+ */
+export function orderGood(id: string, amount: number): boolean {
+  const def = findGood(id)
+  if (!def) return false
+  if (goodBlocker(def, amount) !== null) return false
+
+  spendMaterials(def.input, amount)
+  planet.sites = [...planet.sites, { art: 'ware', id, remaining: amount, progress: 0 }]
   play('buy')
   return true
 }
@@ -135,6 +180,20 @@ export function orderGenerator(id: string, amount: number): boolean {
 export function cancelSite(index: number): boolean {
   const site = planet.sites[index]
   if (!site) return false
+
+  // Eine Ware kostet kein O₂ und keine Menschen — es kommt genau das zurück,
+  // was hineingegangen ist.
+  if (site.art === 'ware') {
+    const good = findGood(site.id)
+    if (!good) return false
+    const offen = site.remaining
+    planet.sites = planet.sites.filter((_, i) => i !== index)
+    for (const [material, per] of Object.entries(good.input)) {
+      storeMaterial(material, new Decimal(per * offen))
+    }
+    return true
+  }
+
   const def = findGenerator(site.id)
   if (!def) return false
 
@@ -163,7 +222,20 @@ export function cancelSite(index: number): boolean {
  * weder für Produktion noch für Arbeitsplätze. Genau das ist der Punkt von
  * M11: eine bezahlte Anlage ist noch keine stehende.
  */
-function finishUnit(def: GeneratorDef): void {
+function finishUnit(site: BuildSite): void {
+  if (site.art === 'ware') {
+    const good = findGood(site.id)
+    if (!good) return
+    /*
+     * Über storeMaterial(), nicht über addMaterial() — die Lagergrenze aus
+     * M11 gilt auch für Werkstattgüter. Was keinen Platz findet, verfällt;
+     * was schon liegt, bleibt liegen.
+     */
+    storeMaterial(good.output, new Decimal(good.amount))
+    return
+  }
+  const def = findGenerator(site.id)
+  if (!def) return
   planet.generators[def.id] = generatorCount(def.id) + 1
 }
 
@@ -174,20 +246,20 @@ export function constructionSystem(dt: number): void {
   if (work <= 0) return
 
   let fertig = 0
-  let letzter: GeneratorDef | undefined
+  let letzter = ''
 
   while (work > 0 && planet.sites.length > 0) {
     const site = planet.sites[0]!
-    const def = findGenerator(site.id)
-    if (!def) {
-      // Kann nur passieren, wenn ein Generator aus den Daten verschwindet.
-      // Die Baustelle stillschweigend fallen lassen ist besser, als die
-      // ganze Reihe daran hängen zu lassen.
+    const stueckArbeit = siteWork(site)
+    if (stueckArbeit <= 0) {
+      // Kann nur passieren, wenn eine id aus den Daten verschwindet. Die
+      // Baustelle stillschweigend fallen lassen ist besser, als die ganze
+      // Reihe daran hängen zu lassen.
       planet.sites = planet.sites.slice(1)
       continue
     }
 
-    const fehlt = Math.max(0, def.buildWork - site.progress)
+    const fehlt = Math.max(0, stueckArbeit - site.progress)
     if (work < fehlt) {
       site.progress += work
       work = 0
@@ -196,9 +268,9 @@ export function constructionSystem(dt: number): void {
 
     // Ein Stück ist fertig.
     work -= fehlt
-    finishUnit(def)
+    finishUnit(site)
     fertig++
-    letzter = def
+    letzter = siteName(site)
 
     if (site.remaining <= 1) {
       planet.sites = planet.sites.slice(1)
@@ -211,8 +283,8 @@ export function constructionSystem(dt: number): void {
   if (fertig > 0 && letzter) {
     addLog(
       fertig === 1
-        ? `${letzter.name} steht.`
-        : `${fertig} Anlagen fertiggestellt, zuletzt ${letzter.name}.`,
+        ? `${letzter} fertig.`
+        : `${fertig} Stück fertiggestellt, zuletzt ${letzter}.`,
       'good',
     )
   }

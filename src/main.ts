@@ -19,6 +19,7 @@ import * as atmosphere from './systems/atmosphere'
 import * as events from './systems/events'
 import * as combat from './systems/combat'
 import * as construction from './systems/construction'
+import * as contentment from './systems/contentment'
 import * as crafting from './systems/crafting'
 import * as forest from './systems/forest'
 import * as labor from './systems/labor'
@@ -200,6 +201,7 @@ if (import.meta.env.DEV) {
       stopPersistence,
       resetPlanet,
       production,
+      contentment,
       crafting,
       atmosphere,
       population,

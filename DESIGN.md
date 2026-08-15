@@ -29,6 +29,7 @@
 15. [Offene Fragen](#15-offene-fragen)
 16. [Kurswechsel: Materialien, Planeten, Rakete](#16-kurswechsel-materialien-planeten-rakete)
 17. [Kurswechsel II: Die Kolonie](#17-kurswechsel-ii-die-kolonie)
+18. [Kurswechsel III: Zufriedenheit und die Werkstatt](#18-kurswechsel-iii-zufriedenheit-und-die-werkstatt)
 
 ---
 
@@ -1363,3 +1364,87 @@ Die Lehre ist nicht „besser hinsehen", sondern eine Zuständigkeit:
 - ~~**Der Arbeitskraft-Multiplikator** (`1 + √siedler / 40`) gehört
   ersetzt.~~ **Erledigt in der zweiten Hälfte von M13:** ersatzlos gestrichen,
   Hände wirken nur noch über Plätze.
+
+---
+
+## 18. Kurswechsel III: Zufriedenheit und die Werkstatt
+
+Entschieden nach M13. **Diese Sektion hat Vorrang vor §17**, wo sie ihr
+widerspricht.
+
+Der Auslöser: seit §17 sind Hände die knappe Ressource, aber ein Paar Hände
+leistet immer dasselbe. Die einzige Antwort auf jedes Problem heißt „mehr
+Leute" — und Leute atmen, wohnen und essen, sind also nie umsonst. Es fehlt
+der Weg, dieselben Menschen **besser** arbeiten zu lassen.
+
+### Drei Entscheidungen
+
+**1. Die heutige Leistung ist der Startwert, nicht die Obergrenze.**
+Zufriedenheit hebt die Handleistung von 100 % auf bis zu 200 %; sie startet
+bei null. Der naheliegendere Weg — bei 50 % anfangen und auf 100 % wachsen —
+wurde verworfen, weil er jede der fünf Zieldauern aus §13 ungültig macht,
+ohne dafür etwas anderes zu erzählen. Wer weniger als 100 % will, bekommt
+dasselbe Gefühl über eine Zufriedenheit, die bei null steht.
+
+**2. Zufriedenheit steht am Planeten, Güter liegen global.** Bauten stehen
+nun mal dort, wo sie gebaut wurden — jeder Planet baut seine Zufriedenheit
+selbst auf. Die Werkstatt-Güter dagegen liegen im Durchlauf-Lager und wirken
+überall, womit Fracht und Rückkehr denselben Sinn bekommen, den §16 für
+Material vorsieht.
+
+**3. Gegenstände sind eine Bestellung, kein Klick.** Kittens Game stellt sie
+sofort her; hier kosten sie Material **und Arbeitszeit**, wie jedes Gebäude
+seit M11. Ein sofortiger Klick wäre das erste im Spiel, das ohne Hände
+passiert, und damit ein Loch in §17. Beide Sorten Bestellung teilen sich
+dieselbe Reihe und dieselbe Kolonne — wer Werkzeug will, baut in dieser Zeit
+kein Haus. Genau das ist die Entscheidung.
+
+### Was Zufriedenheit *nicht* ist
+
+Sie ist **nicht die Sättigung**. Die gibt es seit M10, sie regelt dieselbe
+Zahl, und zwei Quellen für einen Wert sind der Fehler, an dem
+`workforceMultiplier()` und die Berufe gestorben sind. Die Trennung ist die
+Zeitskala:
+
+| | Quelle | Verhalten |
+|---|---|---|
+| **Sättigung** | Vorräte im Lager | schwankt stündlich, fällt bei Engpass sofort |
+| **Zufriedenheit** | Bauten und Güter | wächst über einen Planeten hinweg, fällt nur durch Zuwachs |
+
+Beide treffen sich an genau einer Stelle: `handFactor()` in labor.ts. Wer
+einen dritten Faktor auf dieselbe Zahl legen will, gehört ebenfalls dorthin.
+
+**Das Gegenstück zum Wachsen** (CLAUDE.md) ist eingebaut statt angehängt:
+Zufriedenheit ist der Ausbau **pro Kopf**. Wer die Kolonie wachsen lässt,
+verdünnt sie und muss nachbauen. Das braucht keinen Regler und keinen
+Verfall — mehr Menschen sind von selbst die Kehrseite.
+
+### Die Werkstatt
+
+Balken und Werkzeug entstehen aus Material, das anderswo gefördert wird, und
+sind ihrerseits Baustoff für alles, was Zufriedenheit bringt. Die Kette ist
+damit dieselbe Idee wie die Eisenkette aus M12, nur eine Ebene höher — und
+sie zwingt zum Reisen, weil kein Planet beide Eingänge hat.
+
+**Metallplatten bleiben, wo sie sind.** Die Walzpresse aus M12 stellt sie
+weiter laufend her; die Werkstatt macht *neue* Güter. Zwei Wege zur selben
+Ware wären zwei Systeme für dieselbe Sache.
+
+### Meilensteine
+
+| | Inhalt | Warum diese Reihenfolge |
+|---|---|---|
+| **M14** | Zufriedenheit als zweiter Faktor auf die Handleistung, Werkstatt mit Gütern auf Bestellung, Zufriedenheits-Bauten. | Braucht die Bestell-Reihe aus M11 und das globale Lager aus M12 |
+| **M15** | Der sechste Planet nach Nimbus — mit eigener Mechanik nach §11. | Erst wenn feststeht, wie weit Zufriedenheit trägt |
+
+### Offene Fragen dieses Kurswechsels
+
+- **Wie hoch darf die Obergrenze wirklich?** 200 % verdoppelt die Ausbeute
+  jeder Handarbeit. Ob das die späten Planeten trivialisiert, sagt nur eine
+  Simulation über Kryo und Nimbus.
+- **Bringt der sechste Planet eine neue Mechanik oder den Abschluss?** §11
+  verlangt eine neue; ein Finale, das nur das Vorhandene bündelt, wäre der
+  ehrlichere Schluss. Beides ist vertretbar, entschieden ist es nicht.
+- **Wirken gelagerte Luxusgüter auch ohne Verbau?** In Kittens Game tun sie
+  das. Hier zunächst nicht — Güter wirken, indem sie verbaut werden. Sonst
+  gäbe es wieder zwei Quellen für eine Zahl.

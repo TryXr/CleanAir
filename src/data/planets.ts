@@ -231,17 +231,32 @@ export const AURORA: PlanetDef = {
    * ersten Sekunde an das Thema — und nicht mehr eine Belohnung für 19 % O₂.
    */
   allowsPopulation: true,
-  startSettlers: 10,
+  /**
+   * Vier Menschen, nicht zehn.
+   *
+   * Bei zwölf Betten heißt das: die Landung füllt ihre eigenen Kapseln nur zu
+   * einem Drittel, und die ersten Zugewanderten sind ein sichtbarer Gewinn
+   * statt einer Randnotiz. Vier Hände sind außerdem zu wenige, um alles
+   * gleichzeitig zu besetzen — wer an die Erzmine geht, steht nicht am
+   * Flechtenfeld. Genau diese Entscheidung ist der Inhalt von §17.
+   */
+  startSettlers: 4,
   foodPerCapita: 0.0104,
   waterPerCapita: 0.0139,
   o2PerCapita: 0.03,
   /**
-   * Rationen für rund zwölf Minuten bei zehn Leuten. Lang genug, um in Ruhe
-   * zu verstehen, was zu tun ist; kurz genug, dass Nichtstun auffällt.
+   * Rationen für rund vierzehn Minuten — **mit der Mannschaft mitgeschrumpft**
+   * (vorher 90/120 für zehn Leute).
+   *
+   * Der Vorrat muss an der Kopfzahl hängen, sonst verschwindet mit den sechs
+   * Leuten auch der Druck: dieselben 90 Einheiten hätten vier Menschen 36
+   * Minuten lang ernährt, und das Überlebensproblem, mit dem Aurora seit §17
+   * anfängt, wäre keins mehr. Lang genug, um in Ruhe zu verstehen, was zu tun
+   * ist; kurz genug, dass Nichtstun auffällt.
    */
-  startFood: 90,
-  startWater: 120,
-  /** Die Landekapseln. Platz für die Mannschaft und zwei Nachkommen. */
+  startFood: 36,
+  startWater: 48,
+  /** Die Landekapseln. Platz für die Mannschaft und acht Zugewanderte. */
   baseHousing: 12,
 
   /** Sie sind schon da — es gibt keine Schwelle mehr zu überschreiten. */
