@@ -12,6 +12,15 @@
    * gäbe es zwei Orte für dieselbe Handlung, und einer davon wäre irgendwann
    * der veraltete. Die ausführliche Fassung mit Reichweite und Warnungen
    * bleibt im Versorgungs-Panel.
+   *
+   * **Eine Ausnahme: „O₂ freisetzen".** Sie ist keine Entscheidung, sondern
+   * die Grundhandlung des Spiels, und sie war bis eben nur im Reiter „Planet"
+   * erreichbar — wer unter „Aufbau" merkte, dass zehn O₂ fehlen, musste
+   * zurückwechseln, klicken und wieder vorwechseln. Die Warnung oben bleibt
+   * trotzdem gültig, deshalb steht der Knopf **einmal** in
+   * ReleaseButton.svelte und wird hier wie im Atmosphären-Panel nur
+   * eingesetzt. Zwei Kopien wären der veraltete Ort, vor dem dieser Absatz
+   * warnt.
    */
   import { findGenerator } from '../data/generators'
   import { format, formatInt, formatPercent, formatRate, formatTime } from '../engine/format'
@@ -27,6 +36,7 @@
     waterConsumption,
   } from '../systems/population'
   import { currentO2Rate, supplyRate } from '../systems/production'
+  import ReleaseButton from './ReleaseButton.svelte'
 
   const def = $derived(currentPlanetDef())
   const percent = $derived(o2Percent())
@@ -90,6 +100,9 @@
         </dd>
       </div>
     </dl>
+    <div class="klick">
+      <ReleaseButton kompakt />
+    </div>
   </section>
 
   {#if def.allowsPopulation}
@@ -299,5 +312,9 @@
 
   .line:first-of-type {
     margin-top: 0;
+  }
+
+  .klick {
+    margin-top: 9px;
   }
 </style>

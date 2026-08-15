@@ -11,8 +11,9 @@
     stabilityRequired,
     targetProgress,
   } from '../systems/atmosphere'
-  import { clickGain, currentN2Rate, currentO2Rate, releaseOxygen } from '../systems/production'
+  import { currentN2Rate, currentO2Rate } from '../systems/production'
   import { currentPlanetDef, planet, usesNitrogen } from '../state/planet.svelte'
+  import ReleaseButton from './ReleaseButton.svelte'
   import WindowBar from './WindowBar.svelte'
 
   const def = $derived(currentPlanetDef())
@@ -23,7 +24,6 @@
   const fire = $derived(fireIntensity())
   const rate = $derived(currentO2Rate())
   const n2Rate = $derived(currentN2Rate())
-  const gain = $derived(clickGain())
   const remaining = $derived(remainingToTarget())
 
   /** Erst wenn ein zweiter Wert dazukommt, lohnt die ausführliche Ansicht. */
@@ -65,10 +65,7 @@
   {/if}
 </div>
 
-<button class="release primary" onclick={releaseOxygen}>
-  <span>O₂ freisetzen</span>
-  <span class="gain num">+{format(gain)}</span>
-</button>
+<ReleaseButton />
 
 {#if isMixture}
   <div class="windows">
@@ -279,20 +276,4 @@
     font-weight: 600;
   }
 
-  .release {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 100%;
-    padding: 15px;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-  }
-
-  .gain {
-    color: var(--o2);
-    font-size: 13px;
-  }
 </style>
