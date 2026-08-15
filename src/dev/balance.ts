@@ -16,8 +16,13 @@ import {
 import { meta } from '../state/meta.svelte'
 import { planet, resetPlanet } from '../state/planet.svelte'
 import { run } from '../state/run.svelte'
-import { o2Percent, n2Percent, pollutionPercent } from '../systems/atmosphere'
-import { orderGenerator } from '../systems/construction'
+import {
+  n2Percent,
+  o2Percent,
+  pollutionPercent,
+  resetAtmosphereNotices,
+} from '../systems/atmosphere'
+import { orderBlocker, orderGenerator } from '../systems/construction'
 import {
   buildDefense,
   canBuildDefense,
@@ -28,7 +33,8 @@ import { contentment } from '../systems/contentment'
 import { reseedEvents } from '../systems/events'
 import { buyResearch, canBuyResearch } from '../systems/research'
 import { assignBuilder, canAssign, canAssignBuilder, handFactor, unassigned } from '../systems/labor'
-import { housingCapacity } from '../systems/population'
+import { housingCapacity, resetPopulationNotices } from '../systems/population'
+import { resetStorageNotices } from '../systems/storage'
 import { assign } from '../systems/labor'
 import { isAvailable, maxAffordable, releaseOxygen } from '../systems/production'
 import { travelTo } from '../systems/travel'
@@ -60,11 +66,22 @@ import { travelTo } from '../systems/travel'
  *     cleanair.balance.all()                 // alle fünf, als Tabelle
  *     cleanair.balance.compare('nimbus')     // mit und ohne Komfort
  *
- * **Was der simulierte Spieler kann — und was nicht.** Aurora 19,9 min
- * (§13: 15–25) und Vesta 38,4 min (§13: 30–45), beide im Fenster und ohne
- * jeden mitgeschleppten Fortschritt. Auf **Pyra bleibt er knapp über dem
- * O₂-Fenster** stehen (23,4 % bei erlaubten 23), Kryo und Nimbus sind noch
- * ungemessen.
+ * **Was der simulierte Spieler kann — und was nicht.** Gemessen ohne jeden
+ * mitgeschleppten Fortschritt:
+ *
+ * | Planet | gemessen | Ziel §13 | |
+ * |---|---|---|---|
+ * | Aurora | 24,9 min | 15–25 | im Fenster |
+ * | Vesta | 38,4 min | 30–45 | im Fenster |
+ * | Pyra | bricht bei ~145 min ein | 60–120 | Anoxen |
+ * | Kryo | 97,3 min | 120–240 | **zu schnell** |
+ * | Nimbus | 76,7 min | 120–240 | **zu schnell** |
+ *
+ * Auf **Pyra** bleibt genau ein bekannter Rest: der Planet steht sauber im
+ * Fenster (O₂ 22,4 %, N₂ 76,9 %, Schadstoffe 0,01 %) und bricht dann durch
+ * die Anoxen ein. Der Simulant baut zwar Verteidigung, aber je ein Stück pro
+ * Sorte und Entscheidung — das **skaliert nicht mit der Wellenstärke**, und
+ * Wellen wachsen mit dem Fortschritt (§7). Das ist der nächste Faden.
  *
  * Zwei ganze Systeme hat er anfangs ignoriert, und beide Male sah es aus wie
  * ein unbalancierter Planet:
@@ -79,9 +96,16 @@ import { travelTo } from '../systems/travel'
  *   190 war er auf 8,6 % O₂ und 59,8 % Schadstoffen zusammengebrochen. Wellen
  *   wachsen mit dem Fortschritt, also trifft es den, der weit kommt.
  *
+ * Ein drittes Mal dasselbe Muster, gefunden mit `abgelehnt`: der Simulant
+ * wies **jede** Hand einer Anlage zu, und Gebäude mit `populationCost`
+ * brauchen *freie* Leute. Der Nitrat-Cracker, an dem Pyras Puffer hängt,
+ * scheiterte 5120-mal an „zu wenige freie Bewohner", während Geld und Titan
+ * dalagen.
+ *
  * **Die Lehre für die nächste Balancing-Frage:** bevor eine Zahl in `data/`
  * angefasst wird, prüfen, ob der Simulant überhaupt alle Systeme benutzt, die
- * ein Mensch benutzen würde. Zweimal hintereinander war das die Ursache.
+ * ein Mensch benutzen würde. Dreimal hintereinander war das die Ursache — und
+ * jedes Mal sah es zuerst nach einem kaputten Planeten aus.
  *
  * Das ist ausdrücklich **kein Beleg, dass Pyra unbalanciert ist**: M13 hat
  * ihn bei 82,7 min gemessen, eine Strategie existiert also. Sie ist nur
@@ -140,6 +164,16 @@ export interface BalanceOptions {
   schritt?: number
   /** Startwert für die Ereignisse. Gleicher Wert = gleiche Stürme. */
   seed?: string
+  /**
+   * Sekunden zwischen zwei **Entscheidungen** des Simulanten.
+   *
+   * Nicht mit `schritt` zu verwechseln: die Systeme laufen weiter in
+   * Sekundenschritten, nur das Kaufen und Zuweisen passiert seltener. Das ist
+   * kein Genauigkeitsverlust, sondern näher am Menschen — niemand prüft
+   * zwanzigmal pro Sekunde seine Anlagenliste. Es macht lange Planeten
+   * überhaupt erst messbar: Pyra braucht zweieinhalb Stunden Spielzeit.
+   */
+  takt?: number
 }
 
 export interface BalanceResult {
@@ -168,6 +202,15 @@ export interface BalanceResult {
   warteschlange: number
   /** Mit Schrittweite > 1 gemessen und damit **nicht** belastbar. */
   grob: boolean
+  /**
+   * Abgelehnte Bestellungen, nach Grund gezählt: `"cracker: zu wenig O₂"`.
+   *
+   * Die Frage „warum baut er das nicht?" ist beim Debuggen eines Laufs die
+   * häufigste, und sie ist ohne diese Zahlen nicht zu beantworten — man sieht
+   * nur, dass etwas fehlt, nicht warum. Bei Pyras Nitrat-Cracker hat das
+   * Raten drei Anläufe gekostet.
+   */
+  abgelehnt: Record<string, number>
 }
 
 const STANDARD: Required<BalanceOptions> = {
@@ -177,6 +220,54 @@ const STANDARD: Required<BalanceOptions> = {
   maxMinuten: 300,
   schritt: 1,
   seed: 'balance',
+  /*
+   * Auch hier ist 1 der einzige belastbare Wert. Mit 5 ist der Simulant
+   * entscheidungsgebremst statt planetgebremst: Aurora fiel von 19,9 auf
+   * 26,3 min, Vesta schloss gar nicht mehr ab. Ausprobiert, weil lange
+   * Planeten sonst kaum messbar sind — die Antwort war stattdessen, die
+   * Entscheidung selbst billiger zu machen (siehe `listen`).
+   */
+  takt: 1,
+}
+
+/**
+ * Was auf diesem Planeten überhaupt gebaut werden kann.
+ *
+ * Einmal pro Lauf statt einmal pro Sekunde: `isAvailable` hängt nur am
+ * Planeten, ändert sich während eines Laufs also nie. Vorher lief für jede
+ * Entscheidung ein Filter über alle Generatoren — bei zweieinhalb Stunden
+ * Spielzeit sind das 9000 überflüssige Durchläufe.
+ */
+interface Listen {
+  alle: GeneratorDef[]
+  o2: GeneratorDef[]
+  n2: GeneratorDef[]
+  scrub: GeneratorDef[]
+  vent: GeneratorDef[]
+  supply: GeneratorDef[]
+  housing: GeneratorDef[]
+  amenity: GeneratorDef[]
+  mitPlaetzen: GeneratorDef[]
+  groessterBedarf: number
+}
+
+function sammelListen(): Listen {
+  const alle = GENERATORS.filter((g) => isAvailable(g))
+  const gas = (art: string): GeneratorDef[] =>
+    alle.filter((g) => g.output.kind === 'gas' && g.output.gas === art)
+  const art = (kind: string): GeneratorDef[] => alle.filter((g) => g.output.kind === kind)
+  return {
+    alle,
+    o2: gas('o2'),
+    n2: gas('n2'),
+    scrub: gas('scrub'),
+    vent: gas('vent'),
+    supply: art('supply'),
+    housing: art('housing'),
+    amenity: art('amenity'),
+    mitPlaetzen: alle.filter((g) => g.workSlots),
+    groessterBedarf: alle.reduce((max, g) => Math.max(max, g.populationCost ?? 0), 0),
+  }
 }
 
 /**
@@ -188,10 +279,20 @@ const STANDARD: Required<BalanceOptions> = {
  * unbalancierbarer Planet aussieht, ist eine schlechte Heuristik (M13,
  * Nimbus).
  */
-function entscheiden(def: PlanetDef, opts: Required<BalanceOptions>): void {
+function entscheiden(
+  def: PlanetDef,
+  opts: Required<BalanceOptions>,
+  listen: Listen,
+  abgelehnt: Record<string, number>,
+): void {
   const leute = planet.settlers.toNumber()
   const o2 = o2Percent()
   const n2 = n2Percent()
+
+  const notieren = (g: GeneratorDef, grund: string): void => {
+    const key = `${g.name}: ${grund}`
+    abgelehnt[key] = (abgelehnt[key] ?? 0) + 1
+  }
 
   const offen = (id: string): number =>
     planet.sites.filter((s) => s.id === id).reduce((a, s) => a + s.remaining, 0)
@@ -226,21 +327,38 @@ function entscheiden(def: PlanetDef, opts: Required<BalanceOptions>): void {
      * könnte, hält den Nachschub in Gang und lässt trotzdem Geld für die
      * nächste Stufe übrig.
      */
-    const menge = Math.max(1, Math.min(4, Math.floor(maxAffordable(g) / 4)))
+    let menge = Math.max(1, Math.min(4, Math.floor(maxAffordable(g) / 4)))
+    /*
+     * Menschenkosten deckeln die Menge.
+     *
+     * Sonst bestellt der Simulant zwei Nitrat-Cracker, bräuchte dafür 24
+     * freie Leute, hat aber nur die zwölf der Reserve — und die Bestellung
+     * scheitert *ganz*, statt ein Stück zu liefern. Auf Pyra blieb der Puffer
+     * genau daran hängen: 139 000 O₂ auf der Hand, Titan im Lager, und
+     * trotzdem null Cracker.
+     */
+    if (g.populationCost) {
+      menge = Math.min(menge, Math.floor(unassigned().toNumber() / g.populationCost))
+      if (menge < 1) {
+        notieren(g, 'zu wenige freie Bewohner')
+        return
+      }
+    }
+    const grund = orderBlocker(g, menge)
+    if (grund !== null) {
+      notieren(g, grund)
+      return
+    }
     orderGenerator(g.id, menge)
   }
 
-  const da = GENERATORS.filter((g) => isAvailable(g))
-  const gas = (art: string): GeneratorDef[] =>
-    da.filter((g) => g.output.kind === 'gas' && g.output.gas === art)
+  const gas = (art: 'o2' | 'n2' | 'scrub' | 'vent'): GeneratorDef[] => listen[art]
 
   // Erst leben, dann wachsen: Versorgung und Wohnraum vor allem anderen.
-  for (const g of da) {
-    if (g.output.kind === 'supply' && steht(g.id) < Math.ceil(leute / 3) + 1) kaufen(g)
-    if (g.output.kind === 'housing' && leute >= housingCapacity().toNumber() - 2) kaufen(g)
-    if (opts.komfort && g.output.kind === 'amenity' && steht(g.id) * g.baseRate < leute * 3) {
-      kaufen(g)
-    }
+  for (const g of listen.supply) if (steht(g.id) < Math.ceil(leute / 3) + 1) kaufen(g)
+  for (const g of listen.housing) if (leute >= housingCapacity().toNumber() - 2) kaufen(g)
+  if (opts.komfort) {
+    for (const g of listen.amenity) if (steht(g.id) * g.baseRate < leute * 3) kaufen(g)
   }
 
   /*
@@ -333,9 +451,7 @@ function entscheiden(def: PlanetDef, opts: Required<BalanceOptions>): void {
   // Rückfallkauf: wer nur „das gerade Nötige" kauft und es sich nicht leisten
   // kann, kauft sonst gar nichts und der Lauf stockt bei zwölffacher
   // Spielzeit (CLAUDE.md).
-  const billigste = da
-    .filter((g) => g.output.kind === 'gas' && g.output.gas === 'o2')
-    .sort((a, b) => a.baseCost - b.baseCost)[0]
+  const billigste = [...listen.o2].sort((a, b) => a.baseCost - b.baseCost)[0]
   if (billigste && o2 < def.o2Window.min && !def.n2Window) kaufen(billigste)
 
   /*
@@ -374,12 +490,50 @@ function entscheiden(def: PlanetDef, opts: Required<BalanceOptions>): void {
     if (canBuyResearch(node.id)) buyResearch(node.id)
   }
 
-  // Hände: erst an die Plätze, der Rest auf die Baustelle.
-  for (const g of da) {
-    if (!g.workSlots) continue
-    while (canAssign(g.id) && unassigned().gt(0)) assign(g.id, 1)
-  }
+  /*
+   * Hände an die Plätze — aber **nicht alle**.
+   *
+   * Manche Gebäude verschlucken beim Bau Menschen (`populationCost`), und
+   * `orderBlocker` verlangt dafür *freie*. Wer jede Hand sofort zuweist, kann
+   * sie nie mehr bauen. Auf Pyra ist das kein Randfall: dort hängt der Puffer
+   * am Nitrat-Cracker, der kostet zwölf Leute, und genau deshalb stand der
+   * Planet mit null Crackern bei 23,4 % O₂ über dem Fenster — es fehlte nicht
+   * an Geld, an Material oder an Zeit, sondern an zwölf Menschen, die nicht
+   * gerade an einer Anlage standen.
+   */
+  const groessterBedarf = listen.groessterBedarf
+  /*
+   * Die Reserve gilt erst, wenn die Kolonie sie sich leisten kann. Eine
+   * Siedlung von acht Leuten kann keine zwölf freihalten — sie hat dann
+   * niemanden an der Keimkammer, verhungert und arbeitet mit 25 %. Gemessen:
+   * Pyra mit fester Reserve bei 8 Bewohnern und 95,5 % Schadstoffen.
+   */
+  /*
+   * Die Reserve muss für **mehrere** Bauten reichen, nicht für die größte.
+   *
+   * Gemessen mit `abgelehnt`: mit einer Reserve von genau zwölf scheiterte
+   * der Nitrat-Cracker 5120-mal an „zu wenige freie Bewohner" — Hydroponik
+   * und Eisschmelze kosten ebenfalls Leute und werden vorher gekauft, also
+   * war der Topf jedes Mal leer, wenn der Cracker an der Reihe war. Ein
+   * Zuschlag von fünf Prozent der Bevölkerung deckt die Kleinen ab, ohne der
+   * Handarbeit ernsthaft etwas wegzunehmen.
+   */
+  const leuteGesamt = planet.settlers.toNumber()
+  const reserve =
+    leuteGesamt >= groessterBedarf * 4 ? groessterBedarf + Math.ceil(leuteGesamt * 0.05) : 0
+
+  /*
+   * **Die Baukolonne zuerst, dann die Plätze.**
+   *
+   * Andersherum frisst sie die Reserve auf: die Platz-Schleife lässt genau
+   * zwölf Leute frei, danach zieht die Kolonne drei davon ab, und die zwölf,
+   * die der Nitrat-Cracker braucht, sind nie beisammen. Gemessen — Pyra mit
+   * null Crackern bei 160 Minuten, obwohl Geld, Titan und Menschen da waren.
+   */
   if (planet.builders < 3 && canAssignBuilder()) assignBuilder(1)
+  for (const g of listen.mitPlaetzen) {
+    while (canAssign(g.id) && unassigned().toNumber() > reserve) assign(g.id, 1)
+  }
 }
 
 /** Ein Lauf auf einem Planeten. Verändert den Spielstand **nicht**. */
@@ -449,13 +603,15 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
     run.materials = fracht
 
     const def = PLANETS.find((p) => p.id === planetId) ?? AURORA
+    const listen = sammelListen()
+    const abgelehnt: Record<string, number> = {}
     const schritte = Math.floor((opts.maxMinuten * 60) / opts.schritt)
     let fertigBei: number | null = null
     let raketeBei: number | null = null
 
     for (let i = 1; i <= schritte; i++) {
       for (let k = 0; k < opts.clicks * opts.schritt; k++) releaseOxygen()
-      entscheiden(def, opts)
+      if ((i * opts.schritt) % opts.takt === 0) entscheiden(def, opts, listen, abgelehnt)
       runStep(opts.schritt)
 
       const sekunden = i * opts.schritt
@@ -482,10 +638,24 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
       guthaben: +planet.oxygen.toNumber().toFixed(0),
       warteschlange: planet.sites.reduce((a, s) => a + s.remaining, 0),
       grob: opts.schritt > 1,
+      abgelehnt,
       anlagen,
     }
   } finally {
     importSave(sicherung)
+    /*
+     * Und die Merker der Systeme mit zurück.
+     *
+     * `importSave` stellt den *Zustand* wieder her, aber nicht die
+     * modulinternen Flags, die doppelte Log-Meldungen verhindern („hungert
+     * schon", „brennt schon"). Ein Selbsttest direkt nach einem
+     * Balancing-Lauf meldete dadurch „Versorgung erholt sich wieder" als
+     * Fehler und nach einem Neuladen nicht — ein Werkzeug, das solche Spuren
+     * hinterlässt, macht die nächste Messung unerklärlich.
+     */
+    resetPopulationNotices()
+    resetAtmosphereNotices()
+    resetStorageNotices()
     if (!warGesperrt) resumePersistence()
   }
 }

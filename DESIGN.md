@@ -1472,6 +1472,24 @@ Ware wären zwei Systeme für dieselbe Sache.
   **Nächster Schritt ist deshalb kein Zahlendreh, sondern ein
   Balancing-Werkzeug**, das die Planeten reproduzierbar durchspielt, statt
   eine Heuristik pro Frage neu zu schreiben.
+
+  **Nachtrag, mit dem Werkzeug gemessen** (dev/balance.ts, sauberer Start
+  ohne Forschung, Meta-Baum oder Achievements):
+
+  | Planet | gemessen | Ziel §13 | |
+  |---|---|---|---|
+  | Aurora | 24,9 min | 15–25 | im Fenster |
+  | Vesta | 38,4 min | 30–45 | im Fenster |
+  | Pyra | bricht bei ~145 min durch die Anoxen ein | 60–120 | offen |
+  | Kryo | 97,3 min | 120–240 | **zu schnell** |
+  | Nimbus | 76,7 min | 120–240 | **zu schnell** |
+
+  Zur Obergrenze selbst: auf Vesta kostet voller Komfort 4,3 min (38,4 gegen
+  42,7). Sie trivialisiert dort also nichts. **Kryo und Nimbus liegen
+  dagegen deutlich unter ihrem Fenster** — aber das ist kein Befund über die
+  Zufriedenheit, sondern über die Planeten selbst: gemessen wurde *ohne*
+  Komfort. Bevor daran gedreht wird, muss Pyra messbar sein, sonst verschiebt
+  man Zahlen im Blindflug.
 - **Bringt der sechste Planet eine neue Mechanik oder den Abschluss?** §11
   verlangt eine neue; ein Finale, das nur das Vorhandene bündelt, wäre der
   ehrlichere Schluss. Beides ist vertretbar, entschieden ist es nicht.
