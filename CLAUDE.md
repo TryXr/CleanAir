@@ -267,9 +267,17 @@ Selbsttest lieferte ein anderes Ergebnis, weil dessen Forschung noch als
 Multiplikator stand. **Wer eine Balancing-Frage hat, erweitert dieses
 Werkzeug — er tippt keine neue Schleife in die Konsole.**
 
-Was sein simulierter Spieler kann, steht im Kopf der Datei: Aurora und Vesta
-trifft er (18,3 und 38,6 min gegen 16,9–23,8 und 41,9 aus M13), auf Pyra und
-Kryo scheitert er noch an der eigenen Rückkopplung.
+Was sein simulierter Spieler kann, steht im Kopf der Datei: Aurora schafft er
+(19,9 min), an Vesta, Pyra und Kryo scheitert er noch.
+
+> **Die Zahlen in §13 sind nicht sauber vergleichbar.** Sie stammen aus
+> Läufen mit Forschung, Meta-Upgrades und Achievements im Rücken; das
+> Werkzeug startet bewusst ohne all das. Derselbe Vesta-Aufruf ergab 38,6 min
+> mit stehengebliebenen Achievements und „schließt nicht ab" mit sauberer
+> Meta-Ebene. **`meta.stats` gehört deshalb mit zurückgesetzt**, obwohl dort
+> „reine Statistik" steht: die Achievements vergeben sich daraus und tragen
+> Produktionsboni — die Statistik fließt also sehr wohl in eine Spielformel
+> zurück, nur über eine Ecke.
 
 Zieldauern pro Planet stehen in DESIGN.md §13 und wurden bisher **simuliert,
 nicht geraten**. Im Dev-Build gibt `window.cleanair` in der Browser-Konsole

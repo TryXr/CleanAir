@@ -50,12 +50,21 @@ import { travelTo } from '../systems/travel'
  *     cleanair.balance.all()                 // alle fünf, als Tabelle
  *     cleanair.balance.compare('nimbus')     // mit und ohne Komfort
  *
- * **Was der simulierte Spieler kann — und was nicht.** Er beherrscht Aurora
- * (19,9 min gegen 16,9–23,8 gemessen in M13) und Vesta (41,0 gegen 41,9).
- * Auf **Pyra und Kryo scheitert er bislang**: er baut O₂-Industrie, bis der
+ * **Was der simulierte Spieler kann — und was nicht.** Aurora schafft er in
+ * 19,9 min (§13 will 15–25). Auf **Vesta, Pyra und Kryo scheitert er**.
+ *
+ * Wichtig für die Einordnung: er startet **ohne jeden Fortschritt** — keine
+ * Forschung, keine Meta-Upgrades, keine Achievements. Die Zahlen in §13
+ * stammen aus Läufen, die diese Boni hatten, und sind deshalb nicht direkt
+ * vergleichbar. Ein Vesta-Lauf, gemessen mit stehengebliebenen Achievements
+ * aus einem gespielten Tab, ergab 38,6 min; derselbe Aufruf mit sauberer
+ * Meta-Ebene schließt nicht ab und steht bei 23,0 % O₂ fest. Was davon der
+ * Planet ist und was der Regler, ist offen — beides ist plausibel.
+ *
+ * Auf Pyra kommt die eigene Industrie dazu: er baut O₂-Anlagen, bis der
  * Anteil stimmt, und der Anteil stimmt auf einem schmutzigen Planeten nie,
- * weil die Schadstoffe im Nenner mitwachsen. Das Ergebnis ist eine
- * Rückkopplung, die nicht konvergiert — 66,9 % Schadstoffe auf Pyra.
+ * weil die Schadstoffe im Nenner mitwachsen — eine Rückkopplung, die nicht
+ * konvergiert.
  *
  * Das ist ausdrücklich **kein Beleg, dass Pyra unbalanciert ist**: M13 hat
  * ihn bei 82,7 min gemessen, eine Strategie existiert also. Sie ist nur
@@ -63,6 +72,30 @@ import { travelTo } from '../systems/travel'
  * schreibe sie hierher und nicht in eine neue Konsolenzeile — der ganze
  * Zweck dieser Datei ist, dass die nächste Frage nicht wieder bei null
  * anfängt.
+ *
+ * ### Was ein zweiter Anlauf auf Pyra ergeben hat
+ *
+ * Vier Regeln ausprobiert und alle wieder ausgebaut, weil jede einen anderen
+ * Planeten kaputtmachte. Die Befunde sind trotzdem gültig und ersparen dem
+ * nächsten Versuch die Sackgassen:
+ *
+ * - **Die Formel steht in der Mechanik.** Dreck entsteht absolut
+ *   (`o2Rate × pollutionPerO2`), Wäscher entfernen anteilig. Im
+ *   Gleichgewicht ist der Bestand `o2Rate × pollutionPerO2 / scrubRate`. Wer
+ *   die nötige Waschleistung daraus ausrechnet statt auf den Pegel zu
+ *   reagieren, drückt Pyra von 91 % auf 4 % Schadstoffe und von 0 auf 153
+ *   Bewohner. Der Pegel ist die Folge und hinkt Minuten hinterher.
+ * - **Der Riegel „erst waschen, dann bauen" braucht einen Kaltstart.** Ohne
+ *   Waschleistung ist die Bedingung nie erfüllt, also wird nie der erste
+ *   Elektrolyseur gebaut: Vesta blieb bei 0 % O₂ und 95,2 % N₂ stehen.
+ * - **Über dem O₂-Fenster schließt sich eine Falle.** Es brennt, der Abbrand
+ *   drosselt die Produktion, ohne Produktion fehlt das O₂ für den Puffer,
+ *   ohne Puffer sinkt der Anteil nie wieder. Gemessen: Pyra bei 23,8 % O₂,
+ *   Guthaben 2476, Warteschlange leer — Stillstand. Auf die Untergrenze zu
+ *   zielen ist aber genauso falsch, dann fällt Vesta bei jedem Ausschlag
+ *   heraus.
+ * - **In Blöcken zu bestellen ruiniert die Kasse.** Fünf Sublimatoren am
+ *   Stück, danach kein bezahlbarer Elektrolyseur mehr.
  */
 
 export interface BalanceOptions {
@@ -74,7 +107,19 @@ export interface BalanceOptions {
   fracht?: number
   /** Abbruch nach so vielen Spielminuten. */
   maxMinuten?: number
-  /** Sekunden pro Schritt. Gröber ist schneller, feiner ist genauer. */
+  /**
+   * Sekunden pro Schritt.
+   *
+   * **Nur 1 liefert belastbare Zahlen.** Größere Schritte sind nicht bloß
+   * ungenauer, sie ändern das Ergebnis qualitativ: zwischen zwei
+   * Entscheidungen läuft der Atmosphärenwert weiter, und ein Planet mit
+   * Fenster schießt darüber hinaus. Gemessen — Vesta schließt mit `schritt:
+   * 1` in 38,6 min ab und mit `schritt: 2` **gar nicht**, bei sonst
+   * identischen Bedingungen.
+   *
+   * Gröber ist also nur für einen schnellen Blick auf einen langen Planeten
+   * brauchbar, und das Ergebnis trägt dann `grob: true`.
+   */
   schritt?: number
   /** Startwert für die Ereignisse. Gleicher Wert = gleiche Stürme. */
   seed?: string
@@ -94,6 +139,18 @@ export interface BalanceResult {
   handleistung: number
   /** Was am Ende stand — die Diagnose bei einem Lauf, der nicht fertig wird. */
   anlagen: Record<string, number>
+  /**
+   * O₂-Guthaben und offene Bestellungen am Ende.
+   *
+   * Die zwei Zahlen, an denen man einen steckengebliebenen Lauf erkennt:
+   * leeres Guthaben heißt „konnte nichts mehr kaufen", eine volle Reihe
+   * heißt „konnte nicht mehr bauen". Ohne sie rät man, warum nichts passiert
+   * ist — und rät dann an der falschen Stelle weiter.
+   */
+  guthaben: number
+  warteschlange: number
+  /** Mit Schrittweite > 1 gemessen und damit **nicht** belastbar. */
+  grob: boolean
 }
 
 const STANDARD: Required<BalanceOptions> = {
@@ -290,6 +347,35 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
     meta.achievements = []
     meta.research = new Decimal(0)
     meta.genesisCores = new Decimal(0)
+    meta.population = new Decimal(0)
+    meta.credits = new Decimal(0)
+    meta.planetsCompleted = 0
+    /*
+     * Die Statistik gehört mit zurückgesetzt, obwohl sie „nie in eine
+     * Spielformel zurückfließt".
+     *
+     * Sie fließt nämlich doch — über die Achievements. Die vergeben sich
+     * anhand der Statistik, und jedes trägt einen dauerhaften Bonus. Eine
+     * geleerte Achievement-Liste ist deshalb wertlos, solange die Zahlen
+     * darunter stehen bleiben: das System vergibt im ersten Tick alles
+     * wieder, was die alte Statistik hergibt.
+     *
+     * Gemessen: derselbe Vesta-Lauf ergab 38,6 min aus einem frischen Tab und
+     * „schließt nicht ab" aus einem Tab mit gespieltem Stand — bei
+     * identischem Aufruf. Zwei Läufe *innerhalb* einer Sitzung waren dagegen
+     * immer gleich, weshalb der Fehler beim Prüfen zunächst durchrutschte.
+     */
+    meta.stats.totalOxygen = new Decimal(0)
+    meta.stats.totalClicks = 0
+    meta.stats.eventsSeen = 0
+    meta.stats.eventsHandled = 0
+    meta.stats.fires = 0
+    meta.stats.bestPlanetSeconds = 0
+    meta.stats.runs = 0
+    meta.stats.wavesSeen = 0
+    meta.stats.wavesRepelled = 0
+    meta.stats.abilitiesUsed = 0
+    meta.stats.settlersLost = 0
 
     run.materials = {}
     run.planets = {}
@@ -332,6 +418,9 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
       bewohner: Math.round(planet.settlers.toNumber()),
       zufriedenheit: +contentment().toFixed(2),
       handleistung: +handFactor().toFixed(2),
+      guthaben: +planet.oxygen.toNumber().toFixed(0),
+      warteschlange: planet.sites.reduce((a, s) => a + s.remaining, 0),
+      grob: opts.schritt > 1,
       anlagen,
     }
   } finally {
@@ -401,7 +490,8 @@ export function table(results: BalanceResult[]): string {
               : 'im Fenster'
     const dauer = r.minuten === null ? '—' : `${r.minuten} min`
     const z = ziel ? `${ziel[0]}–${ziel[1]} min` : '—'
-    return `${r.planet.padEnd(8)} ${dauer.padStart(10)}  Ziel ${z.padEnd(12)} ${urteil}`
+    const warnung = r.grob ? '  (grob gemessen, nicht belastbar)' : ''
+    return `${r.planet.padEnd(8)} ${dauer.padStart(10)}  Ziel ${z.padEnd(12)} ${urteil}${warnung}`
   })
   return zeilen.join('\n')
 }
