@@ -267,17 +267,23 @@ Selbsttest lieferte ein anderes Ergebnis, weil dessen Forschung noch als
 Multiplikator stand. **Wer eine Balancing-Frage hat, erweitert dieses
 Werkzeug — er tippt keine neue Schleife in die Konsole.**
 
-Was sein simulierter Spieler kann, steht im Kopf der Datei: Aurora schafft er
-(19,9 min), an Vesta, Pyra und Kryo scheitert er noch.
+Was sein simulierter Spieler kann, steht im Kopf der Datei: Aurora (19,9 min)
+und Vesta (38,4 min) liegen im Fenster, Pyra bleibt knapp über der O₂-Grenze
+stehen, Kryo und Nimbus sind ungemessen.
 
-> **Die Zahlen in §13 sind nicht sauber vergleichbar.** Sie stammen aus
-> Läufen mit Forschung, Meta-Upgrades und Achievements im Rücken; das
-> Werkzeug startet bewusst ohne all das. Derselbe Vesta-Aufruf ergab 38,6 min
-> mit stehengebliebenen Achievements und „schließt nicht ab" mit sauberer
-> Meta-Ebene. **`meta.stats` gehört deshalb mit zurückgesetzt**, obwohl dort
-> „reine Statistik" steht: die Achievements vergeben sich daraus und tragen
-> Produktionsboni — die Statistik fließt also sehr wohl in eine Spielformel
-> zurück, nur über eine Ecke.
+> **Bevor eine Zahl in `data/` angefasst wird: benutzt der Simulant überhaupt
+> alle Systeme, die ein Mensch benutzen würde?** Zweimal hintereinander war
+> genau das die Ursache eines scheinbar unbalancierten Planeten. Er gab
+> **Forschung** nie aus — ohne sie schloss Vesta gar nicht ab, mit ihr steht
+> der Planet nach 38,4 min. Und er baute keine **Verteidigung** — Pyra stand
+> bei Minute 130 sauber im Fenster und war bei Minute 190 zusammengebrochen,
+> weil die Wellen mit dem Fortschritt wachsen (§7).
+
+> **`meta.stats` gehört beim Messen mit zurückgesetzt**, obwohl dort „reine
+> Statistik" steht: Achievements vergeben sich daraus und tragen
+> Produktionsboni. Die Statistik fließt also sehr wohl in eine Spielformel
+> zurück, nur über eine Ecke — und ein Lauf aus einem gespielten Tab misst
+> sonst die Boni mit.
 
 Zieldauern pro Planet stehen in DESIGN.md §13 und wurden bisher **simuliert,
 nicht geraten**. Im Dev-Build gibt `window.cleanair` in der Browser-Konsole

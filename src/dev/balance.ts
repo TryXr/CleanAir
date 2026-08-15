@@ -1,6 +1,9 @@
 import Decimal from 'break_infinity.js'
 import { GENERATORS, type GeneratorDef } from '../data/generators'
+import { ABILITIES } from '../data/abilities'
+import { DEFENSES } from '../data/defenses'
 import { MATERIALS } from '../data/materials'
+import { RESEARCH } from '../data/research'
 import { AURORA, PLANETS, type PlanetDef } from '../data/planets'
 import { runStep, stopLoop } from '../engine/loop'
 import {
@@ -15,8 +18,15 @@ import { planet, resetPlanet } from '../state/planet.svelte'
 import { run } from '../state/run.svelte'
 import { o2Percent, n2Percent, pollutionPercent } from '../systems/atmosphere'
 import { orderGenerator } from '../systems/construction'
+import {
+  buildDefense,
+  canBuildDefense,
+  canUseAbility,
+  useAbility,
+} from '../systems/combat'
 import { contentment } from '../systems/contentment'
 import { reseedEvents } from '../systems/events'
+import { buyResearch, canBuyResearch } from '../systems/research'
 import { assignBuilder, canAssign, canAssignBuilder, handFactor, unassigned } from '../systems/labor'
 import { housingCapacity } from '../systems/population'
 import { assign } from '../systems/labor'
@@ -50,21 +60,28 @@ import { travelTo } from '../systems/travel'
  *     cleanair.balance.all()                 // alle fünf, als Tabelle
  *     cleanair.balance.compare('nimbus')     // mit und ohne Komfort
  *
- * **Was der simulierte Spieler kann — und was nicht.** Aurora schafft er in
- * 19,9 min (§13 will 15–25). Auf **Vesta, Pyra und Kryo scheitert er**.
+ * **Was der simulierte Spieler kann — und was nicht.** Aurora 19,9 min
+ * (§13: 15–25) und Vesta 38,4 min (§13: 30–45), beide im Fenster und ohne
+ * jeden mitgeschleppten Fortschritt. Auf **Pyra bleibt er knapp über dem
+ * O₂-Fenster** stehen (23,4 % bei erlaubten 23), Kryo und Nimbus sind noch
+ * ungemessen.
  *
- * Wichtig für die Einordnung: er startet **ohne jeden Fortschritt** — keine
- * Forschung, keine Meta-Upgrades, keine Achievements. Die Zahlen in §13
- * stammen aus Läufen, die diese Boni hatten, und sind deshalb nicht direkt
- * vergleichbar. Ein Vesta-Lauf, gemessen mit stehengebliebenen Achievements
- * aus einem gespielten Tab, ergab 38,6 min; derselbe Aufruf mit sauberer
- * Meta-Ebene schließt nicht ab und steht bei 23,0 % O₂ fest. Was davon der
- * Planet ist und was der Regler, ist offen — beides ist plausibel.
+ * Zwei ganze Systeme hat er anfangs ignoriert, und beide Male sah es aus wie
+ * ein unbalancierter Planet:
  *
- * Auf Pyra kommt die eigene Industrie dazu: er baut O₂-Anlagen, bis der
- * Anteil stimmt, und der Anteil stimmt auf einem schmutzigen Planeten nie,
- * weil die Schadstoffe im Nenner mitwachsen — eine Rückkopplung, die nicht
- * konvergiert.
+ * - **Forschung.** Er sammelte Punkte und gab sie nie aus. Ohne sie schloss
+ *   Vesta *überhaupt nicht* ab und stand bei 23,0 % O₂ fest; mit ihr steht
+ *   der Planet nach 38,4 min. Das war der Unterschied zwischen „der Planet
+ *   ist kaputt" und „der Spieler war es".
+ * - **Verteidigung.** Auf Pyra sitzen die ersten Anoxen (§7). Der Einbruch
+ *   kommt spät und sieht deshalb nach etwas anderem aus: bei Minute 130 stand
+ *   der Planet sauber im Fenster (O₂ 21,5 %, Schadstoffe 0,04 %), bei Minute
+ *   190 war er auf 8,6 % O₂ und 59,8 % Schadstoffen zusammengebrochen. Wellen
+ *   wachsen mit dem Fortschritt, also trifft es den, der weit kommt.
+ *
+ * **Die Lehre für die nächste Balancing-Frage:** bevor eine Zahl in `data/`
+ * angefasst wird, prüfen, ob der Simulant überhaupt alle Systeme benutzt, die
+ * ein Mensch benutzen würde. Zweimal hintereinander war das die Ursache.
  *
  * Das ist ausdrücklich **kein Beleg, dass Pyra unbalanciert ist**: M13 hat
  * ihn bei 82,7 min gemessen, eine Strategie existiert also. Sie ist nur
@@ -226,6 +243,14 @@ function entscheiden(def: PlanetDef, opts: Required<BalanceOptions>): void {
     }
   }
 
+  /*
+   * Die Mitte des Fensters — zweimal gemessen, dass es die Mitte sein muss.
+   *
+   * Tiefer zu zielen (unteres Drittel) klingt sicherer, weil O₂ nur steigen
+   * kann. Es kostet aber genau das Tempo, das den Planeten ins Fenster
+   * bringt: Vesta fiel damit von 38,4 auf 104,7 min. Der Überschuss auf Pyra
+   * ist damit *nicht* über den Zielpunkt zu lösen.
+   */
   const o2Ziel = (def.o2Window.min + Math.min(def.o2Window.max, def.o2Window.min + 4)) / 2
 
   /*
@@ -312,6 +337,42 @@ function entscheiden(def: PlanetDef, opts: Required<BalanceOptions>): void {
     .filter((g) => g.output.kind === 'gas' && g.output.gas === 'o2')
     .sort((a, b) => a.baseCost - b.baseCost)[0]
   if (billigste && o2 < def.o2Window.min && !def.n2Window) kaufen(billigste)
+
+  /*
+   * Verteidigung, wo es Anoxen gibt (§7).
+   *
+   * Ohne diese Zeilen ignoriert der Simulant ein ganzes System — und das
+   * rächt sich nicht sofort, sondern nach über zwei Stunden: Pyra stand bei
+   * Minute 130 mit O₂ 21,5 %, N₂ 77,1 % und 0,04 % Schadstoffen sauber im
+   * Fenster und war bei Minute 190 auf 8,6 % O₂ und 59,8 % Schadstoffen
+   * zusammengebrochen. Die Wellen wachsen mit dem Fortschritt (§7), also
+   * trifft der Einbruch genau den, der weit gekommen ist.
+   *
+   * Bewusst je ein Stück von jeder Sorte statt „viel vom Billigsten": die
+   * Konter-Matrix in data/defenses.ts macht eine einseitige Verteidigung
+   * wertlos, und das gehört mitgemessen.
+   */
+  if (def.hasAnoxen) {
+    for (const d of DEFENSES) {
+      if (canBuildDefense(d.id)) buildDefense(d.id)
+    }
+    for (const a of ABILITIES) {
+      if (canUseAbility(a.id)) useAbility(a.id)
+    }
+  }
+
+  /*
+   * Forschung ausgeben, sobald sie reicht.
+   *
+   * Ohne diese vier Zeilen sammelte der Simulant Forschungspunkte an und gab
+   * sie nie aus — ein Spieler, der eine ganze Systemebene ignoriert. Die
+   * Reihenfolge ist bewusst die Datenreihenfolge und keine Bewertung: welcher
+   * Zweig sich lohnt, ist selbst eine Balancing-Frage und gehört nicht als
+   * stille Annahme in das Werkzeug, das sie beantworten soll.
+   */
+  for (const node of RESEARCH) {
+    if (canBuyResearch(node.id)) buyResearch(node.id)
+  }
 
   // Hände: erst an die Plätze, der Rest auf die Baustelle.
   for (const g of da) {
