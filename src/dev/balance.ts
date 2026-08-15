@@ -81,16 +81,21 @@ import { travelTo } from '../systems/travel'
  * | Planet | gemessen | Ziel §13 | |
  * |---|---|---|---|
  * | Aurora | 24,9 min | 15–25 | im Fenster |
- * | Vesta | 38,4 min | 30–45 | im Fenster |
- * | Pyra | bricht bei ~145 min ein | 60–120 | Anoxen |
- * | Kryo | 97,3 min | 120–240 | **zu schnell** |
- * | Nimbus | 76,7 min | 120–240 | **zu schnell** |
+ * | Vesta | 38,5 min | 30–45 | im Fenster |
+ * | Pyra | 73,1 min | 60–120 | im Fenster |
+ * | Kryo | 129,6 min | 120–240 | im Fenster |
+ * | Nimbus | 151,7 min | 120–240 | im Fenster |
+ * | Erebos | 176,7 min | 120–240 | im Fenster |
  *
- * Auf **Pyra** bleibt genau ein bekannter Rest: der Planet steht sauber im
- * Fenster (O₂ 22,4 %, N₂ 76,9 %, Schadstoffe 0,01 %) und bricht dann durch
- * die Anoxen ein. Der Simulant baut zwar Verteidigung, aber je ein Stück pro
- * Sorte und Entscheidung — das **skaliert nicht mit der Wellenstärke**, und
- * Wellen wachsen mit dem Fortschritt (§7). Das ist der nächste Faden.
+ * **Alle sechs stehen im Fenster** — ein Lauf, `maxMinuten: 240`, sonst
+ * Standardwerte. Die Reihenfolge stimmt dabei auch inhaltlich: jeder Planet
+ * dauert länger als der vorige, ohne dass eine Zahl dafür gestellt wurde.
+ *
+ * Frühere Einträge dieser Tabelle sind absichtlich nicht aufgehoben: sie
+ * behaupteten „Pyra bricht bei 145 min ein" und „Kryo/Nimbus zu schnell",
+ * und beides ist seit den Commits zu M13 erledigt. Eine Tabelle, die alte
+ * Befunde konserviert, schickt den nächsten Messversuch auf eine Fährte, die
+ * es nicht mehr gibt — die Lehren darunter bleiben, die Zahlen nicht.
  *
  * Zwei ganze Systeme hat er anfangs ignoriert, und beide Male sah es aus wie
  * ein unbalancierter Planet:
@@ -111,17 +116,23 @@ import { travelTo } from '../systems/travel'
  * scheiterte 5120-mal an „zu wenige freie Bewohner", während Geld und Titan
  * dalagen.
  *
+ * Ein **viertes** Mal, bei der ersten Messung von Erebos, und diesmal war es
+ * keine vergessene Möglichkeit, sondern eine Regel, die woanders richtig ist:
+ * `erstickt` verbietet O₂-Bau, solange die Schadstoffe über dem Doppelten des
+ * Fensters stehen. Auf Pyra ist das die Rettung — dort ist der Dreck selbst
+ * gemacht. Auf Erebos, der mit 60 % beginnt, griff die Sperre in der ersten
+ * Sekunde und ließ sich nie mehr lösen: nach 20 Minuten kein einziger
+ * Wäscher, Guthaben 89, Schadstoffe unverändert bei 59,97 %. Der Planet sah
+ * unlösbar aus und war es nicht — es fehlten die paar Elektrolysezellen, mit
+ * denen ein Mensch den ersten Wäscher bezahlt. Die Sperre hängt jetzt daran,
+ * ob überhaupt schon gewaschen wird.
+ *
  * **Die Lehre für die nächste Balancing-Frage:** bevor eine Zahl in `data/`
  * angefasst wird, prüfen, ob der Simulant überhaupt alle Systeme benutzt, die
- * ein Mensch benutzen würde. Dreimal hintereinander war das die Ursache — und
- * jedes Mal sah es zuerst nach einem kaputten Planeten aus.
- *
- * Das ist ausdrücklich **kein Beleg, dass Pyra unbalanciert ist**: M13 hat
- * ihn bei 82,7 min gemessen, eine Strategie existiert also. Sie ist nur
- * planetenspezifisch, und dieser Regler kennt sie nicht. Wer sie einbaut,
- * schreibe sie hierher und nicht in eine neue Konsolenzeile — der ganze
- * Zweck dieser Datei ist, dass die nächste Frage nicht wieder bei null
- * anfängt.
+ * ein Mensch benutzen würde — und ob eine Regel, die er befolgt, auf *diesem*
+ * Planeten dasselbe bedeutet wie auf dem, für den sie geschrieben wurde.
+ * Viermal hintereinander war das die Ursache, und jedes Mal sah es zuerst
+ * nach einem kaputten Planeten aus.
  *
  * ### Was ein zweiter Anlauf auf Pyra ergeben hat
  *
@@ -416,7 +427,36 @@ function entscheiden(
    * blockierten den O₂-Bau dauerhaft, der Planet blieb bei 16,9 % O₂ stehen,
    * obwohl er nur hätte weiterwaschen müssen.
    */
-  const erstickt = def.maxPollution !== undefined && pollutionPercent() > def.maxPollution * 2
+  /*
+   * **Aber nur, wenn schon gewaschen wird** (Erebos, M15).
+   *
+   * Die Regel oben ist auf Pyra entstanden, wo der Dreck *selbst gemacht*
+   * ist: erst steht die Industrie, dann steigt der Anteil, dann hilft nur
+   * aufhören. Erebos dreht das um — der Planet beginnt mit 60 % Schadstoffen,
+   * die Sperre greift also in der ersten Sekunde und lässt sich nie mehr
+   * lösen. Gemessen: nach 20 Minuten kein einziger Wäscher, Guthaben 89,
+   * Schadstoffe unverändert bei 59,97 %. Der Simulant war in genau die Falle
+   * gelaufen, vor der der Hinweis im Spiel jetzt warnt — nur andersherum: er
+   * hat gar kein O₂ mehr gemacht und konnte damit die 2000 für den Wäscher
+   * nie bezahlen.
+   *
+   * Ein Mensch tut dort das Naheliegende: ein paar Elektrolysezellen als
+   * Einkommen, davon den Wäscher, dann waschen. Die Sperre gehört deshalb an
+   * die Frage „kann ich überhaupt schon waschen".
+   *
+   * **Pyra ändert sich dadurch, und zwar messbar:** 84,5 min mit der alten
+   * Fassung, 73,1 min mit dieser — beide Zahlen im selben Lauf gemessen, nur
+   * diese eine Bedingung getauscht. Der Grund ist derselbe wie auf Erebos,
+   * nur kleiner: auch dort steigt der Dreck über das Doppelte, *bevor* der
+   * erste Wäscher steht, und in diesem Fenster hielt die alte Regel den
+   * Simulanten von beidem ab — bauen durfte er nicht, waschen konnte er
+   * nicht. Der Planet bleibt mit 73,1 min im Fenster (60–120), und die neue
+   * Fassung ist das ehrlichere Modell: niemand hört auf zu bauen, während er
+   * gegen die Verschmutzung noch gar nichts unternehmen kann.
+   */
+  const waescherStehen = listen.scrub.some((g) => (planet.generators[g.id] ?? 0) > 0)
+  const erstickt =
+    def.maxPollution !== undefined && pollutionPercent() > def.maxPollution * 2 && waescherStehen
 
   if (!def.n2Window) {
     // Ohne Fenster nach oben gibt es nichts abzuwägen: O₂, bis es reicht.
@@ -781,6 +821,15 @@ const ZIEL: Record<string, [number, number]> = {
   pyra: [60, 120],
   kryo: [120, 240],
   nimbus: [120, 240],
+  /*
+   * Erebos fällt unter dieselbe Zeile in §13 („4+: 2–4 h") wie Kryo und
+   * Nimbus. Bewusst kein eigenes, längeres Fenster, obwohl er der letzte
+   * Planet ist: seine Härte soll aus der **Reihenfolge** kommen — waschen,
+   * abblasen, atmen lassen —, nicht aus einer größeren Zahl. Wer ihn löst,
+   * hat verstanden, wie die Mischung rechnet; das ist die Prüfung, nicht die
+   * Dauer.
+   */
+  erebos: [120, 240],
 }
 
 /** Tabelle für die Konsole — Ergebnis neben Zielfenster. */

@@ -308,9 +308,12 @@ Selbsttest lieferte ein anderes Ergebnis, weil dessen Forschung noch als
 Multiplikator stand. **Wer eine Balancing-Frage hat, erweitert dieses
 Werkzeug — er tippt keine neue Schleife in die Konsole.**
 
-Was sein simulierter Spieler kann, steht im Kopf der Datei: Aurora (19,9 min)
-und Vesta (38,4 min) liegen im Fenster, Pyra bleibt knapp über der O₂-Grenze
-stehen, Kryo und Nimbus sind ungemessen.
+Was sein simulierter Spieler kann, steht im Kopf der Datei. **Seit dem
+Nachtrag zu M17 stehen alle sechs Planeten im Fenster** — Aurora 24,9 min,
+Vesta 38,5, Pyra 73,1, Kryo 129,6, Nimbus 151,7, Erebos 176,7, jeder länger
+als der vorige, ohne dass eine Zahl dafür gestellt wurde. Die Tabelle im
+Dateikopf ist der aktuelle Stand; wer sie ändert, ersetzt die Zahlen, statt
+alte danebenzustellen.
 
 > **Bevor eine Zahl in `data/` angefasst wird: benutzt der Simulant überhaupt
 > alle Systeme, die ein Mensch benutzen würde?** Zweimal hintereinander war
@@ -319,6 +322,14 @@ stehen, Kryo und Nimbus sind ungemessen.
 > der Planet nach 38,4 min. Und er baute keine **Verteidigung** — Pyra stand
 > bei Minute 130 sauber im Fenster und war bei Minute 190 zusammengebrochen,
 > weil die Wellen mit dem Fortschritt wachsen (§7).
+>
+> **Und die Fortsetzung davon, bei Erebos' erster Messung:** eine Regel, die
+> er befolgt, kann auf einem Planeten das Gegenteil bedeuten. Die Sperre
+> „bei zu viel Dreck kein O₂ bauen" rettet Pyra, wo der Dreck selbst gemacht
+> ist — auf Erebos, der mit 60 % beginnt, griff sie in der ersten Sekunde und
+> nie wieder anders: kein Wäscher, Guthaben 89, der Planet sah unlösbar aus.
+> **Ein umgekehrter Planet braucht die Regeln in beide Richtungen geprüft**,
+> nicht nur die Möglichkeiten abgehakt.
 
 > **`meta.stats` gehört beim Messen mit zurückgesetzt**, obwohl dort „reine
 > Statistik" steht: Achievements vergeben sich daraus und tragen

@@ -1556,16 +1556,27 @@ sich bringt, baut man keine Badehäuser.**
   | Planet | gemessen | Ziel §13 | |
   |---|---|---|---|
   | Aurora | 24,9 min | 15–25 | im Fenster |
-  | Vesta | 38,4 min | 30–45 | im Fenster |
-  | Pyra | 84,5 min | 60–120 | im Fenster |
+  | Vesta | 38,5 min | 30–45 | im Fenster |
+  | Pyra | 73,1 min | 60–120 | im Fenster |
   | Kryo | 129,6 min | 120–240 | im Fenster |
   | Nimbus | 151,7 min | 120–240 | im Fenster |
+  | Erebos | 176,7 min | 120–240 | im Fenster |
 
-  **Zum ersten Mal liegen alle fünf im Fenster**, gemessen mit demselben
-  Regler und ohne mitgeschleppten Fortschritt. Die Zahlen der letzten beiden
+  **Zum ersten Mal liegen alle sechs im Fenster**, gemessen mit demselben
+  Regler und ohne mitgeschleppten Fortschritt. Die Zahlen der mittleren drei
   stammen aus den Korrekturen weiter unten; Kryo und Nimbus waren nach der
   Wellen-Behebung auf 97,5 und 63,5 min gefallen — ein Teil ihrer früheren
   Spielzeit war die Spirale, nicht der Planet.
+
+  **Erebos ist im Nachtrag zu M17 dazugekommen** und war bis dahin nie
+  gemessen worden. Die Reihenfolge stimmt dabei auch inhaltlich: jeder Planet
+  dauert länger als der vorige, ohne dass eine Zahl dafür gestellt wurde —
+  die Staffelung entsteht aus den Mechaniken, nicht aus einem Regler. Beim
+  ersten Versuch sah er unlösbar aus, und die Ursache saß im Simulanten und
+  nicht im Planeten: seine Sperre „bei zu viel Dreck kein O₂ bauen" ist für
+  Pyra geschrieben, wo der Dreck selbst gemacht ist. Auf einem Planeten, der
+  vergiftet **beginnt**, verbietet dieselbe Regel genau den Zug, mit dem man
+  den ersten Wäscher bezahlt.
 
   Zur Obergrenze selbst: auf Vesta kostet voller Komfort 4,3 min (38,4 gegen
   42,7). Sie trivialisiert dort also nichts.
