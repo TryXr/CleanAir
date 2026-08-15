@@ -1463,11 +1463,49 @@ mehr Produktion, also denselben Überschuss eine Ecke weiter. **Nicht
 festgeschrieben**, weil eine halb gemessene Umgestaltung schlechter ist als
 ein benanntes Problem.
 
-Damit ist die wichtigste Frage vor M15: **worauf darf Zufriedenheit wirken,
-ohne das Fenster zu gefährden?** Kandidaten, die nichts beschleunigen, was
-geregelt ist: Verbrauch senken (weniger Atem oder Nahrung pro Kopf), Kosten
-senken, Zuwanderung erhöhen, oder Genesis-Kerne beim Abflug. Keiner davon ist
-gemessen.
+Danach wurden alle Kandidaten durchgemessen, jeweils Komfort gegen keinen
+Komfort:
+
+| Wirkung von Zufriedenheit | Vesta | Pyra |
+|---|---|---|
+| Hände | −4,1 min | −20,8 min |
+| geringerer Verbrauch | −4,1 | −29,2 |
+| billigere Anlagen | −2,7 | −22,3 |
+| mehr Zuwanderung | −4,1 | −29,4 |
+
+**Alle vier kosten Zeit.** Und der Gegentest schließt auch die Kosten als
+Erklärung aus: mit Bauzeit 3 und ohne Materialkosten — also fast geschenkt —
+wurde Pyra **117,1 min**, schlechter als mit dem teuren Komfort, weil dann
+noch mehr davon gebaut wird und der Überschuss noch größer ausfällt.
+
+### Die Lösung: Zufriedenheit zahlt auf den Abflug, nicht auf den Planeten
+
+Sie multipliziert seit dem Nachtrag zu M14 die **Biomasse** — und sonst
+nichts. Biomasse speist die Genesis-Kerne (§13) und damit den Meta-Baum; der
+Lohn kommt also nach dem Abflug und kann das Fenster strukturell nicht
+gefährden. Jeder andere Kanal beschleunigt etwas, das in ein Fenster treffen
+muss, und ist damit kein Geschenk, sondern ein Risiko.
+
+Für den Spieler ist es dadurch eine **echte Entscheidung** statt einer
+Pflichtübung: Komfort kostet Zeit auf diesem Planeten und zahlt auf den
+nächsten Durchlauf ein.
+
+| Planet | ohne Komfort | mit Komfort |
+|---|---|---|
+| Vesta | 38,4 min · 421 008 Biomasse | 42,5 min · 468 246 (+11 %) |
+| Pyra | 84,5 min · 1 023 922 | 113,9 min · 2 587 679 (+153 %) |
+
+Auf Pyra kostet voller Ausbau 29 Minuten und bringt zweieinhalbmal so viel
+Biomasse — über die Wurzelformel rund 1,6-mal so viele Kerne. Auf dem kurzen
+Vesta lohnt es sich kaum, weil der Komfort erst gegen Ende steht. Auch das ist
+eine Aussage und keine Panne: **auf einem Planeten, den man schnell hinter
+sich bringt, baut man keine Badehäuser.**
+
+> **Die Kerne runden, die Biomasse nicht.** Doppelte Biomasse sind nur
+> 1,41-mal so viele Kerne, und auf einem frühen Planeten verschwindet der
+> ganze Gewinn unter dem Abrunden. Wer die Wirkung von Komfort messen will,
+> schaut auf `biomasse` im Ergebnis des Balancing-Werkzeugs, nicht auf
+> `kerne`.
 
 ### Offene Fragen dieses Kurswechsels
 

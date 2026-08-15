@@ -26,14 +26,20 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
-M14 ist fertig: **Zufriedenheit ist der zweite Faktor auf dieselben Hände**
-(§18). Sie hebt die Handleistung von 100 % auf bis zu 200 % — der heutige
-Wert ist der *Startwert*, nicht die Obergrenze, damit keine der fünf
-Zieldauern aus §13 ungültig wird. Sie ist **abgeleitet, nicht gespeichert**:
-Komfort zählt pro Kopf, also verdünnt jeder neue Mensch sie von selbst, und
-das geforderte Gegenstück ist eingebaut statt angehängt. Sättigung und
-Zufriedenheit treffen sich ausschließlich in `handFactor()` — wer einen
-dritten Einfluss auf Hände hat, schreibt ihn dorthin.
+M14 ist fertig: **Zufriedenheit zahlt auf den Abflug, nicht auf den Planeten**
+(§18). Sie multipliziert die **Biomasse** und damit die Genesis-Kerne — und
+sonst nichts. Sie ist **abgeleitet, nicht gespeichert**: Komfort zählt pro
+Kopf, also verdünnt jeder neue Mensch sie von selbst, und das geforderte
+Gegenstück ist eingebaut statt angehängt.
+
+> **Ein Beschleuniger ist in diesem Spiel keine Belohnung.** Das Ziel ist ein
+> *Fenster*, kein Maximum — wer den Ausstoß erhöht, erhöht die Gefahr,
+> darüber hinauszuschießen, und über dem O₂-Fenster gibt es kein Zurück (§4).
+> Zufriedenheit wirkte einen halben Meilenstein lang auf die Handleistung;
+> mit verschenkter voller Zufriedenheit war Vesta **gar nicht mehr
+> abzuschließen**. Auch Verbrauch, Kosten und Zuwanderung wurden gemessen —
+> alle drei machten es schlimmer. Wer künftig einen Bonus einbaut, prüfe
+> zuerst, ob er auf etwas wirkt, das ins Fenster treffen muss.
 
 Dazu die **Werkstatt**: Güter kosten Material und Arbeitszeit, kein O₂, und
 stehen in **derselben Reihe** wie ein Hausbau (`BuildSite.art`). Dieselbe
@@ -193,7 +199,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 106 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 109 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in

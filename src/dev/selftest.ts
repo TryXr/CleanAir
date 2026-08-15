@@ -589,15 +589,52 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     const handOhne = handFactor()
     check(r, 'Ohne Komfort ist die Handleistung unverändert', Math.abs(handOhne - 1) < 0.001, `${handOhne}`)
 
+    /*
+     * Zufriedenheit darf die Handleistung **nicht** anfassen. Sie tat es
+     * einen halben Meilenstein lang, und das war die falsche Form: in einem
+     * Spiel, dessen Ziel ein Fenster ist, ist ein Beschleuniger keine
+     * Belohnung. Gemessen war Vesta mit verschenkter voller Zufriedenheit
+     * gar nicht mehr abzuschließen (§18).
+     */
     planet.generators = { commons: 5 }
     const handMit = handFactor()
     check(
       r,
-      'Zufriedenheit hebt die Handleistung',
-      handMit > handOhne,
+      'Zufriedenheit lässt die Handleistung in Ruhe',
+      Math.abs(handMit - handOhne) < 0.001,
       `${handOhne.toFixed(2)} → ${handMit.toFixed(2)}`,
     )
-    check(r, 'Handleistung bleibt unter dem Doppelten', handMit <= 2.0001, `${handMit}`)
+
+    /*
+     * Stattdessen zahlt sie auf die Biomasse und damit auf die Genesis-Kerne.
+     *
+     * Beide Proben mit **derselben** Kopfzahl: `populationSystem` lässt die
+     * Kolonie nebenbei wachsen, und ohne das Zurücksetzen misst man den
+     * Zuwachs mit — der Faktor lag dadurch bei 2,02 statt 2,00.
+     */
+    planet.generators = {}
+    planet.settlers = new Decimal(10)
+    planet.biomass = new Decimal(0)
+    populationSystem(10)
+    const biomasseOhne = planet.biomass.toNumber()
+
+    planet.generators = { commons: 5 }
+    planet.settlers = new Decimal(10)
+    planet.biomass = new Decimal(0)
+    populationSystem(10)
+    const biomasseMit = planet.biomass.toNumber()
+    check(
+      r,
+      'Zufriedenheit hebt die Biomasse',
+      biomasseMit > biomasseOhne * 1.01,
+      `${biomasseOhne.toFixed(2)} → ${biomasseMit.toFixed(2)}`,
+    )
+    check(
+      r,
+      'Biomasse bleibt unter dem Doppelten',
+      biomasseMit <= biomasseOhne * 2.0001,
+      `Faktor ${(biomasseMit / biomasseOhne).toFixed(2)}`,
+    )
 
     const zufriedenKlein = contentment()
     planet.settlers = new Decimal(60)

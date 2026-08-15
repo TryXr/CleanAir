@@ -64,13 +64,18 @@ export function contentment(): number {
 }
 
 /**
- * Der Faktor, mit dem Zufriedenheit die Handleistung multipliziert: 1,0 bis
+ * Der Faktor, mit dem Zufriedenheit die **Biomasse** multipliziert: 1,0 bis
  * 2,0.
  *
- * **Der heutige Wert ist der Startwert, nicht die Obergrenze** (§18). Der
- * naheliegendere Weg — bei 0,5 anfangen und auf 1,0 wachsen — hätte jede der
- * fünf Zieldauern aus §13 ungültig gemacht, ohne dafür etwas anderes zu
- * erzählen.
+ * Sie wirkt ausdrücklich **nicht** auf Ausstoß, Kosten, Verbrauch oder
+ * Zuwanderung. Alle vier wurden gemessen, und alle vier machten die Planeten
+ * *langsamer* — das Ziel dieses Spiels ist ein Fenster, kein Maximum, also
+ * ist ein Beschleuniger dort keine Belohnung, sondern ein Risiko (§18).
+ *
+ * Biomasse dagegen speist nur die Genesis-Kerne und damit den Meta-Baum. Der
+ * Lohn kommt nach dem Abflug und kann deshalb strukturell nichts kaputt
+ * machen. Für den Spieler ist es eine echte Entscheidung: Komfort kostet
+ * Bauzeit auf *diesem* Planeten und zahlt auf den *nächsten Durchlauf* ein.
  */
 export function contentmentFactor(): number {
   return 1 + contentment()

@@ -42,6 +42,7 @@ import {
   unassigned,
 } from '../systems/labor'
 import { housingCapacity, resetPopulationNotices } from '../systems/population'
+import { pendingCores } from '../systems/prestige'
 import { resetStorageNotices } from '../systems/storage'
 import { assign } from '../systems/labor'
 import { isAvailable, maxAffordable, releaseOxygen } from '../systems/production'
@@ -196,6 +197,23 @@ export interface BalanceResult {
   bewohner: number
   zufriedenheit: number
   handleistung: number
+  /**
+   * Genesis-Kerne, die dieser Lauf einbrächte.
+   *
+   * Seit dem Nachtrag zu M14 der einzige Ort, an dem sich Zufriedenheit
+   * auszahlt — eine Dauer allein kann den Komfort-Ausbau deshalb gar nicht
+   * bewerten. Wer nur auf Minuten schaut, hält jede Investition für Verlust.
+   */
+  kerne: number
+  /**
+   * Biomasse des Laufs — die ungerundete Fassung von `kerne`.
+   *
+   * Nötig, weil die Kernformel eine Wurzel mit Abrundung ist: doppelte
+   * Biomasse sind nur 1,41-mal so viele Kerne, und auf einem frühen Planeten
+   * verschwindet der ganze Gewinn unter der Rundung. Wer den Effekt von
+   * Komfort sehen will, schaut hierher.
+   */
+  biomasse: number
   /** Was am Ende stand — die Diagnose bei einem Lauf, der nicht fertig wird. */
   anlagen: Record<string, number>
   /**
@@ -693,6 +711,8 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
       bewohner: Math.round(planet.settlers.toNumber()),
       zufriedenheit: +contentment().toFixed(2),
       handleistung: +handFactor().toFixed(2),
+      kerne: pendingCores().toNumber(),
+      biomasse: +planet.biomass.toNumber().toFixed(0),
       guthaben: +planet.oxygen.toNumber().toFixed(0),
       warteschlange: planet.sites.reduce((a, s) => a + s.remaining, 0),
       grob: opts.schritt > 1,

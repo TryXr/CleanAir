@@ -1,7 +1,6 @@
 import Decimal from 'break_infinity.js'
 import { GENERATORS, findGenerator, type GeneratorDef } from '../data/generators'
 import { generatorCount, planet } from '../state/planet.svelte'
-import { contentmentFactor } from './contentment'
 
 /**
  * Arbeitskraft (DESIGN.md §17).
@@ -75,19 +74,23 @@ const SATIETY_FLOOR = 0.25
 
 /**
  * Wie viel ein Paar Hände gerade leistet — 0,25 bei leeren Vorräten, 1 bei
- * voller Sättigung, bis zu 2 bei voller Zufriedenheit.
+ * voller Sättigung.
  *
  * Eigene Funktion, weil seit M11 auch die Baustelle danach rechnet. Zweimal
  * dieselbe Formel hinzuschreiben hieße, sie beim nächsten Balancing genau
  * einmal zu ändern.
  *
- * **Die eine Stelle für alles, was auf Hände wirkt** (M14, §18). Sättigung
- * und Zufriedenheit greifen hier ineinander und nirgends sonst; wer einen
- * dritten Einfluss hat, schreibt ihn hierher und nicht in eine Formel. Genau
- * daran sind die Berufe und `workforceMultiplier()` gescheitert.
+ * **Zufriedenheit steht hier nicht mehr** (Nachtrag zu M14). Sie war einen
+ * halben Meilenstein lang der zweite Faktor an dieser Stelle, und das war die
+ * falsche Form: das Ziel dieses Spiels ist ein *Fenster*, kein Maximum, also
+ * erhöht ein Bonus auf den laufenden Ausstoß nicht den Erfolg, sondern die
+ * Gefahr, darüber hinauszuschießen. Gemessen — mit verschenkter voller
+ * Zufriedenheit war Vesta gar nicht mehr abzuschließen und Pyra fiel von 84,5
+ * auf 127,3 min. Sie zahlt jetzt auf die Biomasse und damit auf den Abflug
+ * ein (systems/contentment.ts).
  */
 export function handFactor(): number {
-  return (SATIETY_FLOOR + (1 - SATIETY_FLOOR) * planet.satiety) * contentmentFactor()
+  return SATIETY_FLOOR + (1 - SATIETY_FLOOR) * planet.satiety
 }
 
 /**

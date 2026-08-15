@@ -125,16 +125,20 @@
           <dt>Sättigung</dt>
           <dd class="num" class:bad={knapp}>{formatPercent(planet.satiety * 100, 0)}</dd>
         </div>
-        <!-- Zwei Zahlen, die dieselbe Leistung regeln, gehören nebeneinander:
-             sonst sucht man den Grund für langsame Hände an der falschen
-             Stelle. Sättigung schwankt, Zufriedenheit wird gebaut (§18). -->
-        <div>
-          <dt>Zufriedenheit</dt>
-          <dd class="num" class:accent={zufrieden > 0}>{formatPercent(zufrieden * 100, 0)}</dd>
-        </div>
         <div>
           <dt>Handleistung</dt>
           <dd class="num">{formatPercent(handFactor() * 100, 0)}</dd>
+        </div>
+        <!-- Zufriedenheit steht bewusst *nicht* neben der Handleistung: sie
+             wirkt seit dem Nachtrag zu M14 nicht mehr auf sie, sondern auf
+             die Biomasse und damit auf die Genesis-Kerne (§18). Der Faktor
+             daneben sagt, was sie tatsächlich bringt. -->
+        <div>
+          <dt>Zufriedenheit</dt>
+          <dd class="num" class:accent={zufrieden > 0}>
+            {formatPercent(zufrieden * 100, 0)}
+            <span class="rate">×{(1 + zufrieden).toFixed(2)} Biomasse</span>
+          </dd>
         </div>
       </dl>
     </section>

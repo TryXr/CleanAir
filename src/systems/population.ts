@@ -4,6 +4,7 @@ import { currentPlanetDef, generatorCount, planet } from '../state/planet.svelte
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { effectiveO2Window, o2Percent } from './atmosphere'
+import { contentmentFactor } from './contentment'
 import { eventEffects } from './eventEffects'
 import { enforceStaffLimit } from './labor'
 import { metaEffects } from './metaEffects'
@@ -182,7 +183,22 @@ export function populationSystem(dt: number): void {
     planet.airO2 = planet.airO2.sub(consumed)
     if (planet.airO2.lt(0)) planet.airO2 = new Decimal(0)
 
-    planet.biomass = planet.biomass.add(planet.settlers.mul(BIOMASS_PER_SETTLER).mul(dt))
+    /*
+     * **Hier zahlt sich Zufriedenheit aus** (Nachtrag zu M14).
+     *
+     * Biomasse speist die Genesis-Kerne (§13) und sonst nichts. Damit ist sie
+     * der einzige Kanal, der eine zufriedene Kolonie belohnen kann, ohne das
+     * O₂-Fenster zu gefährden: Kerne wirken erst nach dem Abflug, im
+     * Meta-Baum. Jeder andere Kanal — Ausstoß, Kosten, Verbrauch, Zuwanderung
+     * — beschleunigt etwas, das ohnehin in ein Fenster treffen muss, und
+     * wurde gemessen als *Verschlechterung* (§18).
+     *
+     * Die Fiktion trägt es ohne Umweg: Biomasse ist, wie gut das Leben hier
+     * gedeiht. Zufriedene Menschen sind genau das.
+     */
+    planet.biomass = planet.biomass.add(
+      planet.settlers.mul(BIOMASS_PER_SETTLER).mul(contentmentFactor()).mul(dt),
+    )
     meta.research = meta.research.add(researchRate().mul(dt))
   }
 
