@@ -193,7 +193,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 104 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 106 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -248,6 +248,28 @@ ein Mensch. **Anzeigetabellen gehören deshalb nach `data/`, nicht in die
 Komponente:** was nur die `.svelte`-Datei kennt, kann keine Prüfung sehen.
 
 ## Balancing prüfen statt schätzen
+
+**Seit M14 gibt es dafür ein Werkzeug** — [dev/balance.ts](src/dev/balance.ts),
+in der Konsole unter `cleanair.balance`:
+
+```js
+cleanair.balance.run('vesta')        // ein Lauf, mit Diagnose am Ende
+cleanair.balance.table(...)          // Ergebnis neben dem Zielfenster aus §13
+cleanair.balance.compare('vesta')    // mit und ohne Komfort, mehrfach
+```
+
+Es fährt die **echten Systeme in der echten Reihenfolge** (`runStep` aus
+loop.ts), setzt die Ereignisse auf einen festen Startwert und stellt den
+Spielstand danach wieder her. Alle drei Punkte sind Lehrgeld: eine
+handgetippte Heuristik hatte Bau und Bevölkerung vertauscht, zwei Läufe
+derselben Frage sahen verschiedene Stürme, und ein Lauf direkt nach dem
+Selbsttest lieferte ein anderes Ergebnis, weil dessen Forschung noch als
+Multiplikator stand. **Wer eine Balancing-Frage hat, erweitert dieses
+Werkzeug — er tippt keine neue Schleife in die Konsole.**
+
+Was sein simulierter Spieler kann, steht im Kopf der Datei: Aurora und Vesta
+trifft er (18,3 und 38,6 min gegen 16,9–23,8 und 41,9 aus M13), auf Pyra und
+Kryo scheitert er noch an der eigenen Rückkopplung.
 
 Zieldauern pro Planet stehen in DESIGN.md §13 und wurden bisher **simuliert,
 nicht geraten**. Im Dev-Build gibt `window.cleanair` in der Browser-Konsole

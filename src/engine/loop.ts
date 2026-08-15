@@ -39,6 +39,24 @@ export function runTicks(count: number): void {
   for (let i = 0; i < count; i++) tick()
 }
 
+/**
+ * Ein Schritt mit frei gewähltem `dt` — für das Balancing-Werkzeug.
+ *
+ * Ein Lauf über zwei Stunden Spielzeit sind bei 20 Hz 144 000 Ticks; in
+ * Sekundenschritten sind es 7200. Deshalb grob schreiten zu dürfen ist der
+ * Unterschied zwischen „misst man mal eben" und „misst man nie".
+ *
+ * Der Grund, warum das hier steht und nicht im Werkzeug: die
+ * **Reihenfolge** der Systeme ist Balancing (siehe registerSystem) und darf
+ * nur an einer Stelle stehen. Ein Werkzeug, das sie abschreibt, misst
+ * irgendwann ein anderes Spiel als das laufende — genau so ist der erste
+ * Messversuch nach M14 danebengegangen: er hatte Bau und Bevölkerung
+ * vertauscht und Ereignisse gar nicht.
+ */
+export function runStep(dt: number): void {
+  for (const s of systems) s.fn(dt)
+}
+
 let catchUp = false
 
 /**

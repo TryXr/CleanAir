@@ -1,4 +1,5 @@
 import Decimal from 'break_infinity.js'
+import { runPlanet } from './balance'
 import { GENERATOR_GROUPS, GENERATORS, findGenerator, groupOf } from '../data/generators'
 import { AURORA, PLANETS } from '../data/planets'
 import { ROCKETS } from '../data/rockets'
@@ -516,6 +517,31 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       housingCapacity().toNumber() > bettenVorher,
       `${bettenVorher} → ${housingCapacity().toNumber()}`,
     )
+
+    /* --- Das Balancing-Werkzeug fasst den Spielstand nicht an --------------
+       Dieselbe Gefahr wie beim Selbsttest, und in diesem Projekt schon
+       zweimal eingetreten: ein Lauf, der den echten Stand überschreibt. Ein
+       Werkzeug, das ganze Planeten durchspielt, ist die schlimmste denkbare
+       Variante davon — es hinterließe eine fertig simulierte Kolonie.
+    --------------------------------------------------------------------- */
+    freshRun()
+    planet.generators = { electrolysis: 7 }
+    planet.airO2 = new Decimal(4711)
+    /*
+     * Verglichen wird der Zustand, nicht die Exportdatei: die trägt einen
+     * Zeitstempel und unterscheidet sich deshalb immer von sich selbst.
+     */
+    const zustand = (): string =>
+      JSON.stringify([planet.id, planet.generators, planet.airO2.toString(), planet.sites.length])
+    const vorLauf = zustand()
+    runPlanet('aurora', { maxMinuten: 1 })
+    check(
+      r,
+      'Balancing-Lauf lässt den Spielstand unverändert',
+      zustand() === vorLauf,
+      `${vorLauf} → ${zustand()}`,
+    )
+    check(r, 'Balancing-Lauf hält die Speichersperre', isPersistenceSuspended())
 
     /* --- Zufriedenheit und Werkstatt (M14, §18) ---------------------------
        Zwei Fehler, die hier möglich sind und beim Lesen nicht auffallen: ein

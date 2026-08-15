@@ -25,7 +25,20 @@ import { addOxygen, currentO2Rate } from './production'
 const MIN_GAP = 180
 const MAX_GAP = 400
 
-const rng = createRng(`ereignisse:${Date.now()}`)
+let rng = createRng(`ereignisse:${Date.now()}`)
+
+/**
+ * Setzt den Zufall der Ereignisse auf einen festen Startwert.
+ *
+ * Nur für das Balancing-Werkzeug (dev/balance.ts): zwei Läufe, die
+ * verschiedene Stürme abbekommen, sind nicht vergleichbar, und ohne
+ * Vergleichbarkeit misst man das Rauschen statt der Änderung. Im Spiel wird
+ * das nie aufgerufen — dort ist die Zeit der Startwert, damit nicht jeder
+ * Durchlauf dieselbe Wetterlage hat.
+ */
+export function reseedEvents(seed: string | number): void {
+  rng = createRng(seed)
+}
 
 /** Führt der Planet die Mechanik, die dieses Ereignis braucht? */
 function isPossible(def: EventDef): boolean {

@@ -44,6 +44,7 @@ import { GENERATORS } from './data/generators'
 import { ACHIEVEMENTS } from './data/achievements'
 import { MATERIALS } from './data/materials'
 import { ROCKETS } from './data/rockets'
+import { compare, runAll, runPlanet, table } from './dev/balance'
 import { selftest } from './dev/selftest'
 import { run } from './state/run.svelte'
 import { META_UPGRADES } from './data/metaUpgrades'
@@ -217,6 +218,8 @@ if (import.meta.env.DEV) {
       travel,
       run,
       selftest,
+      /** Balancing-Werkzeug (§13). Fasst den Spielstand nicht an. */
+      balance: { run: runPlanet, all: runAll, compare, table },
       audio: { unlockAudio, play: playSound, isAudioReady },
       // Für Save-Rundläufe im Test: exportieren, Zustand zerstören,
       // importieren und prüfen, ob wirklich alles zurückkommt.
