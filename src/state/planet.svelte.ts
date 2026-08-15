@@ -78,11 +78,17 @@ function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new De
      * Trennung erzeugt die Spannung aus DESIGN.md §5: mehr Bevölkerung heißt
      * mehr Produktion *und* fallender Atmosphärenwert.
      */
-    airO2: startingOxygen,
+    /*
+     * Ein Planet mit vorhandener Atmosphäre bringt seine eigenen Werte mit
+     * (M15). `startingOxygen` ist der Meta-Bonus auf das *Guthaben* und hat
+     * damit nichts zu tun — auf Erebos steht die Luft schon voll, und das
+     * Konto ist trotzdem leer.
+     */
+    airO2: def.startAirO2 !== undefined ? new Decimal(def.startAirO2) : startingOxygen,
     /** Der N₂-Puffer. Verdünnt alles andere, sonst nichts (§4). */
-    airN2: new Decimal(0),
+    airN2: new Decimal(def.startAirN2 ?? 0),
     /** CO₂, CH₄, SO₂ — zusammengefasst zu einem Wert. */
-    pollution: new Decimal(0),
+    pollution: new Decimal(def.startPollution ?? 0),
 
     /**
      * Sekunden, die *alle* Werte am Stück im Fenster stehen. Fällt einer

@@ -33,6 +33,22 @@ export interface PlanetDef {
    */
   baseAtmosphere: number
 
+  /**
+   * Was schon in der Luft steht, wenn man ankommt (M15).
+   *
+   * Fehlt es, startet der Planet leer — so war es bis Nimbus, und deshalb
+   * hieß Terraforming bisher immer *aufbauen*. Erebos kehrt das um: dort
+   * steht eine fertige Atmosphäre, nur die falsche, und der erste Zug ist
+   * Abbau statt Aufbau.
+   *
+   * Bewusst drei getrennte Werte statt eines „Verschmutzungsgrads": die
+   * Atmosphäre ist eine Mischung (§4), und welcher der drei Töpfe zu voll ist,
+   * entscheidet, welches Werkzeug hilft — Wäscher, Ventil oder Verdünnung.
+   */
+  startAirO2?: number
+  startAirN2?: number
+  startPollution?: number
+
   /** Zielfenster für O₂. Über `max` brechen Brände aus (§4). */
   o2Window: Window
   /**
@@ -562,8 +578,97 @@ export const NIMBUS: PlanetDef = {
   popCapacity: 180,
 }
 
+/**
+ * Erebos — der sechste Planet (M15, §18).
+ *
+ * **Die eine neue Sache hier ist kein neues System, sondern ein umgekehrtes
+ * Problem.** Fünf Planeten lang hieß Terraforming: aus nichts etwas machen.
+ * Erebos hat schon eine Atmosphäre, dicht und vollständig — sie ist nur
+ * vergiftet. Der erste Zug ist Abbau.
+ *
+ * Das erfüllt §11 dem Sinn nach, ohne ihm dem Buchstaben nach zu folgen: es
+ * gibt keine sechste Mechanik zu lernen. Stattdessen werden die drei
+ * *Gegenstücke*, die das Spiel längst hat und die bisher immer Beiwerk waren,
+ * zum Hauptdarsteller — Wäscher gegen den Dreck, Ventil gegen den Puffer,
+ * Verdünnung gegen zu viel O₂. Ein Finale, das ein sechstes System aufmacht,
+ * bündelt nichts; es fängt noch einmal an.
+ *
+ * Der Weg ist bewusst dreistufig und in dieser Reihenfolge zwingend:
+ *
+ * 1. **Waschen.** 60 % Schadstoffe drücken alles andere unter sein Fenster.
+ *    Solange sie stehen, ist kein Anteil zu retten.
+ * 2. **Abblasen.** Ist der Dreck weg, schnellt der Puffer auf rund 87 % — weit
+ *    über sein Fenster. Wer hier weiter N₂ macht, hat nichts verstanden.
+ * 3. **Atmen lassen.** Erst dann fehlt Sauerstoff, und zwar viel.
+ *
+ * Wer die Reihenfolge vertauscht, arbeitet gegen sich: O₂ in eine Luft zu
+ * pumpen, die zu 60 % aus Dreck besteht, verpufft im Nenner.
+ */
+export const EREBOS: PlanetDef = {
+  id: 'erebos',
+  name: 'Erebos',
+  intro:
+    'Hier war schon jemand. Die Luft ist dicht, warm und tödlich — jemand hat diesen Planeten terraformt und dabei verloren. Du bekommst seine Atmosphäre, nicht seine Notizen.',
+
+  baseAtmosphere: 1000000,
+
+  /*
+   * Der Startzustand ist der ganze Planet. Gerechnet, nicht gegriffen:
+   * zusammen mit `baseAtmosphere` ergibt das rund 4 % Inertgas, 1 % O₂,
+   * 35 % N₂ und 60 % Schadstoffe. Nach vollständiger Wäsche stünde der Puffer
+   * bei etwa 87 % und damit über seinem Fenster — genau deshalb sind Ventil
+   * *und* Wäscher nötig und nicht nur eines von beiden.
+   */
+  startAirO2: 250000,
+  startAirN2: 8750000,
+  startPollution: 15000000,
+
+  o2Window: { min: 19, max: 23 },
+  n2Window: { min: 74, max: 80 },
+  maxPollution: 1,
+  /** Die alte Industrie qualmt nicht mehr. Deine schon. */
+  pollutionPerO2: 0.2,
+
+  /** Der längste Atem des Spiels — es ist die letzte Prüfung. */
+  stabilitySeconds: 360,
+  hasEvents: true,
+
+  hasAnoxen: true,
+  /**
+   * Weniger Druck als auf Nimbus, und das ist Absicht: Erebos' Widerstand
+   * soll aus seiner Luft kommen, nicht aus den Wellen. Pyra hat vorgeführt,
+   * wie schnell die Anoxen sonst das eigentliche Thema eines Planeten
+   * überdecken (§18).
+   */
+  anoxenPressure: 0.9,
+
+  /** Rostrot unter braunem Smog. */
+  palette: { rock: '#6b4a3a', sky: '#4a3a2a', accent: '#c88a5a' },
+
+  /**
+   * **Erebos gibt nichts her.** Kein Vorkommen, kein Wald — was hier gebaut
+   * wird, ist mitgebracht. Das ist die letzte Konsequenz aus §16: der Planet,
+   * auf dem sich entscheidet, ob man vorher Lager angelegt hat.
+   */
+  materials: [],
+  forestCapacity: 0,
+
+  growthFactor: 0.8,
+  allowsPopulation: true,
+  startSettlers: 0,
+  foodPerCapita: 0.0104,
+  waterPerCapita: 0.0139,
+  o2PerCapita: 0.03,
+  startFood: 0,
+  startWater: 0,
+  baseHousing: 8,
+  /** Man kann hier von Anfang an landen — die Luft ist ohnehin nicht atembar. */
+  settleAt: 0,
+  popCapacity: 240,
+}
+
 /** Reihenfolge = Fortschritt. Die Rakete eines Planeten öffnet den nächsten. */
-export const PLANETS: readonly PlanetDef[] = [AURORA, VESTA, PYRA, KRYO, NIMBUS]
+export const PLANETS: readonly PlanetDef[] = [AURORA, VESTA, PYRA, KRYO, NIMBUS, EREBOS]
 
 export function findPlanet(id: string): PlanetDef | undefined {
   return PLANETS.find((p) => p.id === id)

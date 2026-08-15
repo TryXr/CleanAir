@@ -1435,7 +1435,7 @@ Ware wären zwei Systeme für dieselbe Sache.
 | | Inhalt | Warum diese Reihenfolge |
 |---|---|---|
 | **M14** | Zufriedenheit als zweiter Faktor auf die Handleistung, Werkstatt mit Gütern auf Bestellung, Zufriedenheits-Bauten. | Braucht die Bestell-Reihe aus M11 und das globale Lager aus M12 |
-| **M15** | Der sechste Planet nach Nimbus — mit eigener Mechanik nach §11. | Erst wenn feststeht, wie weit Zufriedenheit trägt |
+| **M15** ✓ | Erebos — der sechste Planet. Er hat schon eine Atmosphäre, die falsche. | Erst wenn feststeht, wie weit Zufriedenheit trägt |
 
 ### Zufriedenheit hat die falsche Form — gemessen, nicht vermutet
 
@@ -1635,3 +1635,42 @@ die füllen.
 - **Wirken gelagerte Luxusgüter auch ohne Verbau?** In Kittens Game tun sie
   das. Hier zunächst nicht — Güter wirken, indem sie verbaut werden. Sonst
   gäbe es wieder zwei Quellen für eine Zahl.
+
+### M15: Erebos — Abbau statt Aufbau
+
+**Die offene Frage war, ob der sechste Planet eine sechste Mechanik bekommt
+(§11) oder ein Finale wird, das bündelt. Die Antwort ist beides — über ein
+umgekehrtes Problem statt über ein neues System.**
+
+Fünf Planeten lang hieß Terraforming: aus nichts etwas machen. Erebos hat
+schon eine Atmosphäre, dicht und vollständig, und sie ist vergiftet. Jemand
+war vor dir hier und hat verloren.
+
+Damit werden die drei **Gegenstücke**, die das Spiel längst hat und die bisher
+immer Beiwerk waren, zum Hauptdarsteller: Wäscher gegen den Dreck, Ventil
+gegen den Puffer, Verdünnung gegen zu viel O₂. Ein Finale, das ein sechstes
+System aufmacht, bündelt nichts — es fängt noch einmal an.
+
+Der Weg ist dreistufig und die Reihenfolge zwingend:
+
+| | Zustand | Werkzeug |
+|---|---|---|
+| Ankunft | O₂ 1 %, N₂ 35 %, Schadstoffe 60 % | — |
+| nach der Wäsche | N₂ **87 %**, über seinem Fenster | Wäscher |
+| nach dem Abblasen | Puffer im Fenster, O₂ fehlt | Ventil |
+| zuletzt | O₂ von 2,5 auf 19 % | Produktion |
+
+Wer die Reihenfolge vertauscht, arbeitet gegen sich: O₂ in eine Luft zu
+pumpen, die zu 60 % aus Dreck besteht, verpufft im Nenner.
+
+**Erebos gibt nichts her** — kein Vorkommen, kein Wald. Was dort gebaut wird,
+ist mitgebracht. Das ist die letzte Konsequenz aus §16: der Planet, auf dem
+sich entscheidet, ob man vorher Lager angelegt hat.
+
+Gemessen im ersten Anlauf: **231,5 min** bei einem Zielfenster von 2–4 h. Der
+Lauf zeigt genau die gemeinte Form — 39 Wäscher, 6 Ventile, Schadstoffe auf
+null, am Ende O₂ 21,4 % und N₂ 76,0 %.
+
+Sein `anoxenPressure` liegt bei 0,9 und damit unter Nimbus' 1,4. Das ist
+Absicht: Erebos' Widerstand soll aus seiner Luft kommen. Pyra hat vorgeführt,
+wie schnell die Anoxen sonst das eigentliche Thema eines Planeten überdecken.

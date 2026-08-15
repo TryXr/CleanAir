@@ -26,6 +26,15 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M15 ist fertig: **Erebos hat schon eine Atmosphäre, die falsche.** Sechs
+Planeten, aber kein sechstes System — die neue Sache ist ein umgekehrtes
+Problem. `startAirO2`, `startAirN2` und `startPollution` in
+[data/planets.ts](src/data/planets.ts) füllen die Luft beim Ankommen, und
+damit werden die drei Gegenstücke (Wäscher, Ventil, Verdünnung) vom Beiwerk
+zum Hauptdarsteller. Die Reihenfolge ist zwingend: waschen, abblasen, atmen
+lassen — O₂ in eine Luft zu pumpen, die zu 60 % aus Dreck besteht, verpufft
+im Nenner.
+
 M14 ist fertig: **Zufriedenheit zahlt auf den Abflug, nicht auf den Planeten**
 (§18). Sie multipliziert die **Biomasse** und damit die Genesis-Kerne — und
 sonst nichts. Sie ist **abgeleitet, nicht gespeichert**: Komfort zählt pro
@@ -199,7 +208,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 109 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 113 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in

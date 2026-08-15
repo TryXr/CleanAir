@@ -22,7 +22,7 @@ import {
   serializePlanet,
 } from '../state/planet.svelte'
 import { materialAmount, run } from '../state/run.svelte'
-import { atmosphereSystem, n2Percent } from '../systems/atmosphere'
+import { atmosphereSystem, n2Percent, o2Percent, pollutionPercent } from '../systems/atmosphere'
 import { meta } from '../state/meta.svelte'
 import { achievementsSystem } from '../systems/achievements'
 import { combatSystem } from '../systems/combat'
@@ -516,6 +516,39 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       'Gebauter Wohnraum hebt die Kapazität',
       housingCapacity().toNumber() > bettenVorher,
       `${bettenVorher} → ${housingCapacity().toNumber()}`,
+    )
+
+    /* --- Erebos beginnt mit der falschen Atmosphäre (M15) ------------------
+       Der ganze Planet steht und fällt mit seinem Startzustand. Wäre er leer,
+       wäre es Nimbus mit anderen Zahlen — und die drei Gegenstücke, um die es
+       geht, blieben Beiwerk wie überall sonst.
+    --------------------------------------------------------------------- */
+    freshRun()
+    travelTo('erebos')
+    check(
+      r,
+      'Erebos startet mit voller Luft',
+      planet.pollution.gt(0) && planet.airN2.gt(0),
+      `O₂ ${planet.airO2}, N₂ ${planet.airN2}, Dreck ${planet.pollution}`,
+    )
+    check(
+      r,
+      'Erebos startet außerhalb aller drei Fenster',
+      pollutionPercent() > 1 && n2Percent() < 74 && o2Percent() < 19,
+      `${o2Percent().toFixed(1)} / ${n2Percent().toFixed(1)} / ${pollutionPercent().toFixed(1)}`,
+    )
+    /*
+     * Und die Reihenfolge, die den Planeten ausmacht: **erst waschen**. Ist
+     * der Dreck weg, steht der Puffer über seinem Fenster — deshalb braucht
+     * es danach das Ventil. Ohne diese Eigenschaft wäre der Wäscher der
+     * einzige nötige Griff und der Planet eine Fingerübung.
+     */
+    planet.pollution = new Decimal(0)
+    check(
+      r,
+      'Nach der Wäsche steht der Puffer über dem Fenster',
+      n2Percent() > 80,
+      `N₂ ${n2Percent().toFixed(1)} %`,
     )
 
     /* --- Wellen eskalieren nur, was überstanden ist (§1.2) -----------------
