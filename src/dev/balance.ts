@@ -27,6 +27,8 @@ import {
   buildDefense,
   canBuildDefense,
   canUseAbility,
+  defensePower,
+  requiredDefense,
   useAbility,
 } from '../systems/combat'
 import { contentment } from '../systems/contentment'
@@ -469,8 +471,25 @@ function entscheiden(
    * wertlos, und das gehört mitgemessen.
    */
   if (def.hasAnoxen) {
-    for (const d of DEFENSES) {
-      if (canBuildDefense(d.id)) buildDefense(d.id)
+    /*
+     * **So viel Verteidigung, wie die nächste Welle verlangt.**
+     *
+     * Je ein Stück pro Sorte und Entscheidung zu bauen reicht nicht: Wellen
+     * wachsen geometrisch (Faktor 1,28 je Welle), eine feste Baurate wächst
+     * linear. Gemessen — Pyra stand bei 120 Minuten sauber im Fenster und war
+     * bei 145 Minuten auf 48,5 % Schadstoffen, weil die Wellen davongezogen
+     * waren. Die Schwelle kommt aus combat.ts und nicht aus einer Faustregel
+     * hier: eine Welle steht 75 Sekunden, also zählt Schaden *pro Sekunde*.
+     *
+     * Der Zuschlag von 30 % ist die Reserve für die nächste Welle, die schon
+     * wieder stärker ist als die, gegen die gerade gerechnet wird.
+     */
+    const noetig = requiredDefense().mul(1.3)
+    let versuche = 0
+    while (defensePower(planet.waveNumber + 1).lt(noetig) && versuche < 20) {
+      const gebaut = DEFENSES.some((d) => canBuildDefense(d.id) && buildDefense(d.id))
+      if (!gebaut) break
+      versuche++
     }
     for (const a of ABILITIES) {
       if (canUseAbility(a.id)) useAbility(a.id)

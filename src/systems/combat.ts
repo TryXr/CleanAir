@@ -124,6 +124,24 @@ export function defensePower(waveNumber = planet.waveNumber): Decimal {
   return total.mul(achievementEffects().defenseDamage)
 }
 
+/** Kampfkraft der Welle, die als nächstes losbricht. */
+export function nextWavePower(): number {
+  return BASE_POWER * Math.pow(POWER_GROWTH, planet.waveNumber) * currentPlanetDef().anoxenPressure
+}
+
+/**
+ * Schaden pro Sekunde, den die nächste Welle verlangt, um sie abzuwehren.
+ *
+ * Eine Welle steht `WAVE_DURATION` Sekunden über dem Planeten; wer sie in
+ * dieser Zeit nicht aufreibt, kassiert die ganze Zeit über ihre Wirkung.
+ * Damit ist „reicht meine Verteidigung?" keine Gefühlsfrage, sondern ein
+ * Vergleich zweier Zahlen — und der gehört hierher und nicht in die Aufrufer,
+ * die sonst je ihre eigene Faustregel erfinden.
+ */
+export function requiredDefense(): Decimal {
+  return new Decimal(nextWavePower()).div(WAVE_DURATION)
+}
+
 // --- Fähigkeiten ----------------------------------------------------------
 
 export function abilityCooldown(id: string): number {

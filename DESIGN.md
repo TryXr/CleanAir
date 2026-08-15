@@ -1480,16 +1480,39 @@ Ware wären zwei Systeme für dieselbe Sache.
   |---|---|---|---|
   | Aurora | 24,9 min | 15–25 | im Fenster |
   | Vesta | 38,4 min | 30–45 | im Fenster |
-  | Pyra | bricht bei ~145 min durch die Anoxen ein | 60–120 | offen |
-  | Kryo | 97,3 min | 120–240 | **zu schnell** |
-  | Nimbus | 76,7 min | 120–240 | **zu schnell** |
+  | Pyra | 196,4 min | 60–120 | **zu langsam** |
+  | Kryo | 141,9 min | 120–240 | im Fenster |
+  | Nimbus | 80,2 min | 120–240 | **zu schnell** |
 
   Zur Obergrenze selbst: auf Vesta kostet voller Komfort 4,3 min (38,4 gegen
-  42,7). Sie trivialisiert dort also nichts. **Kryo und Nimbus liegen
-  dagegen deutlich unter ihrem Fenster** — aber das ist kein Befund über die
-  Zufriedenheit, sondern über die Planeten selbst: gemessen wurde *ohne*
-  Komfort. Bevor daran gedreht wird, muss Pyra messbar sein, sonst verschiebt
-  man Zahlen im Blindflug.
+  42,7). Sie trivialisiert dort also nichts.
+
+### Zwei Befunde aus dem ersten vollständigen Messlauf
+
+**Pyra hängt nicht an seiner eigenen Mechanik.** §11 gibt ihm „die eigene
+Industrie erstickt einen" als Thema. Gemessen entscheidet das nichts: den
+Schadstoffausstoß zu halbieren ändert die Dauer um **0,1 Minuten**
+(196,5 statt 196,4). Den Anoxendruck zu halbieren bringt ihn dagegen von
+196,4 auf **59,6 min**. Der Planet wird vollständig von den Anoxen bestimmt,
+und sein eigentliches Thema ist Kulisse. Entweder muss der Wäscher-Zweig
+härter zubeißen oder Pyra bekommt ein anderes Thema — eine Zahl zu drehen
+verschiebt nur, was ohnehin nicht wirkt.
+
+> **Die Anoxen haben eine Weglaufschwelle, und die verstößt gegen §1.2.**
+> Zwischen `anoxenPressure` 0,90 und 0,95 verdoppelt sich Pyras Dauer:
+> 86,0 → 183,3 min. Fünf Prozent Unterschied im Druck, Faktor zwei im
+> Ergebnis. Der Grund ist strukturell: Wellen wachsen geometrisch (Faktor
+> 1,28), Verteidigung wächst so schnell, wie man sie bezahlen kann. Wer
+> einmal zurückfällt, fällt weiter zurück — und §1.2 verlangt, dass
+> Rückschläge temporär bleiben. **Das ist ein Mechanikfehler, kein
+> Balancing-Fehler**, und deshalb ist hier bewusst keine Zahl geändert
+> worden.
+
+**Nimbus lässt sich nicht über die Größe bremsen.** Sein `baseAtmosphere` zu
+erhöhen macht ihn *schneller* statt langsamer (3 M → 80,2 min, 4,5 M → 69,7,
+6 M → 67,6): eine größere Grundatmosphäre verdünnt beide Gase, und der
+Gasschöpfer liefert den Puffer ohnehin fast umsonst. Auch hier ist der
+naheliegende Regler der falsche.
 - **Bringt der sechste Planet eine neue Mechanik oder den Abschluss?** §11
   verlangt eine neue; ein Finale, das nur das Vorhandene bündelt, wäre der
   ehrlichere Schluss. Beides ist vertretbar, entschieden ist es nicht.
