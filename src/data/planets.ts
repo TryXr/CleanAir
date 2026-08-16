@@ -187,10 +187,23 @@ export const AURORA: PlanetDef = {
    * Zwanzigfache.
    *
    * Simuliert mit zugewiesener Handarbeit: 4·10⁵ → 11,5 min, 1,5·10⁶ →
-   * 15,2 min, 4·10⁶ → 21,1 min. Gewählt ist der letzte Wert — Zielfenster
-   * laut §13 sind 15–25 Minuten.
+   * 15,2 min, 4·10⁶ → 21,1 min. Zielfenster laut §13 sind 15–25 Minuten.
+   *
+   * **Seit M29 3·10⁶ statt 4·10⁶.** Nicht weil der Planet sich geändert hätte,
+   * sondern weil die Messung vorher falsch war: bis M26 erfüllte die Fracht
+   * des Balancing-Werkzeugs (50 000 von jedem Material) den Erfolg
+   * „Titanherz", und jeder Lauf lief mit geschenkten +8 % Produktion. Ohne sie
+   * stand Aurora bei 26,5 min und damit **über** seinem Fenster.
+   *
+   * Der Ertrag dieser Zahl flacht stark ab — Aurora ist anlaufgebunden, nicht
+   * füllgebunden: 4·10⁶ → 26,5 min, 3,4·10⁶ → 24,9, 3·10⁶ → 24,2, 2,8·10⁶ →
+   * 23,7, 2·10⁶ → 21,4. Die Hälfte der Atmosphäre spart nur fünf Minuten.
+   * Gewählt ist 3·10⁶: eine knappe Minute Abstand zum Fensterrand, und Aurora
+   * behält mit Abstand die größte Grundatmosphäre der frühen Planeten (Vesta
+   * 30 000, Pyra 70 000). Aurora führt keine Ereignisse, die Zahl ist deshalb
+   * auf die Nachkommastelle reproduzierbar (24,2 über drei Startwerte).
    */
-  baseAtmosphere: 4000000,
+  baseAtmosphere: 3000000,
 
   /**
    * Nach oben offen: Aurora hat kein N₂ zum Verdünnen, ein Deckel wäre also

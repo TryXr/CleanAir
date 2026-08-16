@@ -2262,6 +2262,37 @@ Reihenfolge: 24,9 / 38,5 / 61,5 / 129,6 / 135,2 / 157,4 Minuten.
 > Aurora steht 1,5 min über seinem Fenster (15–25), und Nimbus hat Erebos bis
 > auf 0,5 min eingeholt.
 
+### Nachgemessen über drei Startwerte (M29)
+
+Von den beiden Aufgaben oben blieb nach ehrlicher Messung nur **eine** übrig —
+und eine dritte kam dazu. Mediane aus drei Ereignis-Startwerten:
+
+| Planet | Median | Spanne | Ziel §13 | |
+|---|---|---|---|---|
+| Aurora | 24,2 min | 24,2–24,2 | 15–25 | im Fenster |
+| Vesta | 42,1 min | 41,8–42,9 | 30–45 | im Fenster |
+| Pyra | 69,7 min | 62,7–70,2 | 60–120 | im Fenster |
+| Kryo | 110,0 min | 101,5–133,6 | 120–240 | **10 min zu schnell** |
+| Nimbus | 155,6 min | 153,4–159,8 | 120–240 | im Fenster |
+| Erebos | 165,4 min | 159,3–171,9 | 120–240 | im Fenster |
+
+- **Aurora ist behoben.** `baseAtmosphere` von 4·10⁶ auf 3·10⁶ — der Planet
+  ist anlaufgebunden und nicht füllgebunden, die Hälfte der Atmosphäre spart
+  nur fünf Minuten. Aurora führt keine Ereignisse, die 24,2 min stehen daher
+  auf die Nachkommastelle fest.
+- **Nimbus gegen Erebos war ein Trugschluss.** 159,8 gegen 159,3 waren zwei
+  Läufe an ihren jeweiligen Rändern; die Mediane liegen zehn Minuten
+  auseinander. Nichts zu tun.
+- **Kryo war nie im Fenster** — die 133,6 aus M28 waren der beste von drei
+  Läufen. `baseAtmosphere` ist dort aber der falsche Regler: ×1,5 hebt den
+  Median auf 123,1, der schlechteste Startwert bleibt bei 103,9. Kryo ist
+  **wachstumsgebunden** (`growthFactor` 0,45), und am Wachstum zu drehen
+  ändert den Charakter des Planeten. Das gehört entschieden, nicht gedreht.
+
+> **Ein Lauf ist kein Messwert.** Beide Fehlschlüsse aus M28 stammen aus dem
+> Vergleich einzelner Läufe. Wer zwei Planeten vergleicht oder ein Fenster
+> prüft, nimmt Mediane und notiert die Spanne dazu.
+
 ### Drei Fallen, die dieser Entwurf ausdrücklich vermeidet
 
 1. **Grind ist keine Wartezeit.** Jeder lange Weg hier kostet **Hände** und

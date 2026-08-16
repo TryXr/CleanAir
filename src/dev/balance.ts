@@ -102,14 +102,42 @@ import { travelTo } from '../systems/travel'
  * **Was der simulierte Spieler kann — und was nicht.** Gemessen ohne jeden
  * mitgeschleppten Fortschritt:
  *
- * | Planet | gemessen | Ziel §13 | |
- * |---|---|---|---|
- * | Aurora | 26,5 min | 15–25 | **1,5 min zu langsam** |
- * | Vesta | 42,1 min | 30–45 | im Fenster |
- * | Pyra | 69,7 min | 60–120 | im Fenster |
- * | Kryo | 133,6 min | 120–240 | im Fenster |
- * | Nimbus | 159,8 min | 120–240 | im Fenster |
- * | Erebos | 159,3 min | 120–240 | im Fenster |
+ * **Median aus drei Startwerten, nicht ein Lauf.** Einzelläufe haben in M28
+ * zwei falsche Schlüsse erzeugt (siehe unten); die Spanne gehört deshalb mit
+ * in die Tabelle.
+ *
+ * | Planet | Median | Spanne | Ziel §13 | |
+ * |---|---|---|---|---|
+ * | Aurora | 24,2 min | 24,2–24,2 | 15–25 | im Fenster |
+ * | Vesta | 42,1 min | 41,8–42,9 | 30–45 | im Fenster |
+ * | Pyra | 69,7 min | 62,7–70,2 | 60–120 | im Fenster |
+ * | Kryo | 110,0 min | 101,5–133,6 | 120–240 | **10 min zu schnell** |
+ * | Nimbus | 155,6 min | 153,4–159,8 | 120–240 | im Fenster |
+ * | Erebos | 165,4 min | 159,3–171,9 | 120–240 | im Fenster |
+ *
+ * Die Reihenfolge stimmt wieder durchgehend: 24,2 < 42,1 < 69,7 < 110,0 <
+ * 155,6 < 165,4.
+ *
+ * ### Ein Lauf ist kein Messwert (M29)
+ *
+ * Zwei Schlüsse aus M28 haben sich beim Nachmessen über drei Startwerte als
+ * falsch erwiesen — beide stammten aus dem Vergleich einzelner Läufe:
+ *
+ * - **„Nimbus hat Erebos überholt"** (159,8 gegen 159,3). Über drei Startwerte
+ *   liegen die Mediane bei 155,6 und 165,4 — zehn Minuten Abstand, die
+ *   Reihenfolge war nie in Gefahr. Zwei Läufe an ihren jeweiligen Rändern
+ *   hatten sich nur zufällig gekreuzt.
+ * - **„Kryo steht im Fenster"** (133,6). Das war der beste von drei Läufen;
+ *   der Median liegt bei 110,0 und damit *unter* dem Fenster. Kryos
+ *   Einhaltung war schon immer ein Einzelwert-Artefakt.
+ *
+ * **Kryo bleibt trotzdem unverändert**, und das ist eine Entscheidung, keine
+ * Auslassung: `baseAtmosphere` ist dort der falsche Regler. Gemessen ×1,25 →
+ * Median 116,8, ×1,5 → 123,1, aber der schlechteste Startwert bleibt bei
+ * 103,9 — die Spanne schrumpft nicht. Kryo ist **wachstumsgebunden**
+ * (`growthFactor` 0,45, „alles dauert"), nicht füllgebunden. Wer ihn ins
+ * Fenster heben will, fasst das Wachstum an und ändert damit den Charakter
+ * des Planeten; das gehört entschieden und nicht nebenbei gedreht.
  *
  * ### Die Fracht hat sich selbst einen Erfolg geschenkt (M28)
  *

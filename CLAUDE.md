@@ -448,13 +448,19 @@ Selbsttest lieferte ein anderes Ergebnis, weil dessen Forschung noch als
 Multiplikator stand. **Wer eine Balancing-Frage hat, erweitert dieses
 Werkzeug — er tippt keine neue Schleife in die Konsole.**
 
-Was sein simulierter Spieler kann, steht im Kopf der Datei. Stand nach M28 —
-Aurora 26,5 min, Vesta 42,1, Pyra 69,7, Kryo 133,6, Nimbus 159,8, Erebos
-159,3: **fünf im Fenster, Aurora 1,5 min darüber**, und Nimbus hat Erebos bis
-auf 0,5 min eingeholt. „Jeder länger als der vorige" gilt damit nur noch
-knapp; beides ist die nächste Balancing-Aufgabe. Die Tabelle im Dateikopf ist
-der aktuelle Stand; wer sie ändert, ersetzt die Zahlen, statt alte
-danebenzustellen.
+Was sein simulierter Spieler kann, steht im Kopf der Datei. Stand nach M29,
+**Mediane aus drei Startwerten** — Aurora 24,2 min, Vesta 42,1, Pyra 69,7,
+Kryo 110,0, Nimbus 155,6, Erebos 165,4. Fünf im Fenster, die Reihenfolge
+durchgehend steigend; **Kryo liegt 10 min unter seinem Fenster** und ist die
+offene Aufgabe. Die Tabelle im Dateikopf ist der aktuelle Stand; wer sie
+ändert, ersetzt die Zahlen, statt alte danebenzustellen.
+
+> **Ein Lauf ist kein Messwert.** Zwei Schlüsse aus M28 waren beim Nachmessen
+> über drei Startwerte falsch: „Nimbus hat Erebos überholt" (159,8 gegen 159,3
+> — Mediane 155,6 gegen 165,4, zehn Minuten Abstand) und „Kryo steht im
+> Fenster" (133,6 war der beste von drei Läufen, der Median liegt bei 110,0).
+> Wer zwei Planeten vergleicht oder ein Fenster prüft, nimmt Mediane und
+> notiert die Spanne dazu — `compare()` tut genau das, `run()` nicht.
 
 > **Was das Werkzeug mitgibt, kann Bedingungen erfüllen, die das Spiel
 > prüft.** Alle Zahlen vor M28 waren zu niedrig: `fracht` gibt jedem Lauf
