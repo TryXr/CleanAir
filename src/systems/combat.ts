@@ -306,11 +306,18 @@ export function combatSystem(dt: number): void {
      Läuft immer, auch während einer Welle und auch im Nachlauf. Rückschläge
      sollen von selbst verheilen (§1.2), Depots beschleunigen das nur.
   --------------------------------------------------------------------- */
-  const offen = Object.values(planet.disabled).reduce((a, b) => a + b, 0)
-  if (offen > 0) {
+  /*
+   * **Einmal durchzählen, nicht zweimal.** `planet.disabled` ist ein
+   * `$state`-Proxy; jede Aufzählung läuft durch Fallen. Gemessen kostete
+   * `Object.entries()` darüber bei 33 Einträgen 40,6 µs — die alte Fassung
+   * zählte erst `values()` für die Summe und dann `entries()` fürs Reparieren
+   * und zahlte das doppelt, in *jedem* Tick, auch wenn nichts kaputt war.
+   */
+  const kaputt = Object.entries(planet.disabled)
+  if (kaputt.length > 0) {
     const rate = REPAIR_BASE + REPAIR_PER_DEPOT * defenseCount('depot')
     const next: Record<string, number> = {}
-    for (const [id, count] of Object.entries(planet.disabled)) {
+    for (const [id, count] of kaputt) {
       const rest = count - Math.max(count * rate, 0.02) * dt
       if (rest > 0.01) next[id] = rest
     }

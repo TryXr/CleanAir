@@ -141,7 +141,7 @@ function collectMultipliers(): Multipliers {
  * Die Einheit hängt an der Gasart: bei `o2` und `n2` ist es Gas pro Sekunde,
  * bei `scrub` der Anteil der Schadstoffe, der pro Sekunde verschwindet.
  */
-export function generatorRate(def: GeneratorDef): Decimal {
+export function generatorRate(def: GeneratorDef, vorberechnet?: Multipliers): Decimal {
   // Lahmgelegte Anlagen zählen nicht mit. Ohne diese eine Zeile wäre die
   // Sabotage der Anoxen (§7) reine Kosmetik — sie *ist* der Angriff.
   const count = Math.max(0, generatorCount(def.id) - (planet.disabled[def.id] ?? 0))
@@ -155,7 +155,22 @@ export function generatorRate(def: GeneratorDef): Decimal {
   const labor = laborFactor(def)
   if (labor <= 0) return new Decimal(0)
 
-  const m = collectMultipliers()
+  /*
+   * **Die Sammelstelle einmal je Durchlauf, nicht einmal je Anlage.**
+   *
+   * `collectMultipliers()` liest fünf reaktive Quellen — Meta-Baum, Forschung,
+   * Erfolge, Ereignisse, lokale Upgrades — und `meta`/`planet` sind `$state`,
+   * also Proxies. Gemessen kostete ein Aufruf rund 45 µs, davon allein 14 µs
+   * für die neun `planet.upgrades.includes(...)` der Upgrade-Schleife. Da
+   * `productionSystem` siebenmal über alle Anlagen läuft, entstand dieser
+   * Preis pro Anlage und Durchlauf neu.
+   *
+   * Die Multiplikatoren ändern sich innerhalb eines Ticks nicht — wer über
+   * mehrere Anlagen summiert, reicht sie deshalb durch. Ohne Parameter
+   * verhält sich die Funktion exakt wie vorher, damit bleibt jeder
+   * Einzelaufruf aus der Oberfläche unverändert richtig.
+   */
+  const m = vorberechnet ?? collectMultipliers()
   // Forschungsboni gelten je Gasart; Abbau und Wald hängen bislang nur an
   // den globalen Faktoren.
   const specific =
@@ -169,10 +184,11 @@ export function generatorRate(def: GeneratorDef): Decimal {
 }
 
 function rateForGas(gas: GasKind): Decimal {
+  const m = collectMultipliers()
   let total = new Decimal(0)
   for (const def of GENERATORS) {
     if (def.output.kind === 'gas' && def.output.gas === gas) {
-      total = total.add(generatorRate(def))
+      total = total.add(generatorRate(def, m))
     }
   }
   return total
@@ -180,9 +196,10 @@ function rateForGas(gas: GasKind): Decimal {
 
 /** Summe aller Anlagen mit dieser Ausgabeart. */
 function rateForKind(kind: 'plant' | 'fell'): Decimal {
+  const m = collectMultipliers()
   let total = new Decimal(0)
   for (const def of GENERATORS) {
-    if (def.output.kind === kind) total = total.add(generatorRate(def))
+    if (def.output.kind === kind) total = total.add(generatorRate(def, m))
   }
   return total
 }
@@ -199,10 +216,11 @@ export function fellingRate(): Decimal {
 
 /** Nahrung bzw. Wasser pro Sekunde. */
 export function supplyRate(supply: SupplyKind): Decimal {
+  const m = collectMultipliers()
   let total = new Decimal(0)
   for (const def of GENERATORS) {
     if (def.output.kind === 'supply' && def.output.supply === supply) {
-      total = total.add(generatorRate(def))
+      total = total.add(generatorRate(def, m))
     }
   }
   return total
@@ -217,10 +235,11 @@ export function supplyRate(supply: SupplyKind): Decimal {
  * Bäume stehen.
  */
 export function materialRate(material: string): Decimal {
+  const m = collectMultipliers()
   let total = new Decimal(0)
   for (const def of GENERATORS) {
     if (def.output.kind === 'material' && def.output.material === material) {
-      total = total.add(generatorRate(def))
+      total = total.add(generatorRate(def, m))
     }
   }
   if (material === 'holz' && planet.trees.gt(0)) {
@@ -534,9 +553,10 @@ export function productionSystem(dt: number): void {
   }
 
   // Abbau: alles, was direkt ins globale Lager geht.
+  const abbauM = collectMultipliers()
   for (const gen of GENERATORS) {
     if (gen.output.kind !== 'material') continue
-    const gained = generatorRate(gen).mul(dt)
+    const gained = generatorRate(gen, abbauM).mul(dt)
     if (gained.gt(0)) storeMaterial(gen.output.material, gained)
   }
 

@@ -194,14 +194,27 @@ ausschließlich über `storeMaterial()` aus systems/storage.ts.
 **Ein Proxy-Zugriff kostet das Vierzigfache eines Feldzugriffs.** `meta`,
 `planet` und `run` sind `$state` und damit Proxies; jeder Lesezugriff läuft
 durch eine Falle. Gemessen: `meta.achievements.includes(...)` braucht 3,3 µs,
-dieselbe Prüfung auf einer rohen Kopie 0,075 µs — eine Decimal-Multiplikation
-liegt bei 0,09 µs. **Rechnen ist billig, Lesen ist teuer.** Wer in einer
-Schleife über Daten dieselbe reaktive Sammlung mehrfach abfragt, liest sie
-einmal in ein `Set` oder eine lokale Variable. `achievementEffects()` fiel so
-von 60 auf 2 µs und ein ganzer Tick von **1693 auf 1024 µs** (dieselbe Lage,
-direkt hintereinander gemessen) — ohne dass sich eine einzige Spielzahl
-geändert hat, geprüft über die Balancing-Läufe, die auf die Nachkommastelle
-gleich blieben.
+dieselbe Prüfung auf einer rohen Kopie 0,075 µs, und `Object.entries()` über
+einen Datensatz mit 33 Einträgen 40,6 µs — eine Decimal-Multiplikation liegt
+dagegen bei 0,09 µs. **Rechnen ist billig, Lesen ist teuer.**
+
+Drei Muster, die daraus folgen, alle drei gemessen:
+
+1. **Eine reaktive Sammlung einmal lesen, nicht je Element.** `new
+   Set(meta.achievements)` vor der Schleife: `achievementEffects()` von 60 auf
+   2 µs.
+2. **Eine Sammelstelle einmal je Durchlauf, nicht je Anlage.**
+   `generatorRate()` nimmt die Multiplikatoren jetzt optional entgegen, die
+   Summenfunktionen berechnen sie einmal: Produktion von 515 auf 330 µs.
+3. **Einen Datensatz einmal aufzählen, nicht zweimal.** `combatSystem` zählte
+   `planet.disabled` erst für die Summe und dann fürs Reparieren durch: 145
+   auf 94 µs.
+
+Ein ganzer Tick fiel damit von **1693 auf 666 µs** (dieselbe Lage, direkt
+hintereinander gemessen), ohne dass sich eine einzige Spielzahl geändert hat —
+geprüft über die Balancing-Läufe, die auf die Nachkommastelle gleich blieben.
+Im laufenden Spiel ist das gleichgültig; im Offline-Nachlauf und im
+Balancing-Werkzeug, die dieselben Systeme zehntausendfach fahren, nicht.
 
 **Eine Bedingung und ihr Fortschrittsbalken lesen dieselbe Quelle.** Klingt
 selbstverständlich und war es nicht: bis M26 prüfte der Erfolg „Holzweg" den
