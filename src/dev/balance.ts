@@ -4,6 +4,7 @@ import { ABILITIES } from '../data/abilities'
 import { DEFENSES } from '../data/defenses'
 import { MATERIALS } from '../data/materials'
 import { RESEARCH } from '../data/research'
+import { findEvent } from '../data/events'
 import { AURORA, PLANETS, type PlanetDef } from '../data/planets'
 import { runStep, stopLoop } from '../engine/loop'
 import {
@@ -51,11 +52,22 @@ import {
   stagesDone,
 } from '../systems/landmarks'
 import { gatedGenerators } from '../systems/blueprints'
-import { housingCapacity, resetPopulationNotices } from '../systems/population'
+import {
+  housingCapacity,
+  o2ConsumptionRate,
+  resetPopulationNotices,
+} from '../systems/population'
 import { pendingCores } from '../systems/prestige'
 import { resetStorageNotices } from '../systems/storage'
 import { assign } from '../systems/labor'
-import { isAvailable, maxAffordable, releaseOxygen } from '../systems/production'
+import {
+  canDemolish,
+  currentO2Rate,
+  demolish,
+  isAvailable,
+  maxAffordable,
+  releaseOxygen,
+} from '../systems/production'
 import { travelTo } from '../systems/travel'
 
 /**
@@ -94,10 +106,10 @@ import { travelTo } from '../systems/travel'
  * |---|---|---|---|---|
  * | Aurora | 24,9 min | 15–25 | im Fenster | 65,9 min |
  * | Vesta | 38,5 min | 30–45 | im Fenster | 83,0 min |
- * | Pyra | 73,1 min | 60–120 | im Fenster | 142,5 min |
+ * | Pyra | 61,5 min | 60–120 | im Fenster | 123,8 min |
  * | Kryo | 129,6 min | 120–240 | im Fenster | 128,6 min |
  * | Nimbus | 135,2 min | 120–240 | im Fenster | 183,6 min |
- * | Erebos | 176,7 min | 120–240 | im Fenster | hat keines |
+ * | Erebos | 157,4 min | 120–240 | im Fenster | hat keines |
  *
  * Die letzte Spalte ist die Antwort auf die offene Frage aus §20 („wie viele
  * Fundstücke kostet ein Bauwerk?"): bei sechs Fundstücken — acht auf Kryo und
@@ -195,12 +207,43 @@ import { travelTo } from '../systems/travel'
  * ### Was `compare()` über mehrere Startwerte zeigt
  *
  * Bergung und Bauwerk kosten Vesta im Median **nichts** (41,4 ohne / 40,9 mit
- * Bergung / 41,5 mit Bauwerk). Wichtiger ist, was dabei nebenbei auffiel:
- * derselbe Planet braucht je nach Ereignislage 39,3 oder **193,6** Minuten —
- * und zwar *ohne* jedes neue System. Ein Startwert von dreien trifft Vesta
- * fünfmal so hart wie die anderen. Das ist keine Eigenschaft von §20, sondern
- * eine offene Frage an Vesta selbst, und sie war ohne Mehrfachlauf nicht zu
- * sehen. Wer sie angeht, misst zuerst, **welches** Ereignis es ist.
+ * Bergung / 41,5 mit Bauwerk). Wichtiger war, was dabei nebenbei auffiel:
+ * derselbe Planet brauchte je nach Ereignislage 39,3 oder **193,6** Minuten,
+ * und zwar ohne jedes neue System.
+ *
+ * ### Ein **siebtes** Mal — und es war der teuerste Befund von allen
+ *
+ * Die 193,6 aufzuklären hat den Simulanten und einen Planeten verändert. Der
+ * Hergang, ablesbar an `ereignisse` und `verlauf`:
+ *
+ * 1. Startwert `balance:0` wirft **vier Temperaturinversionen** in die ersten
+ *    22 Minuten — als einziges Ereignis mit `needs: 'nitrogen'` bremst sie
+ *    genau den Puffer (Produktion ×0,7).
+ * 2. Der Regler gleicht aus und schwingt: N₂ auf **85,4 %** (Fenster bis 80),
+ *    dann kippt O₂ bei Minute 42 auf **23,4 %** (Fenster bis 23).
+ * 3. Ab da steht der Lauf 150 Minuten bei 23,0 bis 23,3 % und kriecht. Das ist
+ *    die Falle aus §4: über dem O₂-Fenster gibt es kein Zurück.
+ *
+ * Kein Ereignis dauert länger als 150 Sekunden — 150 Minuten Schaden kann also
+ * nur über eine Falle gehen. Und die Falle war offen, weil der Simulant den
+ * **Abriss** nicht kannte (§17). N₂ hat das Ventil, Schadstoffe haben den
+ * Wäscher, O₂ hat *kein* Gegenmittel außer aufzuhören zu produzieren. Mit der
+ * Abrissregel: Vesta 47,1 statt 193,6 bei demselben Startwert, die beiden
+ * anderen unverändert.
+ *
+ * **Und dann fiel Erebos aus seinem Fenster.** Derselbe Griff verkürzte ihn
+ * von 176,7 auf 86,0 min — weit unter sein Ziel von 120–240 und kürzer als
+ * Kryo und Nimbus. Die alte Zahl war zu 90 Minuten „steht über dem Fenster
+ * fest": der letzte Planet war nie so lang, wie diese Tabelle behauptet hat.
+ * Die Frachthypothese (der Simulant startet mit 50 000 von allem, und Erebos
+ * fördert nichts) wurde geprüft und ist **falsch** — mit 1000 statt 50 000
+ * braucht er 92,2 statt 86,0. Erebos' Startluft steht deshalb seit M22 auf dem
+ * Vierfachen, Anteile unverändert (data/planets.ts).
+ *
+ * Die Lehre ist die alte, nur teurer: **ein Planet, der auffällig ist, ist
+ * meistens ein Simulant, der etwas nicht kann.** Siebenmal in Folge, und
+ * diesmal hat es eine Zahl in `data/` gekostet, die drei Meilensteine lang
+ * richtig aussah.
  *
  * **Die Lehre für die nächste Balancing-Frage:** bevor eine Zahl in `data/`
  * angefasst wird, prüfen, ob der Simulant überhaupt alle Systeme benutzt, die
@@ -373,6 +416,26 @@ export interface BalanceResult {
    * und keine des Bauwerks.
    */
   bauwerkMin: number | null
+  /**
+   * Welches Ereignis wann auftrat — `"12,3 min Sonneneruption"`.
+   *
+   * Nötig geworden bei der Frage, warum Vesta je nach Startwert 39 oder 193
+   * Minuten braucht. Ein Ereignis dauert 60 bis 150 Sekunden; dass eines davon
+   * 150 Minuten kostet, kann nur über eine **Falle** gehen und nicht über
+   * seine Dauer. Welche das ist, sieht man erst, wenn Zeitpunkt und Verlauf
+   * nebeneinander liegen — der Endzustand allein sagt nur, dass etwas
+   * schiefging.
+   */
+  ereignisse: string[]
+  /**
+   * Der Verlauf, einmal je Minute: Atmosphäre, Guthaben, Bevölkerung.
+   *
+   * Dieselbe Begründung wie bei `abgelehnt`: die Frage „wann ist es gekippt?"
+   * ist aus einem Endstand nicht zu beantworten, und Raten kostet in diesem
+   * Projekt regelmäßig drei Anläufe. Ein Eintrag pro Minute ist billig genug,
+   * dass er immer mitlaufen kann.
+   */
+  verlauf: { min: number; o2: number; n2: number; guthaben: number; leute: number }[]
   /** Mit Schrittweite > 1 gemessen und damit **nicht** belastbar. */
   grob: boolean
   /**
@@ -667,6 +730,40 @@ function entscheiden(
     }
     if (!erstickt && o2 < Math.min(o2Ziel, erlaubtesO2)) for (const g of gas('o2')) kaufen(g)
     if (n2 > n2Ziel + 1.5) for (const g of gas('vent')) kaufen(g)
+  }
+
+  /*
+   * **Über dem O₂-Fenster reißt man ab** (§17) — der sechste Fall derselben
+   * Klasse.
+   *
+   * Fünfmal war die Ursache eines scheinbar kaputten Planeten, dass der
+   * Simulant ein ganzes System nicht benutzte (Forschung, Verteidigung,
+   * Reserve, Bergung, Zählweise). Hier ist es der **Abriss**, und er wiegt
+   * schwerer als die anderen: N₂ hat mit dem Abblasventil ein Gegenstück,
+   * Schadstoffe haben den Wäscher — O₂ hat **keines**. Über dem Fenster gibt
+   * es kein Zurück (§4), außer aufzuhören zu produzieren. Genau dafür ist
+   * `demolish()` da, und genau das tut ein Mensch, der sieht, wie sein Anteil
+   * davonläuft.
+   *
+   * Gemessen an Vesta mit Startwert `balance:0`: vier Temperaturinversionen in
+   * den ersten 22 Minuten bremsen den Puffer (Produktion ×0,7), der Regler
+   * schwingt — N₂ auf 85,4 %, dann O₂ auf 23,4 % bei einem Fenster bis 23 —
+   * und danach steht der Lauf **150 Minuten** bei 23,0 bis 23,3 % und kriecht.
+   * 193,6 min statt 39,3, allein aus der Ereignislage.
+   *
+   * Die Bedingung ist bewusst „solange die Luft noch O₂ **gewinnt**" und nicht
+   * „solange der Anteil zu hoch ist": der Anteil fällt nach einem Abriss nicht
+   * sofort, er fällt erst, wenn die Atmung überwiegt. Am Anteil zu hängen
+   * hieße, bis zur letzten Anlage abzureißen — der Regler, der spiegelbildlich
+   * schwingt.
+   */
+  if (o2 > def.o2Window.max && currentO2Rate().gt(o2ConsumptionRate())) {
+    for (const g of gas('o2')) {
+      if (canDemolish(g.id)) {
+        demolish(g.id, 1)
+        break
+      }
+    }
   }
 
   /*
@@ -1126,12 +1223,38 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
     const weiterlaufen = (): boolean =>
       opts.bauwerk && landmarkHere() !== undefined && !landmarkDone()
 
+    const ereignisse: string[] = []
+    const verlauf: BalanceResult['verlauf'] = []
+    /*
+     * Ereignisse werden am **Anfang** eines Ticks gesehen, nicht am Ende: ein
+     * kurzes Ereignis kann zwischen zwei Beobachtungen sonst vollständig
+     * auftreten und wieder vergehen. Gemerkt wird, was gerade läuft, und
+     * gemeldet nur der Wechsel.
+     */
+    let laufendesEreignis: string | undefined
+
     for (let i = 1; i <= schritte; i++) {
       for (let k = 0; k < opts.clicks * opts.schritt; k++) releaseOxygen()
       if ((i * opts.schritt) % opts.takt === 0) entscheiden(def, opts, listen, abgelehnt)
       runStep(opts.schritt)
 
       const sekunden = i * opts.schritt
+
+      const jetzt = planet.events[0]?.id
+      if (jetzt !== undefined && jetzt !== laufendesEreignis) {
+        ereignisse.push(`${(sekunden / 60).toFixed(1)} min ${findEvent(jetzt)?.name ?? jetzt}`)
+      }
+      laufendesEreignis = jetzt
+
+      if (sekunden % 60 === 0) {
+        verlauf.push({
+          min: sekunden / 60,
+          o2: +o2Percent().toFixed(1),
+          n2: +n2Percent().toFixed(1),
+          guthaben: Math.round(planet.oxygen.toNumber()),
+          leute: Math.round(planet.settlers.toNumber()),
+        })
+      }
       if (planet.rocketBuilt && raketeBei === null) raketeBei = sekunden
       if (landmarkDone() && bauwerkBei === null) bauwerkBei = sekunden
       if (planet.completed) {
@@ -1159,6 +1282,8 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
       warteschlange: planet.sites.reduce((a, s) => a + s.remaining, 0),
       etappen: stagesDone(),
       bauwerkMin: bauwerkBei === null ? null : +(bauwerkBei / 60).toFixed(1),
+      ereignisse,
+      verlauf,
       fundstuecke: +(run.materials.fundstueck?.toNumber() ?? 0).toFixed(1),
       anlaeufe: Object.values(planet.salvageRuns).reduce((a, n) => a + n, 0),
       grob: opts.schritt > 1,

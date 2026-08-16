@@ -610,7 +610,7 @@ export const EREBOS: PlanetDef = {
   intro:
     'Hier war schon jemand. Die Luft ist dicht, warm und tödlich — jemand hat diesen Planeten terraformt und dabei verloren. Du bekommst seine Atmosphäre, nicht seine Notizen.',
 
-  baseAtmosphere: 1000000,
+  baseAtmosphere: 4000000,
 
   /*
    * Der Startzustand ist der ganze Planet. Gerechnet, nicht gegriffen:
@@ -618,10 +618,24 @@ export const EREBOS: PlanetDef = {
    * 35 % N₂ und 60 % Schadstoffe. Nach vollständiger Wäsche stünde der Puffer
    * bei etwa 87 % und damit über seinem Fenster — genau deshalb sind Ventil
    * *und* Wäscher nötig und nicht nur eines von beiden.
+   *
+   * **Alle vier Zahlen sind seit M22 viermal so groß, die Anteile unverändert.**
+   * Erebos war zu kurz, und zwar erst sichtbar, seit der simulierte Spieler
+   * abreißen kann (§17): vorher stand er 90 Minuten über dem O₂-Fenster fest
+   * und maß 176,7 min, danach 86,0 — weit unter seinem Fenster von 120–240 und
+   * kürzer als Kryo und Nimbus. Der letzte Planet war nie so lang, wie die
+   * Tabelle behauptet hat; gemessen wurde die blinde Stelle des Simulanten.
+   *
+   * Der Faktor liegt auf **allen vier** Zahlen und nicht auf einer: nur so
+   * bleiben die Anteile stehen, und damit bleibt die Härte dieses Planeten
+   * seine *Reihenfolge* — waschen, abblasen, atmen lassen — statt einer
+   * einzelnen größeren Zahl. Was wächst, ist allein die Menge Arbeit. Gemessen
+   * über drei Startwerte: 157,4 / 138,9 / 162,5 min, jeder im Fenster und
+   * jeder länger als Nimbus (135,2). ×3,5 rutschte mit 125 min darunter.
    */
-  startAirO2: 250000,
-  startAirN2: 8750000,
-  startPollution: 15000000,
+  startAirO2: 1000000,
+  startAirN2: 35000000,
+  startPollution: 60000000,
 
   o2Window: { min: 19, max: 23 },
   n2Window: { min: 74, max: 80 },

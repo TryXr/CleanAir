@@ -2093,10 +2093,12 @@ Das Ergebnis, ein Lauf je Feld, `maxMinuten: 300`:
 |---|---|---|---|---|
 | Aurora | 24,9 min | 24,6 | **65,9** | 15–25 ✓ |
 | Vesta | 38,5 min | 38,3 | **83,0** | 30–45 ✓ |
-| Pyra | 73,1 min | 73,1 | **142,5** | 60–120 ✓ |
+| Pyra | 61,5 min | 62,4 | **123,8** | 60–120 ✓ |
 | Kryo | 129,6 min | 130,6 | **128,6** | 120–240 ✓ |
 | Nimbus | 135,2 min | 147,1 | **183,6** | 120–240 ✓ |
-| Erebos | 176,7 min | 176,3 | hat keines | 120–240 ✓ |
+| Erebos | 157,4 min | 176,3 | hat keines | 120–240 ✓ |
+
+(Pyra und Erebos stehen hier bereits mit den Zahlen aus M22 — siehe unten.)
 
 Die drei Vorhersagen oben waren **zwei Drittel falsch**, und das ist der Wert
 der Messung:
@@ -2127,9 +2129,53 @@ der Messung:
 Und ein Befund, der nicht §20 gehört, aber ohne `compare()` über mehrere
 Startwerte nie aufgefallen wäre: **Vesta hängt an der Ereignislage.** Derselbe
 Planet, dieselbe Fassung, drei Startwerte — 39,3, 41,4 und **193,6** Minuten.
-Fünffache Dauer bei einem von drei Läufen, ohne jedes neue System. Das ist die
-nächste Balancing-Frage, und ihr erster Schritt ist herauszufinden, *welches*
-Ereignis es ist.
+Fünffache Dauer bei einem von drei Läufen, ohne jedes neue System.
+
+### Der Abriss fehlte (M22)
+
+Die Aufklärung der 193,6 hat den Simulanten und einen Planeten verändert.
+Ablesbar geworden ist sie erst, seit ein Lauf mitschreibt, **welches** Ereignis
+wann auftrat und wie die Atmosphäre dabei lief:
+
+1. Startwert `balance:0` wirft **vier Temperaturinversionen** in die ersten 22
+   Minuten — das einzige Ereignis mit `needs: 'nitrogen'`, Produktion ×0,7. Es
+   bremst genau den Puffer.
+2. Der Regler gleicht aus und **schwingt**: N₂ auf 85,4 % (Fenster bis 80),
+   dann kippt O₂ bei Minute 42 auf 23,4 % (Fenster bis 23).
+3. Von da an steht der Lauf 150 Minuten bei 23,0 bis 23,3 % und kriecht.
+
+Kein Ereignis dauert länger als 150 Sekunden. 150 Minuten Schaden können also
+nur über eine **Falle** entstehen, und die Falle stand offen, weil der
+simulierte Spieler den **Abriss** nicht kannte (§17). Das ist bedeutsamer als
+die sechs vorherigen Fälle derselben Art: N₂ hat das Abblasventil, Schadstoffe
+haben den Wäscher — **O₂ hat kein Gegenmittel** außer aufzuhören zu
+produzieren. Wer über sein O₂-Fenster schießt, hat genau einen Zug, und der
+Simulant kannte ihn nicht.
+
+Mit der Abrissregel: Vesta 47,1 statt 193,6 bei demselben Startwert, die
+beiden anderen Startwerte unverändert.
+
+> **Und dann fiel Erebos aus seinem Fenster.** Derselbe Griff verkürzte ihn von
+> 176,7 auf 86,0 min. Die alte Zahl bestand zu 90 Minuten aus „steht über dem
+> O₂-Fenster fest" — der letzte Planet war nie so lang, wie die Tabelle
+> behauptet hat, und ein Mensch, der abreißt, war nie so lange dort. Damit war
+> die Aussage „alle sechs stehen im Fenster" bei Erebos ein Artefakt.
+>
+> Die naheliegende Erklärung wurde geprüft und ist **falsch**: der Simulant
+> startet mit 50 000 von jedem Material, und Erebos fördert als einziger
+> Planet nichts — aber mit 1000 statt 50 000 braucht er 92,2 statt 86,0 min,
+> zwischen 1000 und 5000 ändert sich gar nichts. Der Planet war wirklich zu
+> kurz.
+>
+> Erebos' Startluft steht deshalb auf dem **Vierfachen**, alle vier Zahlen
+> zugleich, Anteile unverändert. Das ist die einzige Fassung, die §15 treu
+> bleibt: seine Härte kommt weiter aus der *Reihenfolge* — waschen, abblasen,
+> atmen lassen —, gewachsen ist nur die Menge Arbeit. Gemessen über drei
+> Startwerte: 157,4 / 138,9 / 162,5 min, jeder im Fenster und jeder länger als
+> Nimbus. ×3,5 rutschte mit 125 min darunter.
+
+Damit stehen alle sechs Planeten wieder im Fenster **und** in der richtigen
+Reihenfolge: 24,9 / 38,5 / 61,5 / 129,6 / 135,2 / 157,4 Minuten.
 
 ### Drei Fallen, die dieser Entwurf ausdrücklich vermeidet
 
@@ -2157,6 +2203,8 @@ Ereignis es ist.
 - **Was passiert mit `revealAt`?** Baupläne und Freigabeschwellen sind zwei
   Schlösser an derselben Tür. Wahrscheinlich ersetzt der Bauplan die Schwelle,
   wo es einen gibt — sonst wartet man zweimal auf dasselbe.
-- **Warum kostet ein Startwert Vesta 150 Minuten?** Neu aus der Messung, siehe
-  oben. Bis das geklärt ist, sind alle Vesta-Zahlen Mediane und keine Werte.
+- ~~**Warum kostet ein Startwert Vesta 150 Minuten?**~~ **Beantwortet (M22):**
+  vier Temperaturinversionen früh, ein schwingender Regler, und dann die
+  O₂-Falle aus §4 — offen gehalten davon, dass der simulierte Spieler nie
+  abgerissen hat. Siehe oben.
 

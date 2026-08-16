@@ -26,6 +26,29 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M22 ist fertig: **Der Abriss fehlte** — und mit ihm war ein Planet falsch
+eingestellt. Vesta brauchte bei einem von drei Ereignis-Startwerten 193,6
+statt 39,3 Minuten. Ursache: vier Temperaturinversionen früh bremsen den
+Puffer, der Regler schwingt (N₂ auf 85,4 %, dann O₂ auf 23,4 % bei einem
+Fenster bis 23), und danach steht der Lauf 150 Minuten fest. Kein Ereignis
+dauert länger als 150 Sekunden — so viel Schaden geht nur über die Falle aus
+§4.
+
+> **O₂ ist das einzige, was kein Gegenmittel hat.** N₂ hat das Abblasventil,
+> Schadstoffe haben den Wäscher — über dem O₂-Fenster gibt es genau einen Zug,
+> und das ist der **Abriss** (§17). Der simulierte Spieler kannte ihn nicht;
+> das ist der siebte Fall von „ein Planet, der auffällig ist, ist meistens ein
+> Simulant, der etwas nicht kann", und der erste, der eine Zahl in `data/`
+> gekostet hat.
+
+Denn mit Abriss fiel **Erebos von 176,7 auf 86,0 min** — weit unter sein
+Fenster und kürzer als Kryo und Nimbus. Die alte Zahl bestand zu 90 Minuten
+aus Steckenbleiben über dem Fenster; ein Mensch war dort nie so lange. Die
+Frachthypothese wurde geprüft und ist falsch (mit 1000 statt 50 000 Material:
+92,2 min). Erebos' Startluft steht deshalb auf dem **Vierfachen**, alle vier
+Zahlen zugleich, Anteile unverändert — seine Härte bleibt die *Reihenfolge*,
+gewachsen ist nur die Menge Arbeit.
+
 M21 ist fertig: **§20 ist gemessen** — `plaene`, `bergung` und `bauwerk` sind
 Optionen in [dev/balance.ts](src/dev/balance.ts), `compare()` nimmt den
 Schalter als Parameter. Zwei der drei Vorhersagen aus §20 waren falsch:
@@ -382,12 +405,19 @@ Multiplikator stand. **Wer eine Balancing-Frage hat, erweitert dieses
 Werkzeug — er tippt keine neue Schleife in die Konsole.**
 
 Was sein simulierter Spieler kann, steht im Kopf der Datei. **Alle sechs
-Planeten stehen im Fenster** — Aurora 24,9 min, Vesta 38,5, Pyra 73,1, Kryo
-129,6, Nimbus 135,2, Erebos 176,7, jeder länger als der vorige, ohne dass eine
-Zahl dafür gestellt wurde. (Nimbus stand bis M21 bei 151,7; die 16 Minuten
-Unterschied sind der Rundungsfehler in `unassigned()`, der dort die Zuweisung
-am häufigsten traf.) Die Tabelle im Dateikopf ist der aktuelle Stand; wer sie
-ändert, ersetzt die Zahlen, statt alte danebenzustellen.
+Planeten stehen im Fenster** — Aurora 24,9 min, Vesta 38,5, Pyra 61,5, Kryo
+129,6, Nimbus 135,2, Erebos 157,4, jeder länger als der vorige. Fünf dieser
+Zahlen sind nie gestellt worden; die sechste (Erebos) ist es seit M22, weil
+erst der Abriss gezeigt hat, wie kurz der Planet wirklich war. Die Tabelle im
+Dateikopf ist der aktuelle Stand; wer sie ändert, ersetzt die Zahlen, statt
+alte danebenzustellen.
+
+> **Jede dieser Zahlen ist nur so gut wie der Simulant.** Zweimal in zwei
+> Meilensteinen hat eine neue Fähigkeit die halbe Tabelle verschoben — die
+> Decimal-Zählung brachte Nimbus von 151,7 auf 135,2, der Abriss Pyra von 73,1
+> auf 61,5 und Erebos von 176,7 auf 86,0. Wer eine Zahl in `data/` ändern
+> will, fragt zuerst, welchen Zug ein Mensch hier hätte und der Simulant
+> nicht.
 
 > **Bevor eine Zahl in `data/` angefasst wird: benutzt der Simulant überhaupt
 > alle Systeme, die ein Mensch benutzen würde?** Zweimal hintereinander war
