@@ -1,4 +1,5 @@
 import Decimal from 'break_infinity.js'
+import { nameFor } from '../data/names'
 import { SALVAGE, findSalvage, type SalvageTarget } from '../data/salvage'
 import { createRng } from '../engine/rng'
 import { play } from '../engine/audio'
@@ -119,6 +120,18 @@ export function canSend(target: SalvageTarget, crew: number): boolean {
  * `crewAway()` ab, es gibt also keinen zweiten Zähler, der auseinanderlaufen
  * könnte.
  */
+/**
+ * Wer diesen Trupp anführt (M27, §17).
+ *
+ * Abgeleitet und **nicht gespeichert**: derselbe Schlüssel, der über den
+ * Zwischenfall entscheidet, benennt auch die Person. Damit steht sie beim
+ * Aufbruch und bei der Rückkehr gleich da — ohne ein Feld im Spielstand, das
+ * mit ihm auseinanderlaufen könnte, und ohne Migration.
+ */
+function leaderOf(target: SalvageTarget, run: number): string {
+  return nameFor(`bergung:${planet.id}:${target.id}:${run}`)
+}
+
 export function sendCrew(id: string, crew: number): boolean {
   const target = findSalvage(id)
   if (!target || !canSend(target, crew)) return false
@@ -136,7 +149,7 @@ export function sendCrew(id: string, crew: number): boolean {
       mishap,
     },
   ]
-  addLog(`${crew} Leute ziehen los: ${target.name}.`)
+  addLog(`${crew} Leute ziehen los: ${target.name}. ${leaderOf(target, runsOn(id))} führt.`)
   play('buy')
   return true
 }
@@ -192,13 +205,21 @@ function resolve(expedition: (typeof planet.expeditions)[number]): void {
     [target.id]: Math.min(1, depletionOf(target.id) + target.depletion * yieldFactor(target.id)),
   }
 
+  /*
+   * Dieselbe Person wie beim Aufbruch (M27, §17) — sie kommt zurück, und bei
+   * einem Zwischenfall ist sie diejenige, auf die man gewartet hat. Aus „der
+   * Trupp kommt spät" wird damit jemand, der zu spät kommt; mehr braucht §1.4
+   * an dieser Stelle nicht.
+   */
+  const leader = leaderOf(target, run)
+
   if (expedition.mishap) {
     addLog(
-      `${target.name}: der Trupp steckte fest und kommt spät zurück — nur ${gebracht.join(', ')}.`,
+      `${target.name}: ${leader} steckte fest und kommt spät zurück — nur ${gebracht.join(', ')}.`,
       'warn',
     )
   } else {
-    addLog(`${target.name}: ${gebracht.join(', ')}.`, 'good')
+    addLog(`${target.name}: ${leader} bringt ${gebracht.join(', ')}.`, 'good')
   }
 
   // Die Vorgeschichte steht nach dem Ertrag und in einer eigenen Zeile: sie

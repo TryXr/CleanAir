@@ -1423,8 +1423,25 @@ Die Lehre ist nicht „besser hinsehen", sondern eine Zuständigkeit:
   Gefunden wurde es, indem der Planet zum ersten Mal in der *Oberfläche*
   geöffnet wurde statt simuliert. Dasselbe Muster wie bei den
   Versorgungsanlagen acht Meilensteine zuvor.
-- **Haben Bewohner Namen?** Bei Dutzenden wäre es möglich und stärkt §1.4
-  („Zahlen erzählen eine Geschichte"), kostet aber UI.
+- ~~**Haben Bewohner Namen?**~~ **Entschieden in M27: ja, aber nur dort, wo
+  ohnehin von Einzelnen die Rede ist.** Ein Personenregister wäre viel
+  Oberfläche für eine Bevölkerung, die in Dutzenden bis Hunderten zählt
+  (gemessen 60 bis 437 je Planet) — und genau das Micromanagement, das §17
+  abgeschafft hat. Namen stehen deshalb an zwei Stellen und in keinem Panel:
+
+  - **Wer einen Bergungstrupp anführt.** Dieselbe Person zieht los und kommt
+    zurück; bei einem Zwischenfall ist sie diejenige, auf die man wartet. Aus
+    „der Trupp kommt spät" wird jemand, der zu spät kommt.
+  - **Wer eine Etappe eines Bauwerks fertig gemacht hat.** Die Saatbank deutet
+    es selbst schon an: „Die Handschrift bleibt."
+
+  **Kein Zustand, keine Migration.** `nameFor(schlüssel)` in
+  [data/names.ts](src/data/names.ts) leitet den Namen aus dem *Anlass* ab —
+  „Trupp zur Landefähre, dritter Anlauf" ergibt immer denselben Menschen, auch
+  nach einem Neuladen. Derselbe Grundsatz wie beim Zwischenfall (§20.2) und
+  bei der Hochrechnung (§19): ein Zufall, den man neu würfeln kann, ist
+  keiner. Weil nichts gespeichert wird, kann auch nichts mit dem Spielstand
+  auseinanderlaufen.
 - ~~**Der Arbeitskraft-Multiplikator** (`1 + √siedler / 40`) gehört
   ersetzt.~~ **Erledigt in der zweiten Hälfte von M13:** ersatzlos gestrichen,
   Hände wirken nur noch über Plätze.

@@ -1,5 +1,6 @@
 import Decimal from 'break_infinity.js'
 import { LANDMARKS, landmarkFor, type LandmarkDef, type LandmarkStage } from '../data/landmarks'
+import { nameFor } from '../data/names'
 import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
 import { planet } from '../state/planet.svelte'
@@ -128,7 +129,16 @@ export function completeStage(id: string): void {
     addLog(`${def.name} steht. ${def.effectText}`, 'good')
     play('complete')
   } else {
-    addLog(`${def.name}: ${stage?.name ?? 'Etappe'} fertig.`, 'good')
+    /*
+     * **Wer die Etappe fertig gemacht hat, steht dabei** (M27, §17).
+     *
+     * Namen nur, wo Einzelne vorkommen — und ein Bauwerk ist die Stelle, an
+     * der dieses Spiel es selbst schon andeutet: die Saatbank endet mit „Die
+     * Handschrift bleibt". Der Schlüssel enthält Planet und Etappe, nie die
+     * Uhrzeit: dieselbe Etappe trägt nach einem Neuladen denselben Namen.
+     */
+    const wer = nameFor(`bauwerk:${planet.id}:${def.id}:${planet.landmarkStage}`)
+    addLog(`${def.name}: ${stage?.name ?? 'Etappe'} fertig. Aufgeschrieben von ${wer}.`, 'good')
     play('upgrade')
   }
 }

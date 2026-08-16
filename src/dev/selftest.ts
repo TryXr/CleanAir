@@ -52,6 +52,7 @@ import {
   sendCrew,
 } from '../systems/salvage'
 import { findSalvage } from '../data/salvage'
+import { nameFor } from '../data/names'
 import { landmarkFor } from '../data/landmarks'
 import {
   grantBlueprint,
@@ -1094,6 +1095,29 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       salvageBlocker(findSalvage('lander')!, gezeigt) === null,
       `${salvageBlocker(findSalvage('lander')!, gezeigt)}`,
     )
+
+    /*
+     * **Namen sind abgeleitet, nicht gewürfelt** (M27, §17).
+     *
+     * Geprüft wird nicht, *welcher* Name kommt, sondern dass derselbe Anlass
+     * immer denselben liefert und verschiedene Anlässe auseinandergehen. Ein
+     * Name, den ein Neuladen neu würfelt, wäre keiner — dieselbe Regel wie
+     * beim Zwischenfall der Bergung und bei der Hochrechnung (§19). Weil er
+     * aus dem Schlüssel entsteht, steht er in keinem Spielstand und kann
+     * damit auch nicht mit ihm auseinanderlaufen.
+     *
+     * Gegenprobe gesehen: mit `Math.random()` im Schlüssel wird die erste
+     * Prüfung rot.
+     */
+    const ersterName = nameFor('bergung:aurora:lander:0')
+    check(r, 'Derselbe Anlass gibt denselben Namen', nameFor('bergung:aurora:lander:0') === ersterName, ersterName)
+    check(
+      r,
+      'Ein anderer Anlauf gibt einen anderen',
+      nameFor('bergung:aurora:lander:1') !== ersterName,
+      `${ersterName} vs ${nameFor('bergung:aurora:lander:1')}`,
+    )
+    check(r, 'Der Name ist zweiteilig', ersterName.trim().split(/\s+/).length === 2, ersterName)
 
     /*
      * Erebos führt kein eigenes Material (§19) — und genau deshalb ist die
