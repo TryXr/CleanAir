@@ -301,7 +301,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 186 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 189 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -371,6 +371,17 @@ Laufzeitlogik, und eine Anlage, die nirgends verfügbar ist, steht in keiner
 Liste — sichtbar nur, wenn man alle Planeten durchgeht. Genau diesen Weg geht
 ein Mensch. **Anzeigetabellen gehören deshalb nach `data/`, nicht in die
 Komponente:** was nur die `.svelte`-Datei kennt, kann keine Prüfung sehen.
+
+> **Ein Etikett muss die Frage beantworten, die es stellt.** Dritter Durchgang
+> durch die laufende Oberfläche (M23), dieselbe Klasse noch eine Ebene tiefer:
+> das Lager schrieb „Balken **nicht hier**", während zwei Panels darüber die
+> Werkstatt Balken anbot und dreihundert im Regal lagen. Die Bedingung fragte
+> `planet.materials` ab — also „wird hier aus dem Boden geholt" — und
+> beschriftete damit „gibt es hier nicht". Balken, Werkzeug und Fundstücke
+> stehen in keiner Förderliste, weil sie aus keinem Boden kommen; der Vermerk
+> stand also auf jedem Planeten dauerhaft und falsch. Jetzt heißt die Regel
+> `obtainableHere()` und steht in `systems/` — gefördert, gefertigt **oder**
+> geborgen.
 
 > **Verfügbar ist nicht sichtbar.** Der zweite Durchgang durch die laufende
 > Oberfläche hat dieselbe Klasse noch einmal getroffen, eine Ebene tiefer:

@@ -3,13 +3,14 @@ import { findGenerator, type GeneratorDef } from '../data/generators'
 import { GOODS, findGood, type GoodDef } from '../data/goods'
 import { play } from '../engine/audio'
 import { addLog } from '../state/log.svelte'
-import { generatorCount, planet, type BuildSite } from '../state/planet.svelte'
+import { currentPlanetDef, generatorCount, planet, type BuildSite } from '../state/planet.svelte'
 import { canAffordMaterials, materialAmount, spendMaterials } from '../state/run.svelte'
 import { findLandmark } from '../data/landmarks'
 import { isUnlocked } from './blueprints'
 import { completeStage, nextStage, stageWork } from './landmarks'
 import { handFactor, unassigned } from './labor'
 import { generatorCost, isAvailable } from './production'
+import { revealedTargets } from './salvage'
 import { storeMaterial } from './storage'
 
 /**
@@ -172,6 +173,35 @@ export function availableGoods(): GoodDef[] {
       planet.oxygenTotal.gte(g.revealAt) &&
       Object.keys(g.input).some((id) => materialAmount(id).gt(0)),
   )
+}
+
+/**
+ * Ist dieses Material **hier** zu bekommen — gefördert, gefertigt oder geborgen?
+ *
+ * Die Frage, die das Lager beantworten will. Es beantwortete bis dahin eine
+ * andere: `planet.materials.includes(id)` heißt „wird hier aus dem Boden
+ * geholt". Balken, Werkzeug und Fundstücke stehen in *keiner* dieser Listen,
+ * weil sie aus keinem Boden kommen — also trugen sie auf jedem Planeten
+ * dauerhaft den Vermerk „nicht hier", während die Werkstatt eine Handbreit
+ * darüber Balken anbot und dreihundert davon im Regal lagen.
+ *
+ * Steht hier und nicht in der Komponente, aus demselben Grund wie
+ * `availableGoods()` direkt darüber: was nur die `.svelte`-Datei weiß, kann
+ * keine Prüfung sehen — und genau diese Sorte Fehler hat in diesem Projekt
+ * schon mehrere Meilensteine überlebt (CLAUDE.md).
+ */
+export function obtainableHere(materialId: string): boolean {
+  if (currentPlanetDef().materials.includes(materialId)) return true
+  // Gefertigt: es zählt das Rezept, das die Werkstatt **hier** gerade anbietet
+  // — ein Rezept, dessen Eingänge fehlen, ist keine Quelle.
+  if (availableGoods().some((g) => g.output === materialId)) return true
+  /*
+   * Geborgen: das einzige Vorkommen von Fundstücken überhaupt (§20.2).
+   * Bewusst `revealedTargets()` und nicht `targetsHere()` — ein Ziel, das der
+   * Spieler noch nicht entdeckt hat, ist keine Quelle, die man ihm zusagen
+   * darf. Dieselbe Trennung wie „verfügbar ist nicht sichtbar" (CLAUDE.md).
+   */
+  return revealedTargets().some((t) => t.yields.some((y) => y.material === materialId))
 }
 
 /**

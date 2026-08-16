@@ -2200,9 +2200,14 @@ Reihenfolge: 24,9 / 38,5 / 61,5 / 129,6 / 135,2 / 157,4 Minuten.
   entwertet die Rakete. Vermutlich nein — aber es ist die naheliegendste
   Erweiterung und gehört deshalb hier notiert, bevor sie jemand aus Versehen
   einbaut.
-- **Was passiert mit `revealAt`?** Baupläne und Freigabeschwellen sind zwei
-  Schlösser an derselben Tür. Wahrscheinlich ersetzt der Bauplan die Schwelle,
-  wo es einen gibt — sonst wartet man zweimal auf dasselbe.
+- ~~**Was passiert mit `revealAt`?**~~ **Entschieden in M20, geprüft in M23:**
+  wo ein Bauplan gilt, gilt nur er (`isRevealed()` in systems/production.ts).
+  Der Grund ist schärfer als „zweimal warten": ein Bauplan liegt in `meta` und
+  überlebt jede Reise, `revealAt` misst gegen `oxygenTotal` und steht bei
+  jeder Ankunft wieder auf null. Beides zugleich hieße, auf einem neuen
+  Planeten ein zweites Mal auf etwas zu warten, das man längst verdient hat.
+  Die Prüfung deckte bis M23 nur die Richtung „Schwelle erfüllt, Plan fehlt"
+  ab — die eigentliche Entscheidung war ungeprüft.
 - ~~**Warum kostet ein Startwert Vesta 150 Minuten?**~~ **Beantwortet (M22):**
   vier Temperaturinversionen früh, ein schwingender Regler, und dann die
   O₂-Falle aus §4 — offen gehalten davon, dass der simulierte Spieler nie

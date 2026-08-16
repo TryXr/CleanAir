@@ -1,6 +1,7 @@
 <script lang="ts">
   import { MATERIALS } from '../data/materials'
   import { format, formatRate } from '../engine/format'
+  import { obtainableHere } from '../systems/construction'
   import { materialRate } from '../systems/production'
   import { isStorageFull, materialCapacity, storageFraction } from '../systems/storage'
   import { currentPlanetDef } from '../state/planet.svelte'
@@ -17,15 +18,21 @@
   const def = $derived(currentPlanetDef())
   const cap = $derived(materialCapacity())
 
-  // Alles anzeigen, was man besitzt oder hier fördern kann. Ein Material,
+  // Alles anzeigen, was man besitzt oder hier bekommen kann. Ein Material,
   // das es auf diesem Planeten nicht gibt und von dem nichts im Lager
   // liegt, wäre nur eine leere Zeile.
+  //
+  // `local` heißt „hier zu bekommen" und nicht „hier zu fördern": Balken,
+  // Werkzeug und Fundstücke stehen in keiner Förderliste, weil sie aus keinem
+  // Boden kommen — mit `def.materials` trugen sie deshalb überall dauerhaft
+  // „nicht hier", während die Werkstatt zwei Panels weiter oben Balken anbot.
+  // Die Regel selbst steht in systems/, damit eine Prüfung sie sehen kann.
   const rows = $derived(
     MATERIALS.map((m) => ({
       def: m,
       amount: materialAmount(m.id),
       rate: materialRate(m.id),
-      local: def.materials.includes(m.id),
+      local: obtainableHere(m.id),
       full: isStorageFull(m.id),
       fraction: storageFraction(m.id),
     })).filter((r) => r.amount.gt(0) || r.local),

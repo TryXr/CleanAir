@@ -34,6 +34,7 @@ import {
   buildRate,
   cancelSite,
   constructionSystem,
+  obtainableHere,
   orderBlocker,
   orderGenerator,
   orderGood,
@@ -883,6 +884,24 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       availableGoods().map((g) => g.id).join(', '),
     )
 
+    /*
+     * **Was die Werkstatt hier anbietet, ist hier zu bekommen.**
+     *
+     * Beim Durchklicken gefunden: das Lager schrieb „Balken nicht hier",
+     * während zwei Panels darüber die Werkstatt Balken anbot und dreihundert
+     * im Regal lagen. Die Bedingung fragte `planet.materials` ab — also „wird
+     * hier aus dem Boden geholt" —, und Balken, Werkzeug und Fundstücke
+     * stehen in keiner solchen Liste, weil sie aus keinem Boden kommen. Der
+     * Vermerk stand damit auf jedem Planeten dauerhaft und falsch.
+     *
+     * Die Gegenprobe (`obtainableHere` wieder auf `def.materials.includes`)
+     * wurde rot gesehen. Holz daneben ist die zweite Hälfte der Prüfung: es
+     * *ist* auf Aurora nicht zu bekommen, und das muss so bleiben — sonst
+     * hätte man den Vermerk nur global abgeschaltet.
+     */
+    check(r, 'Gefertigtes gilt als hier zu bekommen', obtainableHere('balken'))
+    check(r, 'Mitgebrachtes nicht', !obtainableHere('holz'))
+
     const wareBestellt = orderGood('balken', 3)
     check(r, 'Werkstatt nimmt die Bestellung an', wareBestellt)
     check(r, 'Werkstatt bucht Material sofort ab', materialAmount('holz').toNumber() < holzVorher)
@@ -1147,6 +1166,29 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     grantBlueprint('press', 'Prüfung.')
     check(r, 'Mit Bauplan sichtbar', isRevealed(presse))
     check(r, 'Mit Bauplan bestellbar', orderGenerator('press', 1))
+
+    /*
+     * **Und der Bauplan ersetzt die Freigabeschwelle** (§20, „zwei Schlösser
+     * an derselben Tür").
+     *
+     * Die drei Prüfungen darüber laufen mit `oxygenTotal` auf 1e9 — sie
+     * decken nur die Richtung „Schwelle erfüllt, Plan fehlt" ab. Die andere
+     * ist die eigentliche Entscheidung: ein Bauplan liegt in `meta` und
+     * überlebt jede Reise, `revealAt` misst gegen `oxygenTotal` und steht bei
+     * jeder Ankunft wieder auf null. Ohne diese Prüfung dürfte jemand die
+     * Schwelle wieder danebenstellen, und der Spieler wartete auf einem neuen
+     * Planeten ein zweites Mal auf etwas, das er längst verdient hat.
+     *
+     * Gegenprobe gesehen: mit `planet.oxygenTotal.gte(def.revealAt)` als
+     * zusätzlicher Bedingung in `isRevealed()` wird sie rot.
+     */
+    planet.oxygenTotal = new Decimal(0)
+    check(
+      r,
+      'Der Bauplan ersetzt die Freigabeschwelle',
+      isRevealed(presse),
+      `revealAt ${presse.revealAt}, oxygenTotal 0`,
+    )
 
     /*
      * Baupläne überleben den Durchlauf-Reset. Sie liegen in `meta`, weil ein
