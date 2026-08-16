@@ -6,6 +6,7 @@ import { meta } from '../state/meta.svelte'
 import { grantFromAchievement } from './blueprints'
 import { planet } from '../state/planet.svelte'
 import { materialAmount, run } from '../state/run.svelte'
+import { totalSettlers } from './travel'
 
 /**
  * Achievements (DESIGN.md §10).
@@ -97,7 +98,10 @@ function isMet(c: Condition): boolean {
     case 'runs':
       return meta.stats.runs >= c.atLeast
     case 'population':
-      return meta.population.add(planet.settlers).gte(c.atLeast)
+      // Alle Planeten des Laufs, nicht nur der, auf dem man gerade steht —
+      // sonst wäre ein Erfolg über Bevölkerung dadurch zu verlieren, dass man
+      // weiterfliegt (M24, systems/travel.ts).
+      return meta.population.add(totalSettlers()).gte(c.atLeast)
     case 'research':
       return meta.research.gte(c.atLeast)
     case 'cores':
@@ -132,7 +136,7 @@ export function progressOf(c: Condition): number {
     case 'runs':
       return anteil(meta.stats.runs, c.atLeast)
     case 'population':
-      return anteil(meta.population.add(planet.settlers).toNumber(), c.atLeast)
+      return anteil(meta.population.add(totalSettlers()).toNumber(), c.atLeast)
     case 'research':
       return anteil(meta.research.toNumber(), c.atLeast)
     case 'cores':

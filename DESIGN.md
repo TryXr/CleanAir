@@ -674,17 +674,33 @@ Bewusst noch nicht entschieden — sollte während M1/M2 im Spiel getestet werde
   Fenster, desto mehr O₂ verschwindet, der Anteil bleibt also knapp über der
   Grenze stehen statt davonzulaufen. Herunterdrücken muss man ihn selbst —
   mit N₂ oder mehr atmender Bevölkerung.
-- **Bevölkerung steuerbar oder automatisch?** Ein Regler gibt Kontrolle, aber
-  auch Micromanagement-Druck.
+- ~~**Bevölkerung steuerbar oder automatisch?**~~ **Entschieden in §17,
+  nachgetragen in M24: automatisch.** Zuwanderung passiert von selbst, sobald
+  Wohnraum und Versorgung es hergeben — der Regler wäre genau der
+  Micromanagement-Druck, den diese Zeile befürchtet hat. Das Gegenstück ist
+  nicht ein Schieber, sondern der **Abriss**: Wohnraum weg heißt, die Leute
+  ziehen ab. Damit gilt auch hier „alles, was wächst, braucht ein Gegenstück",
+  ohne eine zweite Bedienung.
 - ~~**Wellen-Frequenz:** an Echtzeit gekoppelt oder an Fortschritt?~~
   **Entschieden in M8: an den Fortschritt.** §7 gab die Antwort bereits vor
   („Der Fortschritt erzeugt die Bedrohung. Keine künstlichen Trigger nötig"),
   und es ist zugleich das idle-freundlichere: wer weggeht, während nichts
   wächst, kommt nicht in eine Wand aus Wellen zurück.
-- **Kolonie-Ertrag:** linear pro Kolonie oder mit abnehmendem Grenzertrag?
-  Linear kann spät explodieren.
-- **Story-Präsentation:** Log-Einträge, Dialogfenster oder ein Codex zum
-  Nachlesen? Log ist am billigsten und stört den Flow am wenigsten.
+- ~~**Kolonie-Ertrag:** linear pro Kolonie oder mit abnehmendem
+  Grenzertrag?~~ **Entschieden mit §16, nachgetragen in M24: abnehmend.** Aus
+  „Kolonien" sind Planeten geworden, und ihr Ertrag ist die Biomasse des
+  ganzen Laufs — verrechnet über `kerne = floor(√(biomasse / 300000))` in
+  systems/prestige.ts. Die Wurzel *ist* der abnehmende Grenzertrag: doppelte
+  Biomasse sind 1,41-mal so viele Kerne. Genau deshalb misst
+  [dev/balance.ts](src/dev/balance.ts) auch die ungerundete Biomasse mit — auf
+  einem frühen Planeten verschwindet ein Zugewinn sonst unter der Rundung.
+- ~~**Story-Präsentation:** Log-Einträge, Dialogfenster oder ein Codex?~~
+  **Entschieden, nachgetragen in M24: der Log — und seit §20.2 die Bergung.**
+  Die Vermutung „Log ist am billigsten und stört den Flow am wenigsten" hat
+  sich gehalten, aber die eigentliche Antwort kam später: ein Bergungsziel
+  gibt bei jedem Anlauf **einen weiteren Satz** heraus, der Reihe nach. Damit
+  ist die Vorgeschichte kein Nachschlagewerk neben dem Spiel, sondern ein
+  Ertrag *im* Spiel — der einzige, den kein Balancing kaputtmachen kann.
 
 ---
 
@@ -849,14 +865,22 @@ Spielen am ehesten unfair wirken wird.
 
 ### Offene Fragen dieses Kurswechsels
 
-- **Überlebt das Material-Inventar den Durchlauf-Reset?** Vermutlich nicht —
-  sonst trivialisiert der zweite Durchlauf den ersten. Naheliegender:
-  Genesis-Upgrades gewähren *Startmaterial*.
-- **Wie viele Planeten pro Durchlauf?** Beim ersten Mal nach Planet 2 zu
-  resetten heißt: der erste Durchlauf ist kurz. Wächst das später auf 5, 10?
-- **Was passiert mit `meta.population` beim Reset?** Bevölkerung ist bisher
-  „überlebt für immer". Unter dem neuen Modell gehört sie vermutlich zum
-  Durchlauf und wird mit zurückgesetzt.
+- ~~**Überlebt das Material-Inventar den Durchlauf-Reset?**~~ **Nein**, wie
+  hier vermutet: `resetRun()` leert Material, Freischaltungen und alle
+  eingelagerten Planeten. Der zweite Teil der Vermutung ist ebenfalls
+  eingetroffen, nur mit anderem Stoff — der Meta-Baum gewährt Start**vorrat**
+  statt Startmaterial („Vorratstank: jeder neue Planet beginnt mit 500 O₂").
+- ~~**Wie viele Planeten pro Durchlauf?**~~ **Alle sechs**, und der Reset ist
+  nicht an eine Zahl gebunden: er lohnt sich, sobald er einen Kern abwirft,
+  und wann es zäh genug ist, entscheidet der Spieler (§16). Die Frage „nach
+  Planet 2 resetten" hat sich damit erledigt, statt beantwortet zu werden.
+- ~~**Was passiert mit `meta.population` beim Reset?**~~ **Anders als hier
+  vermutet: sie überlebt.** `doPrestige()` addiert die Bewohner des Laufs auf
+  `meta.population` — Menschen bleiben als Kolonie-Erfahrung erhalten, auch
+  wenn alles andere zurückfällt. **In M24 korrigiert:** addiert wurde bis dahin
+  nur `planet.settlers`, also die Welt, auf der man beim Drücken zufällig
+  stand. Wer seinen Lauf auf einem frisch besiedelten Planeten beendete,
+  verschenkte jede Kolonie davor.
 
 ### Die fünf Planeten (M7)
 

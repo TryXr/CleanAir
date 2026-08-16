@@ -202,6 +202,30 @@ export function totalBiomass(): Decimal {
   return total
 }
 
+/**
+ * Menschen, die in diesem Durchlauf leben — auf **allen** Planeten.
+ *
+ * Dieselbe Summe wie `totalBiomass()` darüber, und aus demselben Grund
+ * nötig: `planet` ist nur der aktive Planet, alle anderen liegen als
+ * Momentaufnahme in `run.planets`. Wer `planet.settlers` als „Bevölkerung"
+ * anzeigt, zeigt die Bevölkerung *einer* Welt.
+ *
+ * Gefunden beim Durchklicken (M24): eine Kolonie von 300 Leuten auf Aurora,
+ * ein Flug nach Vesta — und die Kopfzeile meldete „Bevölkerung 0". Die Leute
+ * waren nicht weg, sie standen nur in einem Objekt, das niemand mitzählte.
+ * Es ist das vierte Mal, dass in diesem Projekt eine Eigenschaft des aktiven
+ * Planeten mit einer des Durchlaufs verwechselt wurde (Sternenkarte,
+ * Anlagenliste, Fahrstuhl-`scope`) — deshalb steht die Summe hier neben
+ * ihrer Schwester und nicht in der Komponente.
+ */
+export function totalSettlers(): Decimal {
+  let total = planet.settlers
+  for (const raw of Object.values(run.planets)) {
+    total = total.add(readSnapshot(raw).settlers)
+  }
+  return total
+}
+
 /** Wie viele Planeten dieses Durchlaufs stabil stehen. */
 export function completedCount(): number {
   return planetSummaries().filter((p) => p.completed).length

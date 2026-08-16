@@ -5,6 +5,7 @@
   import { currentN2Rate, currentO2Rate } from '../systems/production'
   import { totalStaff } from '../systems/labor'
   import { pendingCores } from '../systems/prestige'
+  import { totalSettlers } from '../systems/travel'
   import { meta } from '../state/meta.svelte'
   import { planet, usesNitrogen, usesPollution } from '../state/planet.svelte'
 
@@ -65,7 +66,7 @@
   {/if}
   <div><dt>O₂ jemals</dt><dd class="num">{format(stats.totalOxygen)}</dd></div>
   <div><dt>Klicks</dt><dd class="num">{formatInt(stats.totalClicks)}</dd></div>
-  <div><dt>Bevölkerung gesamt</dt><dd class="num">{formatInt(meta.population.add(planet.settlers))}</dd></div>
+  <div><dt>Bevölkerung gesamt</dt><dd class="num">{formatInt(meta.population.add(totalSettlers()))}</dd></div>
   <div><dt>Forschungspunkte</dt><dd class="num">{format(meta.research)}</dd></div>
   <div>
     <dt>Ereignisse</dt>

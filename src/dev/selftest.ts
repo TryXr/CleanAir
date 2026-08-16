@@ -81,7 +81,7 @@ import {
   supplyRate,
 } from '../systems/production'
 import { isStorageFull, materialCapacity, storeMaterial } from '../systems/storage'
-import { buildRocket, showsPlanetMap, travelTo } from '../systems/travel'
+import { buildRocket, showsPlanetMap, totalSettlers, travelTo } from '../systems/travel'
 
 /**
  * Selbsttest — die mechanische Klasse von Fehlern, ohne Spieltest.
@@ -201,6 +201,38 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     check(r, 'Rückkehr erhält Klicks', planet.clicks === 555)
     check(r, 'Verlassener Planet liegt eingelagert', run.planets.vesta !== undefined)
     check(r, 'Aktiver Planet liegt nicht doppelt vor', run.planets.aurora === undefined)
+
+    /*
+     * **Eine Kolonie verschwindet nicht, wenn man wegfliegt.**
+     *
+     * Beim Durchklicken gefunden (M24): 300 Menschen auf Aurora, Flug nach
+     * Vesta — und die Kopfzeile meldete „Bevölkerung 0". Die Leute standen in
+     * `run.planets.aurora`, und gezählt wurde nur `planet.settlers`. Dieselbe
+     * Verwechslung wie bei Sternenkarte, Anlagenliste und Fahrstuhl-`scope`,
+     * nur diesmal in drei Anzeigen, den Achievements *und* im Prestige-Übertrag
+     * zugleich.
+     *
+     * Die Prüfung fragt die Summe und nicht die Anzeige — aber sie fragt sie
+     * in der Lage, in der die Anzeige falsch war: aktiver Planet leer,
+     * Bevölkerung eingelagert. Gegenprobe (`totalSettlers` gibt
+     * `planet.settlers` zurück) rot gesehen.
+     */
+    freshRun()
+    planet.settlers = new Decimal(300)
+    travelTo('vesta')
+    check(
+      r,
+      'Ausgelagerte Bewohner zählen weiter mit',
+      totalSettlers().eq(300),
+      `${totalSettlers()} statt 300`,
+    )
+    planet.settlers = new Decimal(40)
+    check(
+      r,
+      'Und der aktive Planet kommt dazu',
+      totalSettlers().eq(340),
+      `${totalSettlers()} statt 340`,
+    )
 
     /* --- Rakete ----------------------------------------------------------
        Sie muss ohne das nötige Material sperren und mit ihm freigeben.

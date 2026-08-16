@@ -3,12 +3,12 @@ import { findMetaUpgrade } from '../data/metaUpgrades'
 import { AURORA } from '../data/planets'
 import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
-import { planet, resetPlanet } from '../state/planet.svelte'
+import { resetPlanet } from '../state/planet.svelte'
 import { resetRun } from '../state/run.svelte'
 import { resetAtmosphereNotices } from './atmosphere'
 import { metaEffects, metaRequirementsMet } from './metaEffects'
 import { resetPopulationNotices } from './population'
-import { completedCount, totalBiomass } from './travel'
+import { completedCount, totalBiomass, totalSettlers } from './travel'
 
 /**
  * Prestige — der Durchlauf-Reset (DESIGN.md §16).
@@ -62,8 +62,15 @@ export function doPrestige(): boolean {
 
   const gained = pendingCores()
   const planets = completedCount()
-  // Menschen bleiben als Kolonie-Erfahrung erhalten, auch wenn der Lauf endet.
-  const settlers = planet.settlers
+  /*
+   * Menschen bleiben als Kolonie-Erfahrung erhalten, auch wenn der Lauf endet
+   * — und zwar **die des ganzen Durchlaufs**, nicht die des Planeten, auf dem
+   * man beim Drücken zufällig steht. Bis M24 stand hier `planet.settlers`:
+   * wer seinen Lauf auf einem frisch besiedelten Planeten beendete, verschenkte
+   * jede Kolonie, die er vorher aufgebaut hatte. Dieselbe Summe wie bei der
+   * Biomasse eine Zeile weiter oben (`pendingCores`), und aus demselben Grund.
+   */
+  const settlers = totalSettlers()
 
   meta.genesisCores = meta.genesisCores.add(gained)
   meta.population = meta.population.add(settlers)

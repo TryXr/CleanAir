@@ -4,6 +4,7 @@
   import { planet } from '../state/planet.svelte'
   import { session } from '../state/session.svelte'
   import { settings } from '../state/settings.svelte'
+  import { totalSettlers } from '../systems/travel'
 
   const saveLabel = $derived(
     session.saveFailed
@@ -32,8 +33,11 @@
     </div>
     <div class="res">
       <span class="label">Bevölkerung</span>
-      <!-- Siedler hier plus schon bestehende Kolonien -->
-      <span class="value num">{formatInt(meta.population.add(planet.settlers))}</span>
+      <!-- Alle Planeten dieses Durchlaufs plus die Kolonien früherer Läufe.
+           `planet.settlers` allein wäre nur die Welt, auf der man gerade
+           steht — wer von einer 300-Seelen-Kolonie wegfliegt, sah hier bis
+           M24 eine 0 (systems/travel.ts). -->
+      <span class="value num">{formatInt(meta.population.add(totalSettlers()))}</span>
     </div>
     <div class="res">
       <span class="label">Credits</span>

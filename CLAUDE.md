@@ -301,7 +301,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 189 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 191 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -371,6 +371,16 @@ Laufzeitlogik, und eine Anlage, die nirgends verfügbar ist, steht in keiner
 Liste — sichtbar nur, wenn man alle Planeten durchgeht. Genau diesen Weg geht
 ein Mensch. **Anzeigetabellen gehören deshalb nach `data/`, nicht in die
 Komponente:** was nur die `.svelte`-Datei kennt, kann keine Prüfung sehen.
+
+> **`planet.settlers` ist nicht die Bevölkerung.** Vierter Fall von
+> „Eigenschaft des aktiven Planeten statt des Durchlaufs" (M24), und der
+> teuerste: 300 Menschen auf Aurora, ein Flug nach Vesta, und die Kopfzeile
+> meldete **Bevölkerung 0**. Dieselbe Summe fehlte in der Statistik, in den
+> Achievements und im Prestige-Übertrag — wer seinen Lauf auf einem frisch
+> besiedelten Planeten beendete, verschenkte jede Kolonie davor. Es gibt jetzt
+> `totalSettlers()` in systems/travel.ts, direkt neben `totalBiomass()`, das
+> seit §16 genau dasselbe richtig macht. **Wer eine Zahl über „den Durchlauf"
+> anzeigt, sucht zuerst die Schwester in travel.ts.**
 
 > **Ein Etikett muss die Frage beantworten, die es stellt.** Dritter Durchgang
 > durch die laufende Oberfläche (M23), dieselbe Klasse noch eine Ebene tiefer:
