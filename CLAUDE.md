@@ -461,12 +461,20 @@ Selbsttest lieferte ein anderes Ergebnis, weil dessen Forschung noch als
 Multiplikator stand. **Wer eine Balancing-Frage hat, erweitert dieses
 Werkzeug — er tippt keine neue Schleife in die Konsole.**
 
-Was sein simulierter Spieler kann, steht im Kopf der Datei. Stand nach M29,
+Was sein simulierter Spieler kann, steht im Kopf der Datei. Stand nach M31,
 **Mediane aus drei Startwerten** — Aurora 24,2 min, Vesta 42,1, Pyra 69,7,
-Kryo 110,0, Nimbus 155,6, Erebos 165,4. Fünf im Fenster, die Reihenfolge
-durchgehend steigend; **Kryo liegt 10 min unter seinem Fenster** und ist die
-offene Aufgabe. Die Tabelle im Dateikopf ist der aktuelle Stand; wer sie
+Kryo 130,1, Nimbus 155,6, Erebos 165,4. Alle sechs im Fenster, die Reihenfolge
+durchgehend steigend. Die Tabelle im Dateikopf ist der aktuelle Stand; wer sie
 ändert, ersetzt die Zahlen, statt alte danebenzustellen.
+
+> **Der Regler muss an der Engstelle des Planeten sitzen.** Kryo lag unter
+> seinem Fenster, und `baseAtmosphere` half nicht: ×1,5 hob den Median um
+> 13 min, ließ den schlechtesten Startwert aber bei 103,9. Kryo ist
+> **wachstumsgebunden** — die Bevölkerung sättigt zwischen Minute 45 und 75,
+> danach hält ihn nichts mehr auf. Über `growthFactor` (0,45 → 0,16) landet
+> jeder Startwert im Fenster, und die Spanne halbiert sich obendrein: weniger
+> Menschen atmen weniger, der O₂-Anteil schwingt schwächer. Dieselbe Lehre wie
+> beim Hand-Hebel in M13, nur für Zeit statt für Hände.
 
 > **Ein Lauf ist kein Messwert.** Zwei Schlüsse aus M28 waren beim Nachmessen
 > über drei Startwerte falsch: „Nimbus hat Erebos überholt" (159,8 gegen 159,3

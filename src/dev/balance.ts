@@ -111,12 +111,13 @@ import { travelTo } from '../systems/travel'
  * | Aurora | 24,2 min | 24,2–24,2 | 15–25 | im Fenster |
  * | Vesta | 42,1 min | 41,8–42,9 | 30–45 | im Fenster |
  * | Pyra | 69,7 min | 62,7–70,2 | 60–120 | im Fenster |
- * | Kryo | 110,0 min | 101,5–133,6 | 120–240 | **10 min zu schnell** |
+ * | Kryo | 130,1 min | 126,3–157,5 | 120–240 | im Fenster |
  * | Nimbus | 155,6 min | 153,4–159,8 | 120–240 | im Fenster |
  * | Erebos | 165,4 min | 159,3–171,9 | 120–240 | im Fenster |
  *
- * Die Reihenfolge stimmt wieder durchgehend: 24,2 < 42,1 < 69,7 < 110,0 <
- * 155,6 < 165,4.
+ * Die Reihenfolge stimmt durchgehend: 24,2 < 42,1 < 69,7 < 130,1 < 155,6 <
+ * 165,4 — und **alle sechs stehen im Fenster**, gemessen über Mediane statt
+ * über Einzelläufe.
  *
  * ### Ein Lauf ist kein Messwert (M29)
  *
@@ -131,13 +132,16 @@ import { travelTo } from '../systems/travel'
  *   der Median liegt bei 110,0 und damit *unter* dem Fenster. Kryos
  *   Einhaltung war schon immer ein Einzelwert-Artefakt.
  *
- * **Kryo bleibt trotzdem unverändert**, und das ist eine Entscheidung, keine
- * Auslassung: `baseAtmosphere` ist dort der falsche Regler. Gemessen ×1,25 →
- * Median 116,8, ×1,5 → 123,1, aber der schlechteste Startwert bleibt bei
- * 103,9 — die Spanne schrumpft nicht. Kryo ist **wachstumsgebunden**
- * (`growthFactor` 0,45, „alles dauert"), nicht füllgebunden. Wer ihn ins
- * Fenster heben will, fasst das Wachstum an und ändert damit den Charakter
- * des Planeten; das gehört entschieden und nicht nebenbei gedreht.
+ * **Kryo ist in M31 über das Wachstum gelöst worden**, nicht über die
+ * Atmosphäre. `baseAtmosphere` war der falsche Regler — ×1,25 → Median 116,8,
+ * ×1,5 → 123,1, aber der schlechteste Startwert blieb bei 103,9, die Spanne
+ * schrumpfte nicht. Kryo ist **wachstumsgebunden**: die Bevölkerung sättigt
+ * zwischen Minute 45 und 75, danach hält den Planeten nichts mehr auf.
+ * `growthFactor` von 0,45 auf 0,16 hebt den Median auf 130,1 und zieht die
+ * Spanne auf 126,3–157,5 zusammen — der erste Wert, bei dem *jeder* Startwert
+ * im Fenster landet. Die Zwischenwerte sind nicht monoton (0,20 → Median
+ * 122,2, aber schlechtester Lauf 100,0); ein einzelner Lauf hätte hier jede
+ * beliebige Antwort geliefert.
  *
  * ### Die Fracht hat sich selbst einen Erfolg geschenkt (M28)
  *

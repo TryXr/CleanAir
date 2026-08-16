@@ -502,8 +502,42 @@ export const KRYO: PlanetDef = {
   /** Zwergsträucher unter Folie. Mehr gibt die Kälte nicht her. */
   forestCapacity: 3000,
 
-  /** Der eigentliche Widerstand dieses Planeten. */
-  growthFactor: 0.45,
+  /**
+   * Der eigentliche Widerstand dieses Planeten — **seit M31 0,16 statt 0,45**.
+   *
+   * Kryo stand mit einem Median von 110 min *unter* seinem Fenster (120–240)
+   * und war damit seinem eigenen Wesen untreu: „alles hier braucht seine
+   * Zeit". Aufgefallen ist das erst, seit über drei Startwerte gemessen wird —
+   * die früher gemeldeten 129,6 und 133,6 waren jeweils der beste von drei
+   * Läufen.
+   *
+   * **Die Atmosphäre war der falsche Regler.** Gemessen: `baseAtmosphere`
+   * ×1,25 → Median 116,8, ×1,5 → 123,1, aber der schlechteste Startwert blieb
+   * bei 103,9 — die Spanne schrumpfte nicht. Kryo ist wachstumsgebunden, nicht
+   * füllgebunden: die Bevölkerung sättigt zwischen Minute 45 und 75, und
+   * danach ist der Planet nicht mehr zeitgebunden.
+   *
+   * Gemessen über drei Ereignis-Startwerte, Median und Spanne:
+   *
+   * | Wachstum | Median | Spanne |
+   * |---|---|---|
+   * | 0,45 | 110,0 | 101,5–133,6 |
+   * | 0,32 | 115,9 | 85,2–130,1 |
+   * | 0,24 | 122,5 | 117,8–128,6 |
+   * | 0,20 | 122,2 | 100,0–131,0 |
+   * | 0,16 | **130,1** | **126,3–157,5** |
+   *
+   * 0,16 ist der erste Wert, bei dem *jeder* Startwert im Fenster landet — und
+   * er beruhigt zugleich den Regler: weniger Menschen atmen weniger, der
+   * O₂-Anteil schwingt schwächer. Die Zwischenwerte sind nicht monoton, ein
+   * einzelner Lauf hätte hier jede beliebige Antwort geliefert.
+   *
+   * **Was die Messung nicht kann:** ob sich das *zäh* statt *langsam* anfühlt.
+   * Die Kolonie steht bei Minute 40 erst bei 42 Menschen (vorher 220) und
+   * füllt sich bis Minute 60. Das ist die eine Stelle dieses Planeten, die
+   * beim Spielen geprüft gehört.
+   */
+  growthFactor: 0.16,
   allowsPopulation: true,
   startSettlers: 0,
   foodPerCapita: 0.0104,

@@ -2286,8 +2286,36 @@ und eine dritte kam dazu. Mediane aus drei Ereignis-Startwerten:
 - **Kryo war nie im Fenster** — die 133,6 aus M28 waren der beste von drei
   Läufen. `baseAtmosphere` ist dort aber der falsche Regler: ×1,5 hebt den
   Median auf 123,1, der schlechteste Startwert bleibt bei 103,9. Kryo ist
-  **wachstumsgebunden** (`growthFactor` 0,45), und am Wachstum zu drehen
-  ändert den Charakter des Planeten. Das gehört entschieden, nicht gedreht.
+  **wachstumsgebunden** (`growthFactor` 0,45). **In M31 genau daran gelöst**,
+  siehe unten.
+
+### Kryo bekommt seine Zeit zurück (M31)
+
+Der Planet, dessen Wesen „alles hier braucht seine Zeit" ist, war zu schnell —
+und der Regler dafür ist das Wachstum, nicht die Atmosphäre. Gemessen über
+drei Ereignis-Startwerte:
+
+| `growthFactor` | Median | Spanne |
+|---|---|---|
+| 0,45 (alt) | 110,0 | 101,5–133,6 |
+| 0,32 | 115,9 | 85,2–130,1 |
+| 0,24 | 122,5 | 117,8–128,6 |
+| 0,20 | 122,2 | 100,0–131,0 |
+| **0,16 (neu)** | **130,1** | **126,3–157,5** |
+
+0,16 ist der erste Wert, bei dem *jeder* Startwert im Fenster landet — und er
+beruhigt den Regler zusätzlich: weniger Menschen atmen weniger, der O₂-Anteil
+schwingt schwächer, die Spanne halbiert sich. Die Zwischenwerte sind nicht
+monoton (0,20 liegt im Median über 0,24, im schlechtesten Lauf aber 18 min
+darunter); ein einzelner Lauf hätte hier jede beliebige Antwort geliefert.
+
+**Damit stehen alle sechs Planeten im Fenster und in der richtigen
+Reihenfolge:** 24,2 / 42,1 / 69,7 / 130,1 / 155,6 / 165,4.
+
+> **Was die Messung nicht kann:** ob sich Kryo dadurch *zäh* statt *langsam*
+> anfühlt. Die Kolonie steht bei Minute 40 erst bei 42 Menschen statt bei 220
+> und füllt sich bis Minute 60. Das ist die eine Stelle dieses Planeten, die
+> beim Spielen geprüft gehört — der Selbsttest sieht sie nicht.
 
 > **Ein Lauf ist kein Messwert.** Beide Fehlschlüsse aus M28 stammen aus dem
 > Vergleich einzelner Läufe. Wer zwei Planeten vergleicht oder ein Fenster
