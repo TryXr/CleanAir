@@ -2084,6 +2084,53 @@ Jeder der drei Teile oben verschiebt das, und zwar in verschiedene Richtungen:
 > mehrere Startwerte. Wer die Zieldauern aus §13 vorher anpasst, misst
 > anschließend die eigene Erwartung.
 
+### Gemessen (M21)
+
+Alle drei Optionen stehen, `compare()` nimmt den Schalter jetzt als Parameter.
+Das Ergebnis, ein Lauf je Feld, `maxMinuten: 300`:
+
+| Planet | Grundlinie | mit Bergung | Bauwerk steht | Ziel §13 |
+|---|---|---|---|---|
+| Aurora | 24,9 min | 24,6 | **65,9** | 15–25 ✓ |
+| Vesta | 38,5 min | 38,3 | **83,0** | 30–45 ✓ |
+| Pyra | 73,1 min | 73,1 | **142,5** | 60–120 ✓ |
+| Kryo | 129,6 min | 130,6 | **128,6** | 120–240 ✓ |
+| Nimbus | 135,2 min | 147,1 | **183,6** | 120–240 ✓ |
+| Erebos | 176,7 min | 176,3 | hat keines | 120–240 ✓ |
+
+Die drei Vorhersagen oben waren **zwei Drittel falsch**, und das ist der Wert
+der Messung:
+
+- **Baupläne kosten nichts.** Vorhergesagt war „verlängert die frühen
+  Planeten, am stärksten Aurora und Vesta". Gemessen ist der Unterschied
+  zwischen `plaene: true` und `false` auf Aurora, Vesta und Pyra **exakt
+  null** (24,9 / 38,5 / 73,1 in beiden Fassungen). Der Zuschnitt aus M20 —
+  Schlösser nur an Bequemlichkeit — trägt genau so weit, wie er sollte: die
+  Sperren kosten nur den, der sie aufmacht. Das war bisher eine Behauptung des
+  M20-Commits und ist jetzt gemessen.
+- **Bergung verlängert nicht, sie ist fast umsonst** — außer auf Nimbus
+  (+11,9 min). Auf Aurora, Vesta und Erebos ist sie sogar minimal schneller,
+  weil das geborgene Material Käufe vorzieht.
+- **Bauwerke machen den Planeten nicht langsamer.** Vorhergesagt war der
+  Komfort-Effekt aus M14 („größer als erwartet"). Gemessen kostet der Bau
+  aller vier Etappen die Abschlusszeit **0,0 bis 0,7 Minuten**, weil die
+  Etappen fast alle *nach* dem Abschluss fallen: das Bauwerk wartet ohnehin
+  auf Fundstücke, nicht auf die Bauschlange.
+
+> **Ein Wert ist wegen der Messung gestellt worden:** Kryos Zisterne kostet
+> jetzt acht statt sechs Fundstücke. Mit sechs stand sie nach 101,6 Minuten,
+> während Kryo selbst erst nach 130 fertig wird — ein Bauwerk, das **vor** dem
+> Ziel dasteht, ist kein Ziel mehr. Der Grund ist nicht der Planet, sondern
+> die Kolonie: große Siedlungen schicken größere Trupps, und die Beute hängt
+> an `crew / maxCrew`. Späte Welten müssen deshalb mehr verlangen.
+
+Und ein Befund, der nicht §20 gehört, aber ohne `compare()` über mehrere
+Startwerte nie aufgefallen wäre: **Vesta hängt an der Ereignislage.** Derselbe
+Planet, dieselbe Fassung, drei Startwerte — 39,3, 41,4 und **193,6** Minuten.
+Fünffache Dauer bei einem von drei Läufen, ohne jedes neue System. Das ist die
+nächste Balancing-Frage, und ihr erster Schritt ist herauszufinden, *welches*
+Ereignis es ist.
+
 ### Drei Fallen, die dieser Entwurf ausdrücklich vermeidet
 
 1. **Grind ist keine Wartezeit.** Jeder lange Weg hier kostet **Hände** und
@@ -2097,9 +2144,12 @@ Jeder der drei Teile oben verschiebt das, und zwar in verschiedene Richtungen:
 
 ### Offen
 
-- **Wie viele Fundstücke kostet ein Bauwerk?** Erst messbar, wenn Bergung
-  läuft. Die Zahl entscheidet, ob ein Bauwerk ein Nachmittag oder ein
-  Wochenende ist.
+- ~~**Wie viele Fundstücke kostet ein Bauwerk?**~~ **Beantwortet (M21):**
+  sechs, auf Kryo und Nimbus acht. Damit steht ein Bauwerk nach dem Zwei- bis
+  Zweieinhalbfachen der Planetendauer auf den frühen Welten und ungefähr zur
+  Abschlusszeit auf den späten — ein Nachmittag, kein Wochenende. Die Zahl ist
+  gemessen und nicht gewählt: sie ergibt sich daraus, wie oft ein Trupp
+  loszieht und wie stark sich ein Ziel dabei erschöpft.
 - **Darf ein Trupp reisen?** Ein Trupp, der von Kryo aus Aurora bergen kann,
   entwertet die Rakete. Vermutlich nein — aber es ist die naheliegendste
   Erweiterung und gehört deshalb hier notiert, bevor sie jemand aus Versehen
@@ -2107,4 +2157,6 @@ Jeder der drei Teile oben verschiebt das, und zwar in verschiedene Richtungen:
 - **Was passiert mit `revealAt`?** Baupläne und Freigabeschwellen sind zwei
   Schlösser an derselben Tür. Wahrscheinlich ersetzt der Bauplan die Schwelle,
   wo es einen gibt — sonst wartet man zweimal auf dasselbe.
+- **Warum kostet ein Startwert Vesta 150 Minuten?** Neu aus der Messung, siehe
+  oben. Bis das geklärt ist, sind alle Vesta-Zahlen Mediane und keine Werte.
 

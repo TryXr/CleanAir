@@ -7,6 +7,7 @@ import { ROCKETS } from '../data/rockets'
 import { findSound } from '../data/sounds'
 import { play } from '../engine/audio'
 import { reportsAbsence } from '../engine/loop'
+import { formatInt } from '../engine/format'
 import {
   exportSave,
   importSave,
@@ -45,6 +46,7 @@ import {
   recallCrew,
   revealedTargets,
   runsOn,
+  salvageBlocker,
   salvageSystem,
   sendCrew,
 } from '../systems/salvage'
@@ -996,6 +998,36 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     planet.oxygenTotal = new Decimal(1e6)
     planet.settlers = new Decimal(2)
     check(r, 'Ohne freie Leute kein Trupp', !sendCrew('lander', 5))
+
+    /*
+     * **Was die Anzeige verspricht, muss sich losschicken lassen.**
+     *
+     * Gefunden beim Messen von §20 und beim Lesen des Codes unsichtbar: vier
+     * Abzüge in `unassigned()` machen aus glatten 8 ein 7,9999999999999.
+     * `lt(8)` vergleicht exakt und ist wahr, `toNumber()` und
+     * `Decimal.floor()` runden beide auf 8 — also zeigt `formatInt()` „8 ohne
+     * Aufgabe", und ein Trupp von 8 wird mit „zu wenige freie Bewohner"
+     * abgelehnt. In einem einzigen Balancing-Lauf ist das 8704-mal passiert
+     * und hat die Bergung dreiviertel der Zeit stillstehen lassen, ohne eine
+     * Spur zu hinterlassen.
+     *
+     * Die Prüfung fragt deshalb nicht nach der internen Zahl, sondern nach
+     * dem Versprechen: **die angezeigte Zahl ist eine gültige Truppgröße.**
+     * Gegenprobe (Rundung in labor.ts entfernt) gesehen: rot.
+     */
+    freshRun()
+    travelTo('aurora')
+    planet.oxygenTotal = new Decimal(1e6)
+    // Der Rechenrest, wie ihn vier Subtraktionen hinterlassen.
+    planet.settlers = new Decimal(8).sub(new Decimal(1e-13))
+    const gezeigt = Number(formatInt(unassigned()))
+    check(r, 'Die Anzeige rundet acht freie Leute', gezeigt === 8, `${gezeigt}`)
+    check(
+      r,
+      'Und genau acht lassen sich auch losschicken',
+      salvageBlocker(findSalvage('lander')!, gezeigt) === null,
+      `${salvageBlocker(findSalvage('lander')!, gezeigt)}`,
+    )
 
     /*
      * Erebos führt kein eigenes Material (§19) — und genau deshalb ist die

@@ -133,6 +133,30 @@ export function crewAway(): number {
 /**
  * Bewohner, die weder an einer Anlage stehen noch auf der Baustelle noch von
  * einem Bau verschluckt sind — und nicht gerade unterwegs.
+ *
+ * > **Die Anzeige verspricht acht, die Prüfung sagt sieben.**
+ * >
+ * > Vier Abzüge hintereinander lassen aus glatten 8 ein 7,9999999999999
+ * > werden. Das wäre folgenlos, wenn alle Stellen gleich rundeten — tun sie
+ * > aber nicht: `lt(8)` vergleicht exakt und ist **wahr**, während sowohl
+ * > `toNumber()` als auch `Decimal.floor()` auf **8** aufrunden (floor läuft
+ * > in break_infinity durch toNumber). Damit zeigt `formatInt()` „8 ohne
+ * > Aufgabe", der Regler im Bergungsfenster lässt einen Trupp von 8 wählen,
+ * > und `salvageBlocker()` antwortet „zu wenige freie Bewohner". Der Spieler
+ * > sieht eine Zahl, die es angeblich nicht gibt.
+ * >
+ * > Gefunden beim Messen von §20: in **einem** Lauf 8704 abgelehnte
+ * > Bergungsanläufe aus genau diesem Grund — die Zuweisungsschleife fährt den
+ * > Wert wiederholt exakt auf die Grenze, also trifft es nicht nur den
+ * > Randfall. Wer im Spiel „besetzen" so lange klickt, bis niemand mehr frei
+ * > ist, erzeugt denselben Rest.
+ *
+ * Deshalb: was auf ein Zehnmilliardstel an einer ganzen Zahl liegt, **ist**
+ * diese ganze Zahl. Menschen sind ganzzahlig, der Rest ist Rechenrauschen aus
+ * vier Subtraktionen — und die Korrektur gehört hierher, weil das hier die
+ * eine Wahrheit darüber ist, wer greifbar ist (siehe `crewAway`). Jede Stelle,
+ * die stattdessen selbst rundet, wäre die verstreute Rechnung, die CLAUDE.md
+ * verbietet.
  */
 export function unassigned(): Decimal {
   const frei = planet.settlers
@@ -140,7 +164,9 @@ export function unassigned(): Decimal {
     .sub(totalStaff())
     .sub(planet.builders)
     .sub(crewAway())
-  return frei.lt(0) ? new Decimal(0) : frei
+  if (frei.lt(0)) return new Decimal(0)
+  const gerundet = Math.round(frei.toNumber())
+  return Math.abs(frei.toNumber() - gerundet) < 1e-9 ? new Decimal(gerundet) : frei
 }
 
 // --- Baukolonne (M11) -----------------------------------------------------

@@ -26,6 +26,33 @@ nur **Handarbeit** (Bergbau, Schmelze, Sägewerk, Forst, Landwirtschaft).
 Chemische Apparate wie Elektrolyse oder Prozessor laufen von selbst.
 Vor jeder Arbeit an Kosten, Bevölkerung oder Berufen dort nachlesen.
 
+M21 ist fertig: **§20 ist gemessen** — `plaene`, `bergung` und `bauwerk` sind
+Optionen in [dev/balance.ts](src/dev/balance.ts), `compare()` nimmt den
+Schalter als Parameter. Zwei der drei Vorhersagen aus §20 waren falsch:
+Baupläne kosten **exakt null** (die Sperren treffen nur den, der sie aufmacht),
+und Bauwerke verlängern den Planeten nicht, weil ihre Etappen ohnehin auf
+Fundstücke warten und nicht auf die Bauschlange. Ein Bauwerk steht nach dem
+Zwei- bis Zweieinhalbfachen der Planetendauer.
+
+> **Ein System, das nicht anspringt, sieht in jeder Tabelle aus wie ein
+> System, das nichts kostet.** M18 hatte gemessen „Bergung ist fast umsonst" —
+> tatsächlich zog in 300 Minuten auf Aurora *kein einziger* Trupp los, weil
+> die Regel „erst wenn jeder Platz besetzt ist" bei einem Simulanten, der
+> laufend neue Anlagen mit neuen Plätzen baut, nie wahr wird. Der teuerste
+> Fehlbefund von allen, weil er beruhigt. Wer ein optionales System misst,
+> prüft **zuerst**, wie oft es überhaupt ausgelöst hat — dafür zählt die
+> Diagnose jetzt auch die Gründe, aus denen *nichts* passiert ist.
+
+> **`Math.floor(decimal.toNumber())` zählt keine Menschen.** Vier Abzüge in
+> `unassigned()` machen aus glatten 8 ein 7,9999999999999. `lt(8)` ist dann
+> exakt wahr, während `toNumber()` **und** `Decimal.floor()` auf 8 aufrunden —
+> `floor()` läuft in break_infinity durch `toNumber()`. Ergebnis: die Anzeige
+> versprach „8 ohne Aufgabe", und ein Trupp von 8 wurde mit „zu wenige freie
+> Bewohner" abgelehnt; in einem Lauf 8704-mal. Die Korrektur sitzt in
+> `unassigned()` selbst, weil das die eine Wahrheit darüber ist, wer greifbar
+> ist. Was auf ein Zehnmilliardstel an einer ganzen Zahl liegt, **ist** diese
+> ganze Zahl.
+
 M20 ist fertig: **Baupläne** (§20.1) — fünf Anlagen brauchen erst einen Plan,
 und der liegt in `meta`, überlebt also den Durchlauf-Reset. Der Zuschnitt ist
 **gemessen und nicht entworfen**: die ehrgeizige Fassung aus §20.1 machte Kryo
@@ -251,7 +278,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 184 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 186 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -273,7 +300,10 @@ Material kommt, das der Planet nicht führt. Seit M19, dass eine Etappe nicht
 sofort dasteht, dass **erst die letzte** Etappe die Wirkung freischaltet, dass
 ein ortsgebundenes Bauwerk aus der Ferne nichts tut und der Fahrstuhl sehr
 wohl. Seit M20 die **Sackgassenprüfung**: jeder Bauplan hat eine Quelle, kein
-Gegenmittel hat ein Schloss, und jeder Planet kommt ohne Bauplan in Gang.
+Gegenmittel hat ein Schloss, und jeder Planet kommt ohne Bauplan in Gang. Seit
+M21, dass die **angezeigte** Zahl freier Leute auch eine gültige Truppgröße
+ist — die Prüfung fragt nach dem Versprechen der Oberfläche, nicht nach der
+internen Zahl, weil genau zwischen beiden der Fehler saß.
 
 > **Eine Gegenprobe, die grün bleibt, ist kein bestandener Test.** Die Prüfung
 > „ein ortsgebundenes Bauwerk wirkt nicht von fern" blieb beim Ausbau des
@@ -351,12 +381,13 @@ Selbsttest lieferte ein anderes Ergebnis, weil dessen Forschung noch als
 Multiplikator stand. **Wer eine Balancing-Frage hat, erweitert dieses
 Werkzeug — er tippt keine neue Schleife in die Konsole.**
 
-Was sein simulierter Spieler kann, steht im Kopf der Datei. **Seit dem
-Nachtrag zu M17 stehen alle sechs Planeten im Fenster** — Aurora 24,9 min,
-Vesta 38,5, Pyra 73,1, Kryo 129,6, Nimbus 151,7, Erebos 176,7, jeder länger
-als der vorige, ohne dass eine Zahl dafür gestellt wurde. Die Tabelle im
-Dateikopf ist der aktuelle Stand; wer sie ändert, ersetzt die Zahlen, statt
-alte danebenzustellen.
+Was sein simulierter Spieler kann, steht im Kopf der Datei. **Alle sechs
+Planeten stehen im Fenster** — Aurora 24,9 min, Vesta 38,5, Pyra 73,1, Kryo
+129,6, Nimbus 135,2, Erebos 176,7, jeder länger als der vorige, ohne dass eine
+Zahl dafür gestellt wurde. (Nimbus stand bis M21 bei 151,7; die 16 Minuten
+Unterschied sind der Rundungsfehler in `unassigned()`, der dort die Zuweisung
+am häufigsten traf.) Die Tabelle im Dateikopf ist der aktuelle Stand; wer sie
+ändert, ersetzt die Zahlen, statt alte danebenzustellen.
 
 > **Bevor eine Zahl in `data/` angefasst wird: benutzt der Simulant überhaupt
 > alle Systeme, die ein Mensch benutzen würde?** Zweimal hintereinander war

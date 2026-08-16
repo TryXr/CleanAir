@@ -208,6 +208,17 @@ export const LANDMARKS: readonly LandmarkDef[] = [
     scope: 'planet',
     effect: { kind: 'satietyFloor', floor: 0.5 },
     effectText: 'Die Versorgung fällt nicht mehr unter die Hälfte — Engpässe bremsen, aber kippen nichts.',
+    /*
+     * **Acht Fundstücke, nicht sechs — gemessen bei der Messung zu §20.**
+     *
+     * Mit sechs stand die Zisterne nach 101,6 Minuten, während Kryo selbst
+     * erst nach 130 fertig wird. Ein Bauwerk, das vor dem Ziel dasteht, ist
+     * kein Ziel mehr, sondern eine Zwischenstation — und ausgerechnet der
+     * vierte Planet hätte damit das früheste Denkmal gehabt. Der Grund ist
+     * nicht Kryo, sondern die Kolonie: große Siedlungen schicken größere
+     * Trupps, und die Beute hängt an `crew / maxCrew`. Späte Planeten müssen
+     * deshalb mehr verlangen, sonst wird der lange Weg zum Selbstläufer.
+     */
     stages: [
       {
         name: 'Fundament',
@@ -218,7 +229,7 @@ export const LANDMARKS: readonly LandmarkDef[] = [
       {
         name: 'Rohbau',
         description: 'Das Becken selbst. Es fasst mehr, als die Kolonie in Wochen trinkt.',
-        cost: { platten: 110, titan: 50, fundstueck: 1 },
+        cost: { platten: 110, titan: 50, fundstueck: 2 },
         work: 600,
       },
       {
@@ -230,7 +241,7 @@ export const LANDMARKS: readonly LandmarkDef[] = [
       {
         name: 'Inbetriebnahme',
         description: 'Pumpen und Leitungen. Danach ist ein schlechter Tag nur noch ein schlechter Tag.',
-        cost: { eisen: 120, werkzeug: 10, fundstueck: 2 },
+        cost: { eisen: 120, werkzeug: 10, fundstueck: 3 },
         work: 960,
       },
     ],

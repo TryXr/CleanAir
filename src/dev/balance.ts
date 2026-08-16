@@ -33,15 +33,24 @@ import {
 } from '../systems/combat'
 import { comfortNeeded, contentment } from '../systems/contentment'
 import { reseedEvents } from '../systems/events'
-import { activeExpedition, revealedTargets, sendCrew } from '../systems/salvage'
+import { activeExpedition, revealedTargets, salvageBlocker, sendCrew } from '../systems/salvage'
 import { buyResearch, canBuyResearch } from '../systems/research'
 import {
   assignBuilder,
   canAssign,
   canAssignBuilder,
+  crewAway,
   handFactor,
   unassigned,
 } from '../systems/labor'
+import {
+  landmarkDone,
+  landmarkHere,
+  orderStage,
+  stageBlocker,
+  stagesDone,
+} from '../systems/landmarks'
+import { gatedGenerators } from '../systems/blueprints'
 import { housingCapacity, resetPopulationNotices } from '../systems/population'
 import { pendingCores } from '../systems/prestige'
 import { resetStorageNotices } from '../systems/storage'
@@ -72,21 +81,29 @@ import { travelTo } from '../systems/travel'
  *
  * Aufruf in der Konsole:
  *
- *     cleanair.balance.run('vesta')          // ein Planet
- *     cleanair.balance.all()                 // alle fünf, als Tabelle
- *     cleanair.balance.compare('nimbus')     // mit und ohne Komfort
+ *     cleanair.balance.run('vesta')              // ein Planet
+ *     cleanair.balance.all()                     // alle sechs, als Tabelle
+ *     cleanair.balance.compare('nimbus')         // mit und ohne Komfort
+ *     cleanair.balance.run('aurora', { bauwerk: true })   // bis das Bauwerk steht
+ *     cleanair.balance.compare('vesta', 'plaene')         // was die Schlösser kosten
  *
  * **Was der simulierte Spieler kann — und was nicht.** Gemessen ohne jeden
  * mitgeschleppten Fortschritt:
  *
- * | Planet | gemessen | Ziel §13 | |
- * |---|---|---|---|
- * | Aurora | 24,9 min | 15–25 | im Fenster |
- * | Vesta | 38,5 min | 30–45 | im Fenster |
- * | Pyra | 73,1 min | 60–120 | im Fenster |
- * | Kryo | 129,6 min | 120–240 | im Fenster |
- * | Nimbus | 151,7 min | 120–240 | im Fenster |
- * | Erebos | 176,7 min | 120–240 | im Fenster |
+ * | Planet | gemessen | Ziel §13 | | Bauwerk steht |
+ * |---|---|---|---|---|
+ * | Aurora | 24,9 min | 15–25 | im Fenster | 65,9 min |
+ * | Vesta | 38,5 min | 30–45 | im Fenster | 83,0 min |
+ * | Pyra | 73,1 min | 60–120 | im Fenster | 142,5 min |
+ * | Kryo | 129,6 min | 120–240 | im Fenster | 128,6 min |
+ * | Nimbus | 135,2 min | 120–240 | im Fenster | 183,6 min |
+ * | Erebos | 176,7 min | 120–240 | im Fenster | hat keines |
+ *
+ * Die letzte Spalte ist die Antwort auf die offene Frage aus §20 („wie viele
+ * Fundstücke kostet ein Bauwerk?"): bei sechs Fundstücken — acht auf Kryo und
+ * Nimbus — steht ein Bauwerk nach dem **Zwei- bis Zweieinhalbfachen** der
+ * Planetendauer auf den frühen Welten und ungefähr zur Abschlusszeit auf den
+ * späten. Ein Nachmittag, kein Wochenende.
  *
  * **Alle sechs stehen im Fenster** — ein Lauf, `maxMinuten: 240`, sonst
  * Standardwerte. Die Reihenfolge stimmt dabei auch inhaltlich: jeder Planet
@@ -142,10 +159,48 @@ import { travelTo } from '../systems/travel'
  * rausschickt, verliert seinen Planeten — genau das war die Absicht (§20.2),
  * und ohne diese Zahl wäre es eine Behauptung geblieben.
  *
- * Mit der vernünftigen Regel kostet Bergung fast nichts: Aurora, Vesta, Pyra,
- * Kryo und Erebos unverändert, Nimbus 150,7 statt 151,7. Das ist der richtige
- * Befund für ein **optionales** System — es darf sich lohnen, es darf wehtun,
- * aber es darf keinen Planeten erzwingen.
+ * ### Und ein **sechstes** Mal, bei der Messung von §20 — dreifach gestaffelt
+ *
+ * Die M18-Antwort auf die 163,4 lautete: erst losschicken, wenn *jeder* Platz
+ * besetzt ist und ein *voller* Trupp übrig bleibt. Damit kostete Bergung
+ * angeblich fast nichts. Beim Bau der `bauwerk`-Option kam heraus, warum:
+ *
+ * | gemessen | Anläufe in 300 min |
+ * |---|---|
+ * | „alle Plätze besetzt" | Aurora **0**, Vesta **1** |
+ * | Rücklage nur beim Losschicken | Aurora 1 |
+ * | Rücklage auch bei Zuweisung | Aurora 2 |
+ * | Rücklage auch beim **Kauf** | Aurora 8 |
+ * | Zählung als Decimal statt `toNumber()` | Aurora **10**, Trupp 92 % der Zeit draußen |
+ *
+ * Der Simulant bestellt laufend neue Anlagen, jede bringt neue Plätze mit —
+ * „alle Plätze besetzt" ist deshalb praktisch nie wahr. Gemessen wurde also
+ * nicht, was Bergung kostet, sondern dass sie nie stattfand. **Ein System,
+ * das nicht anspringt, sieht in jeder Tabelle aus wie ein System, das nichts
+ * kostet.** Das ist der teuerste Fehlbefund von allen, weil er beruhigt.
+ *
+ * Die letzte Zeile war die schlimmste und im Code unsichtbar: `unassigned()`
+ * lieferte nach vier Abzügen 7,9999999999999, `Math.floor(…toNumber())`
+ * rundete auf 8, und `sendCrew` lehnte 8 exakt vergleichend ab — 8704-mal in
+ * einem Lauf, ohne eine einzige Spur. Der Fehler saß dabei nicht nur im
+ * Werkzeug: `Decimal.floor()` läuft in break_infinity durch `toNumber()`,
+ * also zeigte auch `formatInt()` „8 ohne Aufgabe" an, während das Spiel acht
+ * ablehnte. Behoben in systems/labor.ts, festgehalten im Selbsttest.
+ *
+ * Mit allen fünf Zeilen kostet Bergung: Aurora −0,3 min, Vesta −0,2, Pyra 0,
+ * Kryo +1,0, Nimbus +11,9, Erebos −0,4. Das ist der richtige Befund für ein
+ * **optionales** System — es darf sich lohnen, es darf wehtun, aber es darf
+ * keinen Planeten erzwingen.
+ *
+ * ### Was `compare()` über mehrere Startwerte zeigt
+ *
+ * Bergung und Bauwerk kosten Vesta im Median **nichts** (41,4 ohne / 40,9 mit
+ * Bergung / 41,5 mit Bauwerk). Wichtiger ist, was dabei nebenbei auffiel:
+ * derselbe Planet braucht je nach Ereignislage 39,3 oder **193,6** Minuten —
+ * und zwar *ohne* jedes neue System. Ein Startwert von dreien trifft Vesta
+ * fünfmal so hart wie die anderen. Das ist keine Eigenschaft von §20, sondern
+ * eine offene Frage an Vesta selbst, und sie war ohne Mehrfachlauf nicht zu
+ * sehen. Wer sie angeht, misst zuerst, **welches** Ereignis es ist.
  *
  * **Die Lehre für die nächste Balancing-Frage:** bevor eine Zahl in `data/`
  * angefasst wird, prüfen, ob der Simulant überhaupt alle Systeme benutzt, die
@@ -192,6 +247,30 @@ export interface BalanceOptions {
    * Material — welche Richtung überwiegt, ist eine Messung und keine Meinung.
    */
   bergung?: boolean
+  /**
+   * Baut er das Bauwerk seines Planeten (M19, §20.3)?
+   *
+   * **Schaltet die Bergung mit ein**, und das ist keine Bequemlichkeit,
+   * sondern die Mechanik: jede Etappe kostet Fundstücke, und die kommen
+   * ausschließlich aus der Bergung. Ein Lauf mit `bauwerk` ohne `bergung`
+   * würde messen, wie lange ein Planet braucht, wenn der Simulant auf etwas
+   * wartet, das nie kommt.
+   */
+  bauwerk?: boolean
+  /**
+   * Kennt er alle Baupläne von Anfang an (M20, §20.1)?
+   *
+   * Die Gegenprobe zu den Schlössern: eingeschaltet steht offen, was sonst
+   * erst aus Forschung, Bergung oder einem Erfolg kommt. Der Unterschied
+   * zwischen beiden Läufen ist genau der Preis, den §20.1 kostet.
+   *
+   * **Ausgeschaltet heißt hier wirklich leer.** `runPlanet` setzt
+   * `meta.blueprints` in beiden Fällen selbst — bis zu dieser Option tat es
+   * das nicht, und ein Lauf aus einem gespielten Tab brachte die dort
+   * verdienten Baupläne mit. Dieselbe Fehlerklasse wie bei `meta.stats`, nur
+   * einen Meilenstein jünger.
+   */
+  plaene?: boolean
   /** Wie viel Material er mitbringt. Ohne Fracht ist Pyra unlösbar (§16). */
   fracht?: number
   /** Abbruch nach so vielen Spielminuten. */
@@ -265,6 +344,35 @@ export interface BalanceResult {
    */
   guthaben: number
   warteschlange: number
+  /**
+   * Fertige Etappen des Bauwerks am Ende, 0…4 (§20.3).
+   *
+   * Ohne diese Zahl ist ein Lauf mit `bauwerk` nicht zu lesen: eine
+   * unveränderte Dauer heißt entweder „das Bauwerk kostet nichts" oder „er hat
+   * nie eine Etappe bestellt", und das sind entgegengesetzte Befunde.
+   */
+  etappen: number
+  /**
+   * Fundstücke im Lager am Ende — der Vorrat, aus dem Etappen bezahlt werden.
+   *
+   * Sie sind das einzige nicht herstellbare Material und gehen nur in
+   * Bauwerke. Steht hier eine große Zahl bei wenigen Etappen, lag es nicht am
+   * Nachschub, sondern an Arbeit, Material oder der Bauschlange.
+   */
+  fundstuecke: number
+  /** Abgeschlossene Bergungsanläufe, über alle Ziele dieses Planeten. */
+  anlaeufe: number
+  /**
+   * Minuten, bis das Bauwerk stand — oder null.
+   *
+   * **Nicht dieselbe Frage wie `minuten`, und das ist der Punkt.** Ein Bauwerk
+   * ist das Ding, auf das man hinarbeitet (§20.3); die Atmosphäre steht lange
+   * vorher. Mit `bauwerk: true` läuft die Messung deshalb über `completed`
+   * hinaus weiter — sonst misst man nur, wie viele Etappen zufällig vor dem
+   * Abschluss fertig wurden, und das ist eine Eigenschaft der Planetendauer
+   * und keine des Bauwerks.
+   */
+  bauwerkMin: number | null
   /** Mit Schrittweite > 1 gemessen und damit **nicht** belastbar. */
   grob: boolean
   /**
@@ -282,6 +390,8 @@ const STANDARD: Required<BalanceOptions> = {
   clicks: 1,
   komfort: false,
   bergung: false,
+  bauwerk: false,
+  plaene: false,
   fracht: 50000,
   maxMinuten: 300,
   schritt: 1,
@@ -365,6 +475,42 @@ function entscheiden(
   const steht = (id: string): number => (planet.generators[id] ?? 0) + offen(id)
 
   /*
+   * **Wer bergen will, hält einen Trupp frei** (Messung zu §20).
+   *
+   * Die Rücklage steht hier oben, weil sie an *drei* Stellen wirken muss: beim
+   * Kauf, bei der Zuweisung und beim Losschicken. Zwei davon hatte der erste
+   * Anlauf vergessen, und jedes Mal sah das Ergebnis gleich aus — kaum ein
+   * Trupp zog los, und die Bergung schien nichts zu kosten. Der Reihe nach
+   * gemessen:
+   *
+   * - nur beim Losschicken: null Anläufe auf Aurora in 300 Minuten,
+   * - dazu bei der Zuweisung: einer, weil Käufe mit `populationCost` die
+   *   freien Leute in dem Moment verbrauchen, in dem sie auftauchen,
+   * - erst mit allen dreien läuft das System.
+   *
+   * Ein Mensch, der sich für die Bergung entschieden hat, gibt seine letzten
+   * freien Hände nicht für die nächste Anlage aus. Genau das steht jetzt hier.
+   *
+   * Ohne `bergung` ist die Zahl 0 — die Läufe der sechs Planeten bleiben damit
+   * Zeile für Zeile vergleichbar mit allem, was vorher gemessen wurde.
+   *
+   * **Ein voller Trupp, sobald die Kolonie ihn tragen kann** — dieselbe
+   * Bedingung wie bei der Bau-Reserve darüber (`>= das Vierfache`), und
+   * bewusst kein zweiter erfundener Bruchteil. Ein Zehntel der Kolonie stand
+   * hier zuerst, und es hat den Ertrag verzerrt statt ihn zu messen: die Beute
+   * hängt an `crew / maxCrew` (systems/salvage.ts), also bekam die kleinste
+   * Kolonie die kleinsten Trupps *und* den geringsten Anteil. Gemessen —
+   * Aurora brauchte 206 Minuten für sein Bauwerk und Kryo 106, die erste Welt
+   * also achtmal ihre eigene Spieldauer und die vierte nur ihre eigene. Das
+   * war kein Befund über die Planeten, sondern über den Deckel.
+   */
+  const groessterTrupp = opts.bergung
+    ? revealedTargets().reduce((max, t) => Math.max(max, t.maxCrew), 0)
+    : 0
+  const truppReserve =
+    planet.settlers.toNumber() >= groessterTrupp * 4 ? groessterTrupp : 0
+
+  /*
    * Nur nachbestellen, wenn von der Sorte nichts mehr in der Reihe steht.
    * Ohne diese Bremse schießt die Warteschlange über das Fenster hinaus, und
    * zu viel O₂ lässt sich nicht abbauen, nur verdünnen (§4).
@@ -404,7 +550,11 @@ function entscheiden(
      * trotzdem null Cracker.
      */
     if (g.populationCost) {
-      menge = Math.min(menge, Math.floor(unassigned().toNumber() / g.populationCost))
+      // Die Trupp-Rücklage ist hier abgezogen: sonst verbraucht der nächste
+      // Kauf genau die Leute, die gleich losziehen sollen — die Stelle, an der
+      // die Bergung dreimal hintereinander unsichtbar geblieben ist.
+      const verfuegbar = unassigned().toNumber() - truppReserve
+      menge = Math.min(menge, Math.floor(verfuegbar / g.populationCost))
       if (menge < 1) {
         notieren(g, 'zu wenige freie Bewohner')
         return
@@ -633,8 +783,11 @@ function entscheiden(
    * Handarbeit ernsthaft etwas wegzunehmen.
    */
   const leuteGesamt = planet.settlers.toNumber()
-  const reserve =
+  const bauReserve =
     leuteGesamt >= groessterBedarf * 4 ? groessterBedarf + Math.ceil(leuteGesamt * 0.05) : 0
+
+  /** Was die Zuweisungsschleife freilassen muss: beide Rücklagen zusammen. */
+  const reserve = bauReserve + truppReserve
 
   /*
    * **Die Baukolonne zuerst, dann die Plätze.**
@@ -709,13 +862,144 @@ function entscheiden(
      * bleibt danach ein **voller Trupp** übrig. Wer weniger fordert, misst
      * einen Spieler, der seine eigene Kolonie ausräumt.
      */
-    const allesBesetzt = !listen.mitPlaetzen.some((g) => canAssign(g.id))
-    if (allesBesetzt) {
-      for (const ziel of revealedTargets()) {
-        if (activeExpedition(ziel.id)) continue
-        const frei = Math.floor(unassigned().toNumber() - reserve)
-        if (frei >= ziel.maxCrew) sendCrew(ziel.id, ziel.maxCrew)
+    /*
+     * **Warum kein Trupp losgezogen ist, gehört gezählt.**
+     *
+     * Ohne diese Zeilen sah ein Lauf mit Bergung auf Aurora aus wie „das
+     * System kostet nichts" — tatsächlich ging in 25 Minuten kein einziger
+     * Trupp raus, und gemessen wurde, dass nichts passiert. Genau dieselbe
+     * Lücke hatte `abgelehnt` für Anlagen geschlossen; für die Bergung fehlte
+     * sie noch, und ein System, das nicht anspringt, ist von einem System, das
+     * nichts kostet, nur an dieser Zahl zu unterscheiden.
+     */
+    const notierenBergung = (grund: string): void => {
+      const key = `Bergung: ${grund}`
+      abgelehnt[key] = (abgelehnt[key] ?? 0) + 1
+    }
+
+    /*
+     * **Wer noch um seinen Puffer kämpft, schickt keine Leute weg.**
+     *
+     * Die dritte Bedingung, und sie ist die einzige, die den Zeitpunkt
+     * betrifft statt der Zahl. Ohne sie fiel Vesta von 38,5 auf 163,4 min —
+     * dieselbe Zahl wie beim ersten Bergungs-Anlauf in M18, und aus demselben
+     * Grund, nur später: ein Trupp geht in dem Moment raus, in dem der Puffer
+     * noch hinterherhinkt, die Nitratgrube verliert ihre Hände, das O₂ läuft
+     * dem N₂ davon — und über dem Fenster gibt es kein Zurück (§4). Der Lauf
+     * endete bei 23,0 % O₂ und verbrachte zwei Stunden mit Verdünnen.
+     *
+     * Ein Mensch tut das nicht. Er schickt einen Trupp los, wenn die Kolonie
+     * *läuft*, und nicht, während er um sein Fenster kämpft. Auf Planeten ohne
+     * N₂-Fenster (Aurora) gibt es nichts abzuwarten, dort greift die Bedingung
+     * nie.
+     */
+    /*
+     * **Höchstens die Rücklage ist gleichzeitig draußen — nicht „alle Plätze zuerst".**
+     *
+     * Die M18-Fassung verlangte, dass *kein* Arbeitsplatz mehr frei ist. Das
+     * war gegen die richtige Gefahr gerichtet und trotzdem falsch: der
+     * Simulant bestellt laufend neue Anlagen, jede bringt neue Plätze mit,
+     * also ist die Bedingung praktisch nie erfüllt. Gemessen über 300 Minuten:
+     * Aurora **zwei** Anläufe, Vesta **einer**, dazu 17 171 Ticks mit dem
+     * Vermerk „noch Plätze unbesetzt". Damit war die M18-Aussage „Bergung
+     * kostet fast nichts" keine Messung des Systems, sondern eine Messung
+     * seines Nichtstuns — die teuerste Sorte Fehlbefund, weil sie beruhigt.
+     *
+     * Die Grenze ist jetzt die Rücklage selbst: so viele Leute hat die Kolonie
+     * für draußen vorgesehen, mehr gehen nicht. Eine Zahl, drei Wirkungen —
+     * statt einer Rücklage und eines zweiten Deckels, die auseinanderlaufen
+     * können.
+     */
+    const draussen = crewAway()
+    if (draussen >= truppReserve) {
+      notierenBergung('genug Leute unterwegs')
+    } else if (def.n2Window !== undefined && n2 < def.n2Window.min) {
+      notierenBergung('Puffer hinkt noch hinterher')
+    } else {
+      const ziele = revealedTargets()
+      if (ziele.length === 0) notierenBergung('noch kein Ziel entdeckt')
+      for (const ziel of ziele) {
+        // Auch „läuft gerade" gehört gezählt. Ein stiller `continue` ist beim
+        // Lesen der Diagnose nicht von „kommt nie dazu" zu unterscheiden, und
+        // genau diese Unterscheidung war hier dreimal die entscheidende.
+        if (activeExpedition(ziel.id)) {
+          notierenBergung('Trupp ist unterwegs')
+          continue
+        }
+        /*
+         * Wer jetzt noch frei ist, ist wirklich frei — **ohne zweiten Abzug**.
+         *
+         * Die Rücklagen wirken schon dort, wo sie hingehören: in der
+         * Zuweisungsschleife. Hier noch einmal die Bau-Reserve abzuziehen
+         * ergab dauerhaft negative Zahlen (`-7/3`) und damit wieder null
+         * Anläufe — denn Käufe mit `populationCost` verbrauchen freie Leute
+         * *vor* dieser Stelle, der Vorrat steht also ohnehin schon unter der
+         * Rücklage. Zweimal dieselbe Vorsicht ist keine doppelte Sicherheit,
+         * sondern eine Sperre.
+         *
+         * **Und gezählt wird als Decimal, nicht über `toNumber()`.**
+         * `Math.floor(unassigned().toNumber())` sah richtig aus und war die
+         * teuerste Zeile dieser Messung: bei 7,999… freien Leuten rundet die
+         * Umrechnung auf 8,00, `Math.floor` liefert 8, und `sendCrew` lehnt
+         * mit „zu wenige freie Bewohner" ab — Decimal vergleicht exakt. Das
+         * passierte **8704-mal in einem einzigen Lauf** und ließ die Bergung
+         * dreiviertel der Zeit stillstehen, ohne eine Spur zu hinterlassen.
+         * `formatInt()` in engine/format.ts macht es seit jeher richtig
+         * (`n.floor()` *vor* der Umrechnung) — deshalb zeigt die Oberfläche
+         * korrekt 7 an und ist von diesem Fehler nicht betroffen.
+         */
+        const frei = unassigned().floor().toNumber()
+        /*
+         * **So viele, wie entbehrlich sind — nicht so viele, wie hineinpassen.**
+         *
+         * Bis zur Messung von §20 schickte der Simulant ausschließlich
+         * `maxCrew`. Das war die Überkorrektur zur M18-Falle: dort zog er
+         * Leute ab, *bevor* die Anlagen besetzt waren, und die Antwort darauf
+         * ist die Bedingung eine Zeile höher, nicht die Truppgröße. Gemessen
+         * hat die volle Truppe auf Aurora **null Anläufe** ergeben — acht
+         * freie Leute standen dort nie beisammen, Höchststand drei —, und ein
+         * Lauf ohne einen einzigen Anlauf sah aus wie „Bergung kostet nichts".
+         *
+         * `minCrew` steht in den Daten und bedeutet genau das: ein kleiner
+         * Trupp geht auch, er bringt weniger mit und trägt mehr Risiko
+         * (systems/salvage.ts). Diese Abwägung ist der Sinn der Truppgröße —
+         * sie wegzudrücken heißt, das System an sich nicht zu messen.
+         */
+        const trupp = Math.min(ziel.maxCrew, frei)
+        if (trupp < ziel.minCrew) notierenBergung(`kein Trupp frei (${frei}/${ziel.minCrew})`)
+        // Ein Losschicken, das fehlschlägt, muss laut sein. Es war die letzte
+        // stille Stelle in dieser Kette — und prompt die, an der 8705 von
+        // 12 062 Entscheidungen verschwanden.
+        else if (!sendCrew(ziel.id, trupp)) {
+          notierenBergung(`abgelehnt: ${salvageBlocker(ziel, trupp) ?? 'ohne Grund'}`)
+        }
       }
+    }
+  }
+
+  /*
+   * Das Bauwerk — **nach** allem anderen (M19, §20.3).
+   *
+   * Die Stelle ist wieder die Aussage. Eine Etappe steht in derselben Reihe
+   * wie ein Wohnmodul (`BuildSite.art`), also nimmt sie der Kolonne Zeit weg;
+   * wer sie vor Versorgung und Wohnraum bestellt, misst einen Spieler, der
+   * sein Denkmal wichtiger nimmt als seine Leute. Genau das soll die Messung
+   * *nicht* voraussetzen — die Frage aus §20 ist, was ein Bauwerk kostet,
+   * wenn man es nebenher baut.
+   *
+   * Bestellt wird immer nur die **nächste** Etappe, und `stageBlocker()`
+   * verhindert von sich aus, dass zwei gleichzeitig laufen. Der Grund fürs
+   * Scheitern wandert in `abgelehnt`: „warum baut er das nicht?" ist bei
+   * einem Lauf, der bei zwei Etappen stehen bleibt, die einzige Frage.
+   */
+  if (opts.bauwerk && landmarkHere()) {
+    const grund = stageBlocker()
+    if (grund === null) orderStage()
+    // „steht fertig" und „Etappe läuft" sind kein Scheitern, sondern der
+    // Normalfall — sie zu zählen ersäuft die eine Zeile, auf die es ankommt.
+    else if (grund !== 'steht fertig' && grund !== 'Etappe läuft') {
+      const key = `Bauwerk: ${grund}`
+      abgelehnt[key] = (abgelehnt[key] ?? 0) + 1
     }
   }
 }
@@ -723,6 +1007,14 @@ function entscheiden(
 /** Ein Lauf auf einem Planeten. Verändert den Spielstand **nicht**. */
 export function runPlanet(planetId: string, options: BalanceOptions = {}): BalanceResult {
   const opts = { ...STANDARD, ...options }
+  /*
+   * Ein Bauwerk ohne Bergung ist keine Variante, sondern ein Messfehler:
+   * jede Etappe kostet Fundstücke, und die gibt es nirgendwo sonst. Wer
+   * `bauwerk: true` allein setzt, misst einen Spieler, der auf Material
+   * wartet, das er sich nicht holt — deshalb hier und nicht in der
+   * Aufruferklärung.
+   */
+  if (opts.bauwerk) opts.bergung = true
   const warGesperrt = isPersistenceSuspended()
   suspendPersistence()
   const sicherung = exportSave()
@@ -744,6 +1036,19 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
     meta.metaUpgrades = []
     meta.researchNodes = {}
     meta.achievements = []
+    /*
+     * **Und die Baupläne**, die M20 dazugestellt hat.
+     *
+     * Sie standen hier bis zur Messung von §20 nicht — ein Lauf aus einem
+     * gespielten Tab brachte damit still jeden Bauplan mit, den dieser Stand
+     * verdient hatte, und maß ein Spiel ohne Schlösser. Dieselbe Fehlerklasse
+     * wie bei `meta.stats` weiter unten, und derselbe Grund, warum sie nicht
+     * auffällt: zwei Läufe *innerhalb* einer Sitzung sind trotzdem gleich.
+     *
+     * `plaene: true` ist die Gegenprobe dazu und füllt die Liste absichtlich
+     * ganz — der Unterschied beider Läufe ist der Preis der Schlösser.
+     */
+    meta.blueprints = opts.plaene ? gatedGenerators() : []
     meta.research = new Decimal(0)
     meta.genesisCores = new Decimal(0)
     meta.population = new Decimal(0)
@@ -784,6 +1089,20 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
 
     const fracht: Record<string, Decimal> = {}
     for (const m of MATERIALS) fracht[m.id] = new Decimal(opts.fracht)
+    /*
+     * **Fundstücke sind keine Fracht.**
+     *
+     * Sie sind das einzige Material, das sich nicht herstellen lässt — „es war
+     * schon da" (data/materials.ts) —, und sie gehen ausschließlich in
+     * Bauwerke. Wer sie mit einlädt, misst die Frage weg, die §20 offen
+     * gelassen hat: 50 000 mitgebrachte Fundstücke machen jede Etappe sofort
+     * bezahlbar, und ein Bauwerk sähe aus wie reine Bauzeit.
+     *
+     * Das ist auch inhaltlich die einzig richtige Zeile: Fracht ist, was man
+     * vom vorigen Planeten mitbringt, und dort hat man seine Fundstücke
+     * verbaut.
+     */
+    fracht.fundstueck = new Decimal(0)
     run.materials = fracht
 
     const def = PLANETS.find((p) => p.id === planetId) ?? AURORA
@@ -792,6 +1111,20 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
     const schritte = Math.floor((opts.maxMinuten * 60) / opts.schritt)
     let fertigBei: number | null = null
     let raketeBei: number | null = null
+    let bauwerkBei: number | null = null
+    /*
+     * **Der Abschluss ist nicht das Ende, wenn ein Bauwerk gemessen wird.**
+     *
+     * `completed` heißt „die Atmosphäre steht stabil" — das passiert lange
+     * bevor vier Etappen aus Fundstücken bezahlt sind, und Fundstücke kommen
+     * nur aus der Bergung, also im Takt von Minuten. Bräche der Lauf hier ab,
+     * hieße das Ergebnis „so viele Etappen passen zufällig in die Dauer dieses
+     * Planeten" und nicht „so lange dauert ein Bauwerk". Ein Mensch spielt an
+     * dieser Stelle auch weiter: die Rakete steht, der Planet läuft, und das
+     * Denkmal ist genau jetzt das, worauf er hinarbeitet (§20.3).
+     */
+    const weiterlaufen = (): boolean =>
+      opts.bauwerk && landmarkHere() !== undefined && !landmarkDone()
 
     for (let i = 1; i <= schritte; i++) {
       for (let k = 0; k < opts.clicks * opts.schritt; k++) releaseOxygen()
@@ -800,9 +1133,10 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
 
       const sekunden = i * opts.schritt
       if (planet.rocketBuilt && raketeBei === null) raketeBei = sekunden
+      if (landmarkDone() && bauwerkBei === null) bauwerkBei = sekunden
       if (planet.completed) {
-        fertigBei = sekunden
-        break
+        if (fertigBei === null) fertigBei = sekunden
+        if (!weiterlaufen()) break
       }
     }
 
@@ -823,6 +1157,10 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
       biomasse: +planet.biomass.toNumber().toFixed(0),
       guthaben: +planet.oxygen.toNumber().toFixed(0),
       warteschlange: planet.sites.reduce((a, s) => a + s.remaining, 0),
+      etappen: stagesDone(),
+      bauwerkMin: bauwerkBei === null ? null : +(bauwerkBei / 60).toFixed(1),
+      fundstuecke: +(run.materials.fundstueck?.toNumber() ?? 0).toFixed(1),
+      anlaeufe: Object.values(planet.salvageRuns).reduce((a, n) => a + n, 0),
       grob: opts.schritt > 1,
       abgelehnt,
       anlagen,
@@ -851,19 +1189,33 @@ export function runAll(options: BalanceOptions = {}): BalanceResult[] {
   return PLANETS.map((p) => runPlanet(p.id, options))
 }
 
+/** Die Schalter, die `compare()` gegeneinander stellen kann. */
+export type BalanceFlag = 'komfort' | 'bergung' | 'bauwerk' | 'plaene'
+
 /**
- * Dieselbe Frage zweimal, einmal mit und einmal ohne Komfort.
+ * Dieselbe Frage zweimal, einmal mit und einmal ohne **einen** Schalter.
  *
  * Der Sinn ist die **Wiederholung**: `laeufe` gibt an, wie oft jede Variante
  * mit verschiedenen Ereignis-Startwerten läuft. Ohne diese Streuung hält man
  * den Unterschied zwischen zwei Zufallslagen für einen Effekt — der Fehler,
  * an dem der erste Messversuch nach M14 gescheitert ist.
+ *
+ * **Der Schalter ist seit der Messung von §20 ein Parameter.** Vorher stand
+ * `komfort` fest im Rumpf, und §20 verlangt dieselbe Gegenüberstellung für
+ * drei weitere Teile. Eine zweite Funktion daneben hätte geheißen, die
+ * Streuungslogik zu kopieren — und beim nächsten Mal die eine Hälfte zu
+ * ändern:
+ *
+ *     cleanair.balance.compare('aurora', 'bauwerk')
+ *     cleanair.balance.compare('vesta', 'plaene', {}, 5)
  */
 export function compare(
   planetId: string,
+  flag: BalanceFlag = 'komfort',
   options: BalanceOptions = {},
   laeufe = 3,
 ): {
+  flag: BalanceFlag
   ohne: (number | null)[]
   mit: (number | null)[]
   median: { ohne: number | null; mit: number | null }
@@ -872,14 +1224,14 @@ export function compare(
   const mit: (number | null)[] = []
   for (let i = 0; i < laeufe; i++) {
     const seed = `${options.seed ?? STANDARD.seed}:${i}`
-    ohne.push(runPlanet(planetId, { ...options, seed, komfort: false }).minuten)
-    mit.push(runPlanet(planetId, { ...options, seed, komfort: true }).minuten)
+    ohne.push(runPlanet(planetId, { ...options, seed, [flag]: false }).minuten)
+    mit.push(runPlanet(planetId, { ...options, seed, [flag]: true }).minuten)
   }
   const median = (werte: (number | null)[]): number | null => {
     const echte = werte.filter((w): w is number => w !== null).sort((a, b) => a - b)
     return echte.length === 0 ? null : (echte[Math.floor(echte.length / 2)] ?? null)
   }
-  return { ohne, mit, median: { ohne: median(ohne), mit: median(mit) } }
+  return { flag, ohne, mit, median: { ohne: median(ohne), mit: median(mit) } }
 }
 
 /** Zieldauern aus §13, damit ein Ergebnis sich selbst einordnet. */
@@ -917,7 +1269,16 @@ export function table(results: BalanceResult[]): string {
     const dauer = r.minuten === null ? '—' : `${r.minuten} min`
     const z = ziel ? `${ziel[0]}–${ziel[1]} min` : '—'
     const warnung = r.grob ? '  (grob gemessen, nicht belastbar)' : ''
-    return `${r.planet.padEnd(8)} ${dauer.padStart(10)}  Ziel ${z.padEnd(12)} ${urteil}${warnung}`
+    /*
+     * Der lange Weg steht nur da, wenn er begangen wurde. Eine Spalte
+     * „0/4 Etappen" in jeder Zeile eines Laufs ohne Bergung wäre kein
+     * Messwert, sondern Rauschen über der Zahl, um die es geht.
+     */
+    const weg =
+      r.anlaeufe > 0 || r.etappen > 0
+        ? `  ${r.etappen}/4 Etappen, ${r.anlaeufe} Anläufe, ${r.fundstuecke} Fd`
+        : ''
+    return `${r.planet.padEnd(8)} ${dauer.padStart(10)}  Ziel ${z.padEnd(12)} ${urteil}${warnung}${weg}`
   })
   return zeilen.join('\n')
 }
