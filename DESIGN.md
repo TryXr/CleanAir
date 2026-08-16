@@ -694,23 +694,35 @@ Bewusst noch nicht entschieden — sollte während M1/M2 im Spiel getestet werde
   Biomasse sind 1,41-mal so viele Kerne. Genau deshalb misst
   [dev/balance.ts](src/dev/balance.ts) auch die ungerundete Biomasse mit — auf
   einem frühen Planeten verschwindet ein Zugewinn sonst unter der Rundung.
-- **Sollen Erfolge Bestände oder Summen messen?** Neu aus M25, und die Frage
-  gehört hierher, weil sie das Spiel und nicht die Anzeige betrifft. Vier der
-  sechzehn Erfolge prüfen einen **Bestand**, während ihr Text eine **Summe**
-  versprach: „100.000 Holz geschlagen" verlangte 100.000 gleichzeitig im
-  Lager, und das Lager fasst 1000 plus 2500 je Halle — der schwere Teil stand
-  im Text gar nicht. „10.000 Forschungspunkte verdient" verlangt sie
-  **ungenutzt**: jeder Forschungskauf entfernt einen davon, und ausgeben ist
-  das, was das Spiel überall sonst verlangt.
+- ~~**Sollen Erfolge Bestände oder Summen messen?**~~ **Entschieden in M26:
+  gemischt — Summen, wo der Text eine Wegmarke verspricht; Bestände, wo er
+  ausdrücklich „gleichzeitig" sagt.**
 
-  Die Texte sind in M25 an die Bedingung angeglichen worden — das kostet keine
-  Zahl und nimmt die Unwahrheit heraus. Die eigentliche Frage bleibt offen:
-  **Bestände sind Sammelaufgaben, Summen sind Wegmarken.** Für Summen bräuchte
-  es Zähler in `meta.stats` (dort stehen schon `totalOxygen` und
-  `totalClicks`), also eine Save-Version und eine Migration — und es machte
-  vier Erfolge samt ihrer dauerhaften Boni leichter. Das ist eine
-  Balancing-Entscheidung und keine Aufräumarbeit, deshalb ist sie nicht
-  nebenbei getroffen worden.
+  Der Befund aus M25: vier der sechzehn Erfolge prüften einen **Bestand**,
+  während ihr Text eine **Summe** versprach. „100.000 Holz geschlagen"
+  verlangte 100.000 gleichzeitig im Lager, und das Lager fasst 1000 plus 2500
+  je Halle — der schwere Teil stand im Text gar nicht. „10.000
+  Forschungspunkte verdient" verlangte sie *ungenutzt*: jeder Kauf entfernte
+  einen davon, und ausgeben ist das, was das Spiel überall sonst verlangt.
+
+  Entschieden wurde **nicht**, den Text zur Prüfung zu ziehen (so hatte M25 es
+  provisorisch gemacht), sondern die Prüfung zum Text. Es zählen jetzt
+  `meta.stats.materialsMined` und `meta.stats.totalResearch`, beide in der
+  Meta-Ebene und damit über den Durchlauf-Reset hinweg — ein Erfolg, den ein
+  Reset zurücknimmt, wäre die Strafe aus §1.2.
+
+  **Gezählt wird der Fund, nicht der gelagerte Teil.** Wer bei vollem Regal
+  weiterfördert, hat trotzdem gefördert; es verfällt nur. Andersherum hinge
+  die Summe wieder an der Lagergrenze, und der Fehler wäre bloß eine Ebene
+  tiefer gewandert. Der Zähler sitzt deshalb in `storeMaterial()` **vor** der
+  Grenze — der einzigen Stelle, durch die im Spiel Material ins Lager kommt.
+
+  „Förster" (10.000 Bäume gleichzeitig) und „Diaspora" (drei bewohnte Welten
+  gleichzeitig) bleiben Bestände: dort *ist* das Gleichzeitige die Aufgabe.
+
+  SAVE_VERSION 20. Die Migration füllt die neuen Zähler bewusst **nicht** auf:
+  was vor der Zählung gefördert wurde, weiß niemand mehr, und eine geratene
+  Zahl könnte einen Erfolg vergeben, den es nie gab.
 - ~~**Story-Präsentation:** Log-Einträge, Dialogfenster oder ein Codex?~~
   **Entschieden, nachgetragen in M24: der Log — und seit §20.2 die Bergung.**
   Die Vermutung „Log ist am billigsten und stört den Flow am wenigsten" hat
@@ -1392,10 +1404,13 @@ Die Lehre ist nicht „besser hinsehen", sondern eine Zuständigkeit:
 
 ### Offene Fragen dieses Kurswechsels
 
-- **Was wird aus dem Klick-Knopf?** Weniger dringend als gedacht: O₂ ist auf
-  Aurora zwar nicht mehr der Preis der *Rakete*, bezahlt aber weiterhin jede
-  Anlage. „O₂ freisetzen" hat damit ein Ziel, solange Gebäude O₂ kosten — die
-  Frage stellt sich erst wieder, wenn auch das fällt.
+- ~~**Was wird aus dem Klick-Knopf?**~~ **Entschieden in M26: er bleibt, wie
+  er ist.** O₂ ist auf Aurora nicht mehr der Preis der *Rakete*, bezahlt aber
+  weiterhin jede Anlage — „O₂ freisetzen" hat damit ein Ziel, und das
+  Balancing-Werkzeug zeigt, wie handfest: ohne Klicks kommt der simulierte
+  Spieler nicht einmal an den ersten Generator (dev/balance.ts). Die Frage
+  stellt sich erst wieder, wenn auch Anlagen kein O₂ mehr kosten; bis dahin
+  wäre jede Änderung eine Lösung ohne Problem.
 - ~~**Wohnkuppel, Hydroponik und Eisschmelze erscheinen auf Aurora, obwohl sie
   Stein und Holz kosten, die es dort nicht gibt.**~~ **Nachgesehen nach M17
   und in dieser Form nicht auffindbar** — beim ersten Besuch zeigt die Liste

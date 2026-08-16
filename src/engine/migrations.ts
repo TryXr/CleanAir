@@ -293,6 +293,24 @@ export const MIGRATIONS: Record<number, (s: SaveShape) => SaveShape> = {
    * Stunden verdient hat. Alles, was irgendwo steht, gilt deshalb als
    * bekannt: auf dem aktiven Planeten und in jedem eingelagerten.
    */
+  /*
+   * M26: Erfolge messen Summen statt Bestände (§15).
+   *
+   * `meta.stats.materialsMined` und `meta.stats.totalResearch` kommen dazu.
+   * **Die Migration füllt sie bewusst nicht auf** — was vor der Zählung
+   * gefördert wurde, weiß niemand mehr, und eine geratene Zahl wäre schlimmer
+   * als eine ehrliche Null: sie könnte einen Erfolg vergeben, den es nicht
+   * gab, oder einen knapp verpassen lassen.
+   *
+   * Ein bestehender Spielstand verliert dadurch nichts: die vier betroffenen
+   * Erfolge waren am Bestand gemessen ohnehin kaum erreichbar, und einmal
+   * vergebene Erfolge stehen in `meta.achievements` und bleiben. Die
+   * defensiven Leser in state/meta.svelte.ts liefern für beide Felder 0, der
+   * Eintrag hier steht trotzdem — damit die Versionskette lückenlos bleibt
+   * und die Absicht dokumentiert ist.
+   */
+  20: (s) => s,
+
   19: (s) => {
     const bekannt = new Set<string>(Array.isArray(s.meta && (s.meta as SaveShape).blueprints) ? ((s.meta as SaveShape).blueprints as string[]) : [])
 

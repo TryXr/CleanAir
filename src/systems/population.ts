@@ -208,7 +208,12 @@ export function populationSystem(dt: number): void {
         .mul(landmarkEffects().biomass)
         .mul(dt),
     )
-    meta.research = meta.research.add(researchRate().mul(dt))
+    // Guthaben und Summe zugleich: `meta.research` wird beim Kauf wieder
+    // kleiner, `totalResearch` nie. Der Erfolg „Gelehrte" hängt seit M26 an
+    // der Summe — vorher belohnte er das Horten (§15).
+    const verdient = researchRate().mul(dt)
+    meta.research = meta.research.add(verdient)
+    meta.stats.totalResearch = meta.stats.totalResearch.add(verdient)
   }
 
   if (!def.allowsPopulation) return

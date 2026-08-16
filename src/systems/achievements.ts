@@ -5,7 +5,6 @@ import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { grantFromAchievement } from './blueprints'
 import { planet } from '../state/planet.svelte'
-import { materialAmount } from '../state/run.svelte'
 import { inhabitedPlanets, totalSettlers } from './travel'
 
 /**
@@ -72,11 +71,15 @@ export function achievementEffects(): AchievementEffects {
 }
 
 /**
- * Wie viele Planeten dieses Durchlaufs gerade bewohnt sind.
+ * Wie viel von diesem Material jemals gefördert wurde (M26, §15).
  *
- * Der aktive Planet lebt in `planet`, alle anderen als Momentaufnahme in
- * `run.planets` — deshalb muss hier beides gezählt werden (§16).
+ * Steht in `meta` und überlebt damit den Durchlauf-Reset — anders als der
+ * Bestand, der mit `run.materials` fällt. Ein Erfolg, den ein Reset
+ * zurücknimmt, wäre die Strafe, die §1.2 verbietet.
  */
+function minedTotal(id: string): Decimal {
+  return meta.stats.materialsMined[id] ?? new Decimal(0)
+}
 
 function isMet(c: Condition): boolean {
   switch (c.kind) {
@@ -94,11 +97,17 @@ function isMet(c: Condition): boolean {
       // weiterfliegt (M24, systems/travel.ts).
       return meta.population.add(totalSettlers()).gte(c.atLeast)
     case 'research':
-      return meta.research.gte(c.atLeast)
+      // Die **Summe**, nicht das Guthaben (M26, §15): sonst belohnt dieser
+      // Erfolg das Horten, während ohne ausgegebene Forschung nicht einmal
+      // Vesta abschließt.
+      return meta.stats.totalResearch.gte(c.atLeast)
     case 'cores':
       return meta.genesisCores.gte(c.atLeast)
     case 'material':
-      return materialAmount(c.material).gte(c.atLeast)
+      // Gefördert, nicht gelagert. Das Lager fasst 1000 plus 2500 je Halle —
+      // am Bestand gemessen war der schwere Teil dieser Erfolge das Bauen von
+      // Regalen, und davon stand nichts in ihrem Text (§15).
+      return minedTotal(c.material).gte(c.atLeast)
     case 'trees':
       return planet.trees.gte(c.atLeast)
     case 'wavesRepelled':
@@ -128,12 +137,15 @@ export function progressOf(c: Condition): number {
       return anteil(meta.stats.runs, c.atLeast)
     case 'population':
       return anteil(meta.population.add(totalSettlers()).toNumber(), c.atLeast)
+    // Beide lesen dieselbe Quelle wie `isMet` darüber. Ein Balken, der etwas
+    // anderes misst als die Bedingung, ist schlimmer als kein Balken: er
+    // steht bei 100 % und der Erfolg löst nicht aus.
     case 'research':
-      return anteil(meta.research.toNumber(), c.atLeast)
+      return anteil(meta.stats.totalResearch.toNumber(), c.atLeast)
     case 'cores':
       return anteil(meta.genesisCores.toNumber(), c.atLeast)
     case 'material':
-      return anteil(materialAmount(c.material).toNumber(), c.atLeast)
+      return anteil(minedTotal(c.material).toNumber(), c.atLeast)
     case 'trees':
       return anteil(planet.trees.toNumber(), c.atLeast)
     case 'wavesRepelled':

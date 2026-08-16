@@ -86,16 +86,16 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     id: 'lumberjack',
     name: 'Holzweg',
     /*
-     * **„im Lager" und nicht „geschlagen"** (M25).
+     * **Die Bedingung misst seit M26 die Summe, nicht den Bestand** (§15).
      *
-     * Die Bedingung `material` prüft den Bestand, nicht die Fördermenge. Wer
-     * dreihunderttausend Holz abbaut und verbaut, bekommt diesen Erfolg nie —
-     * der Text versprach etwas anderes als die Prüfung, und der schwierige
-     * Teil (genug Lagerhallen) kam darin gar nicht vor. Ob das Kumulative das
-     * bessere Spiel wäre, steht als offene Frage in DESIGN.md §15; bis dahin
-     * sagt der Text wenigstens die Wahrheit.
+     * M25 hatte hier „auf einmal im Lager" hingeschrieben, weil die Prüfung
+     * den Bestand las und der Text etwas anderes versprach. Entschieden wurde
+     * dann andersherum: nicht der Text zieht zur Prüfung, sondern die Prüfung
+     * zum Text. Eine Wegmarke soll sagen „so viel hast du bewegt" und nicht
+     * „so viele Regale hast du gebaut" — der Bestand hängt am Lager, und das
+     * fasst 1000 plus 2500 je Halle.
      */
-    description: '100.000 Holz auf einmal im Lager.',
+    description: '100.000 Holz geschlagen.',
     condition: { kind: 'material', material: 'holz', atLeast: 100000 },
     effect: { kind: 'buildCost', reduction: 0.05 },
     reward: '−5 % Baukosten',
@@ -103,7 +103,7 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   {
     id: 'quarryman',
     name: 'Steinreich',
-    description: '250.000 Stein auf einmal im Lager.',
+    description: '250.000 Stein abgebaut.',
     condition: { kind: 'material', material: 'stein', atLeast: 250000 },
     effect: { kind: 'buildCost', reduction: 0.05 },
     reward: '−5 % Baukosten',
@@ -111,7 +111,7 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   {
     id: 'titanheart',
     name: 'Titanherz',
-    description: '50.000 Titan auf einmal im Lager.',
+    description: '50.000 Titan gefördert.',
     condition: { kind: 'material', material: 'titan', atLeast: 50000 },
     effect: { kind: 'globalProduction', factor: 1.08 },
     reward: '+8 % Produktion',
@@ -139,14 +139,14 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     id: 'scholars',
     name: 'Gelehrte',
     /*
-     * **„ungenutzt" ist hier keine Feinheit, sondern die ganze Bedingung.**
-     * `meta.research` ist das *Guthaben* — jeder Forschungskauf zieht davon
-     * ab. „Verdient" stand da und war das Gegenteil dessen, was zählt: das
-     * Spiel verlangt überall, Forschung auszugeben (ohne sie schließt Vesta
-     * gar nicht ab), und dieser Erfolg belohnt genau das Horten. Der Text
-     * sagt das jetzt; ob es so bleiben soll, ist die offene Frage in §15.
+     * **Verdient heißt verdient** (M26, §15) — geprüft wird `totalResearch`
+     * und nicht `meta.research`. Letzteres ist das Guthaben: jeder Kauf zieht
+     * ab, und der Erfolg belohnte damit genau das Horten, das das Spiel
+     * überall sonst bestraft (ohne ausgegebene Forschung schließt Vesta gar
+     * nicht ab). Von allen vier war das der schlimmste Fall, weil er nicht
+     * nur schwer zu treffen war, sondern in die falsche Richtung zog.
      */
-    description: '10.000 Forschungspunkte ungenutzt auf der Hand.',
+    description: '10.000 Forschungspunkte verdient.',
     condition: { kind: 'research', atLeast: 10000 },
     effect: { kind: 'researchYield', factor: 1.15 },
     reward: '+15 % Forschung',

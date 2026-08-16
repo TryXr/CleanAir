@@ -1,6 +1,7 @@
 import Decimal from 'break_infinity.js'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { GENERATORS } from '../data/generators'
+import { MATERIALS } from '../data/materials'
 import { META_UPGRADES } from '../data/metaUpgrades'
 import { RESEARCH } from '../data/research'
 import { readDecimal, readInt, readNumber, writeDecimal } from '../engine/serialize'
@@ -90,6 +91,30 @@ export const meta = $state({
     wavesRepelled: 0,
     abilitiesUsed: 0,
     settlersLost: 0,
+
+    /**
+     * Jemals gefördertes Material, je id — und jemals verdiente Forschung
+     * (M26, §15).
+     *
+     * Der Grund steht in §15: vier Erfolge versprachen eine **Summe**
+     * („100.000 Holz geschlagen") und prüften einen **Bestand**. Der Bestand
+     * hängt am Lager, das 1000 plus 2500 je Halle fasst — der schwierige Teil
+     * stand also gar nicht im Text. Bei der Forschung war es schlimmer:
+     * `meta.research` ist das Guthaben, jeder Kauf zieht ab, und der Erfolg
+     * belohnte damit genau das Horten, das das Spiel sonst bestraft.
+     *
+     * **Gezählt wird, was gefördert wurde — nicht, was hineinpasste.** Wer bei
+     * vollem Lager weiterfördert, hat es trotzdem gefördert; es verfällt nur.
+     * Andersherum hinge die Summe wieder am Lager, und der Fehler wäre bloß
+     * eine Ebene tiefer gewandert.
+     *
+     * Der obige Satz „nichts hiervon fließt je in eine Spielformel zurück"
+     * stimmt schon lange nicht mehr: Erfolge vergeben sich aus der Statistik
+     * und tragen dauerhafte Boni (CLAUDE.md). Diese beiden Zähler sind
+     * ausdrücklich dafür da.
+     */
+    materialsMined: {} as Record<string, Decimal>,
+    totalResearch: new Decimal(0),
   },
 })
 
@@ -131,6 +156,10 @@ export function serializeMeta() {
       wavesRepelled: meta.stats.wavesRepelled,
       abilitiesUsed: meta.stats.abilitiesUsed,
       settlersLost: meta.stats.settlersLost,
+      materialsMined: Object.fromEntries(
+        Object.entries(meta.stats.materialsMined).map(([id, menge]) => [id, writeDecimal(menge)]),
+      ),
+      totalResearch: writeDecimal(meta.stats.totalResearch),
     },
   }
 }
@@ -192,4 +221,23 @@ export function deserializeMeta(raw: unknown): void {
   meta.stats.wavesRepelled = readInt(stats.wavesRepelled, 0)
   meta.stats.abilitiesUsed = readInt(stats.abilitiesUsed, 0)
   meta.stats.settlersLost = readNumber(stats.settlersLost, 0)
+
+  /*
+   * Nur bekannte Material-ids übernehmen — dieselbe Vorsicht wie bei
+   * Bauplänen und Forschungsknoten weiter oben. Ein alter Save mit einem
+   * Material, das es nicht mehr gibt, soll keinen Geisterzähler einschleppen.
+   *
+   * Ein Save vor SAVE_VERSION 20 hat das Feld nicht; `readDecimal` liefert
+   * dann 0. Das ist der ehrliche Anfangswert: was vor der Zählung gefördert
+   * wurde, weiß niemand mehr. Die Migration schreibt deshalb auch nichts
+   * hinein — sie kann es nicht.
+   */
+  const savedMined = (stats.materialsMined ?? {}) as Record<string, unknown>
+  const mined: Record<string, Decimal> = {}
+  for (const def of MATERIALS) {
+    const menge = readDecimal(savedMined[def.id], 0)
+    if (menge.gt(0)) mined[def.id] = menge
+  }
+  meta.stats.materialsMined = mined
+  meta.stats.totalResearch = readDecimal(stats.totalResearch, 0)
 }

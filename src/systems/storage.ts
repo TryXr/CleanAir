@@ -3,6 +3,7 @@ import { GENERATORS } from '../data/generators'
 import { landmarkEffects } from './landmarks'
 import { addLog } from '../state/log.svelte'
 import { findMaterial } from '../data/materials'
+import { meta } from '../state/meta.svelte'
 import { generatorCount } from '../state/planet.svelte'
 import { addMaterial, materialAmount, run } from '../state/run.svelte'
 
@@ -104,6 +105,23 @@ export function resetStorageNotices(): void {
  */
 export function storeMaterial(id: string, amount: Decimal): Decimal {
   if (amount.lte(0)) return new Decimal(0)
+
+  /*
+   * **Hier wird gezählt, was gefördert wurde** (M26, §15) — vor der
+   * Lagergrenze und nicht danach.
+   *
+   * Diese Funktion ist laut CLAUDE.md der einzige Weg, auf dem im Spiel
+   * Material ins Lager kommt; damit ist sie auch der einzige Ort, an dem eine
+   * ehrliche Summe entstehen kann. Gezählt wird der **Fund** und nicht der
+   * gelagerte Teil: wer bei vollem Regal weiterfördert, hat trotzdem
+   * gefördert, es verfällt nur. Andersherum hinge die Summe wieder an der
+   * Lagergrenze, und der Fehler, den §15 beschreibt, wäre bloß eine Ebene
+   * tiefer gewandert.
+   */
+  meta.stats.materialsMined = {
+    ...meta.stats.materialsMined,
+    [id]: (meta.stats.materialsMined[id] ?? new Decimal(0)).add(amount),
+  }
 
   const cap = materialCapacity()
   const room = cap.sub(materialAmount(id))

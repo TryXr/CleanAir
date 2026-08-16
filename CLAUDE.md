@@ -191,6 +191,14 @@ jeder Planet ohne Startbevölkerung eine Sackgasse wäre). Dazu ein **endliches
 Lager**: `addMaterial()` ist der rohe Setzer, im Spiel geht Material
 ausschließlich über `storeMaterial()` aus systems/storage.ts.
 
+**Eine Bedingung und ihr Fortschrittsbalken lesen dieselbe Quelle.** Klingt
+selbstverständlich und war es nicht: bis M26 prüfte der Erfolg „Holzweg" den
+Lagerbestand, während sein Text eine Fördermenge versprach — und `progressOf()`
+las noch eine dritte Zahl. Ein Balken, der etwas anderes misst als die
+Bedingung, ist schlimmer als kein Balken: er steht bei 100 %, und nichts
+passiert. `isMet()` und `progressOf()` in systems/achievements.ts gehören
+deshalb Fall für Fall nebeneinander gelesen.
+
 **Boni gehören in eine Sammelstelle, nie in die Formel.** Es gibt inzwischen
 fünf Quellen — Meta-Baum, Forschung, Berufe, Ereignisse, Achievements. Jede
 hat ihr eigenes `*Effects()`-Modul, und `collectMultipliers()` in
@@ -301,7 +309,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 193 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 197 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in

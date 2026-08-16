@@ -1434,6 +1434,69 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     meta.stats.totalClicks = 0
     meta.achievements = []
 
+    /*
+     * **Erfolge messen Summen, nicht Bestände** (M26, §15).
+     *
+     * Die Prüfung stellt genau die Lage her, in der beide Fassungen
+     * auseinanderlaufen: viel gefördert, nichts mehr im Lager. Vorher zählte
+     * `materialAmount()`, also wäre „Holzweg" hier nie gekommen — wer sein
+     * Holz verbaut, verlor den Erfolg. Dasselbe für die Forschung, wo der
+     * Bestand beim Kauf sogar wieder sinkt.
+     *
+     * Gegenproben gesehen: mit `materialAmount(c.material)` bzw.
+     * `meta.research` in isMet() bleiben beide rot.
+     */
+    freshRun()
+    meta.achievements = []
+    meta.stats.materialsMined = { holz: new Decimal(100000) }
+    meta.stats.totalResearch = new Decimal(10000)
+    meta.research = new Decimal(0)
+    run.materials = {}
+    achievementsSystem(1)
+    check(
+      r,
+      'Gefördertes zählt, auch wenn das Lager leer ist',
+      meta.achievements.includes('lumberjack'),
+      meta.achievements.join(', '),
+    )
+    check(
+      r,
+      'Verdiente Forschung zählt, auch wenn sie ausgegeben ist',
+      meta.achievements.includes('scholars'),
+      meta.achievements.join(', '),
+    )
+
+    /*
+     * Und die Gegenrichtung: ein voller Speicher **ohne** Förderung reicht
+     * nicht. Sonst hätte man den Erfolg nur von einer Quelle auf eine andere
+     * umgehängt, statt die Frage zu ändern.
+     */
+    meta.achievements = []
+    meta.stats.materialsMined = {}
+    run.materials = { holz: new Decimal(500000) }
+    achievementsSystem(1)
+    check(
+      r,
+      'Ein voller Speicher allein reicht nicht',
+      !meta.achievements.includes('lumberjack'),
+      meta.achievements.join(', '),
+    )
+
+    // Und der Zähler selbst: storeMaterial() ist die einzige Quelle.
+    meta.stats.materialsMined = {}
+    run.materials = {}
+    storeMaterial('stein', new Decimal(250))
+    check(
+      r,
+      'Fördern füllt den Summenzähler',
+      (meta.stats.materialsMined.stein ?? new Decimal(0)).eq(250),
+      `${meta.stats.materialsMined.stein}`,
+    )
+
+    meta.stats.materialsMined = {}
+    meta.stats.totalResearch = new Decimal(0)
+    meta.achievements = []
+
     /* --- Ton --------------------------------------------------------------
        Getestet wird nicht, wie es klingt, sondern dass es nichts kaputt macht:
        kein Absturz ohne Audiokontext, jede id vorhanden, Lautstärke begrenzt.
