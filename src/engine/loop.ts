@@ -162,8 +162,50 @@ export function reportsAbsence(elapsedSeconds: number): boolean {
 }
 
 /**
+ * Sekunden je Schritt im Nachlauf — zwanzigmal gröber als im laufenden Spiel.
+ *
+ * Im Betrieb tickt das Spiel mit 20 Hz, weil ein Mensch zusieht. Im Nachlauf
+ * sieht niemand zu, und die Feinheit kostet dann nur Rechenzeit.
+ */
+const CATCHUP_DT = 1
+
+/**
+ * Obergrenze der Schritte, egal wie lang die Abwesenheit war.
+ *
+ * Darüber wird der Schritt gestreckt statt die Zahl erhöht: die Rechenzeit
+ * bleibt damit beschränkt, auch wenn der Deckel eines Tages von zwölf auf
+ * hundert Stunden stiege.
+ */
+const MAX_CATCHUP_STEPS = 5000
+
+/**
  * Rechnet die Abwesenheit nach. Gedrosselt und gedeckelt, damit
  * Wegbleiben nie die bessere Strategie ist als Spielen.
+ *
+ * > **Der Nachlauf lief bis M32 in 20-Hz-Schritten und hat den Browser
+ * > eingefroren.** Zwölf Stunden Abwesenheit sind beim voreingestellten
+ * > Deckel 21 600 angerechnete Sekunden — mal 20 Hz sind das **432 000 Ticks
+ * > am Stück**, synchron, bevor das erste Bild erscheint. Gemessen kostet ein
+ * > Tick rund 0,79 ms, unabhängig davon, wie groß der Spielstand ist (es ist
+ * > fester Aufwand über elf Systeme, nicht Menge). Macht **342 Sekunden
+ * > Standbild** nach einer Nacht — und schon 28 Sekunden nach einer Stunde.
+ *
+ * Die einzige Stellschraube ist die **Zahl der Schritte**, denn der Aufwand
+ * pro Schritt hängt nicht am Spielstand. Gemessen für eine Stunde Nachlauf,
+ * gleicher Ausgangsstand:
+ *
+ * | Schritt | Dauer | O₂ % | N₂ % | Schadstoffe % | Guthaben |
+ * |---|---|---|---|---|---|
+ * | 0,05 s | 51,6 s | 17,257 | 79,906 | 2,749 | 6 862 685 |
+ * | 1 s | 2,7 s | 17,281 | 80,014 | 2,618 | 6 904 246 |
+ * | 5 s | 0,5 s | 17,269 | 79,964 | 2,677 | 6 778 032 |
+ *
+ * Unter 0,2 % Unterschied in der Atmosphäre, unter 1,3 % beim Guthaben, die
+ * Bevölkerung auf den Kopf gleich. **Das steht nicht im Widerspruch zu dem
+ * Satz aus dev/balance.ts**, dass gröbere Schritte das Ergebnis qualitativ
+ * ändern: dort ging es um die *Entscheidungstaktung* des simulierten Spielers
+ * — zwischen zwei Käufen läuft der Wert weiter und schießt über sein Fenster.
+ * Im Nachlauf kauft niemand etwas; es wird nur integriert.
  */
 export function applyOffline(
   elapsedMs: number,
@@ -173,11 +215,15 @@ export function applyOffline(
   const elapsedSeconds = Math.max(0, elapsedMs / 1000)
   const cappedSeconds = Math.min(elapsedSeconds, maxHours * 3600)
   const creditedSeconds = cappedSeconds * efficiency
-  const ticks = Math.floor(creditedSeconds / TICK_DT)
+
+  const ticks = Math.min(Math.floor(creditedSeconds / CATCHUP_DT), MAX_CATCHUP_STEPS)
+  // Der Schritt trägt die volle angerechnete Zeit — auch wenn die Zahl der
+  // Schritte gedeckelt ist, geht dem Spieler keine Sekunde verloren.
+  const dt = ticks > 0 ? creditedSeconds / ticks : 0
 
   catchUp = true
   try {
-    runTicks(ticks)
+    for (let i = 0; i < ticks; i++) runStep(dt)
   } finally {
     catchUp = false
   }

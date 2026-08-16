@@ -297,6 +297,17 @@ für Spiellogik — sonst bricht der Offline-Fortschritt, der genau darauf beruh
 dieselben Systeme n-mal am Stück laufen zu lassen. Die Registrierungsreihenfolge
 ist Balancing (Produktion vor Verbrauch).
 
+> **Der Nachlauf zählt Schritte, nicht Ticks** (M32). Er lief bis dahin in
+> 20-Hz-Schritten: zwölf Stunden Abwesenheit waren 432 000 Ticks am Stück und
+> gemessen **342 Sekunden Standbild**, bevor das erste Bild erschien — schon
+> eine Stunde kostete 28. Der Aufwand je Tick (~0,79 ms) hängt dabei *nicht*
+> am Spielstand, sondern ist fester Aufwand über elf Systeme; die Zahl der
+> Schritte ist also der einzige Hebel. `applyOffline()` fährt jetzt höchstens
+> 5000 Schritte und streckt stattdessen `dt`. Zwölf Stunden dauern damit
+> 3,1 statt 342 Sekunden, und über drei Stunden Abwesenheit kamen beide Wege
+> auf **identische** Werte. Wer ein System schreibt, das auf kleine `dt`
+> angewiesen ist, muss das hier wissen.
+
 **2. Decimal immer ersetzen, nie mutieren.**
 ```ts
 planet.oxygen = planet.oxygen.add(gain)   // richtig
@@ -334,7 +345,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 200 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 203 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in

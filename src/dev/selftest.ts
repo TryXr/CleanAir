@@ -6,7 +6,7 @@ import { AURORA, PLANETS } from '../data/planets'
 import { ROCKETS } from '../data/rockets'
 import { findSound } from '../data/sounds'
 import { play } from '../engine/audio'
-import { reportsAbsence } from '../engine/loop'
+import { applyOffline, reportsAbsence } from '../engine/loop'
 import { formatInt } from '../engine/format'
 import {
   exportSave,
@@ -728,6 +728,39 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     --------------------------------------------------------------------- */
     check(r, 'Kurzes Wegsehen schreibt nichts in den Log', !reportsAbsence(6))
     check(r, 'Echte Abwesenheit meldet sich', reportsAbsence(3600))
+
+    /* --- Der Nachlauf darf den Browser nicht anhalten (M32) ----------------
+       Bis M32 lief er in 20-Hz-Schritten: zwölf Stunden Abwesenheit waren
+       432 000 Ticks am Stück und gemessen 342 Sekunden Standbild, bevor das
+       erste Bild erschien. Die Prüfung hält beides fest — dass die Zahl der
+       Schritte gedeckelt ist *und* dass trotzdem die volle Zeit angerechnet
+       wird. Gegenproben gesehen: ohne Deckel meldet sie 432 000, und mit
+       festem `dt` statt gestrecktem fehlt dem Guthaben der Zuwachs.
+    --------------------------------------------------------------------- */
+    freshRun()
+    travelTo('aurora')
+    planet.generators = { electrolysis: 20 }
+    planet.settlers = new Decimal(0)
+    const vorOffline = planet.oxygen
+    const lang = applyOffline(12 * 3600 * 1000, 0.5, 12)
+    check(
+      r,
+      'Zwölf Stunden Nachlauf bleiben unter tausenden Schritten',
+      lang.ticks <= 5000,
+      `${lang.ticks} Schritte`,
+    )
+    check(
+      r,
+      'Und rechnen trotzdem die volle Zeit an',
+      lang.creditedSeconds === 12 * 3600 * 0.5,
+      `${lang.creditedSeconds}`,
+    )
+    check(
+      r,
+      'Der Nachlauf bringt auch wirklich O₂',
+      planet.oxygen.gt(vorOffline),
+      `${vorOffline} → ${planet.oxygen}`,
+    )
 
     /* --- Erebos beginnt mit der falschen Atmosphäre (M15) ------------------
        Der ganze Planet steht und fällt mit seinem Startzustand. Wäre er leer,
