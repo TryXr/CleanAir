@@ -2340,10 +2340,20 @@ Reihenfolge:** 24,2 / 42,1 / 69,7 / 130,1 / 155,6 / 165,4.
   Abschlusszeit auf den späten — ein Nachmittag, kein Wochenende. Die Zahl ist
   gemessen und nicht gewählt: sie ergibt sich daraus, wie oft ein Trupp
   loszieht und wie stark sich ein Ziel dabei erschöpft.
-- **Darf ein Trupp reisen?** Ein Trupp, der von Kryo aus Aurora bergen kann,
-  entwertet die Rakete. Vermutlich nein — aber es ist die naheliegendste
-  Erweiterung und gehört deshalb hier notiert, bevor sie jemand aus Versehen
-  einbaut.
+- ~~**Darf ein Trupp reisen?**~~ **Nein, entschieden in M33.** Die Rakete ist
+  der einzige Weg zwischen den Welten (§16); ein zweiter, billigerer Weg für
+  Material nähme ihr den Sinn — und die Hin- und Rückreise ist ausdrücklich
+  die Tätigkeit, die §20.3 im Mittelspiel haben will.
+
+  Faktisch war es nie möglich: `targetsHere()` filtert nach dem aktiven
+  Planeten, und `salvageBlocker()` antwortet „nicht auf diesem Planeten".
+  Neu ist, dass es **geprüft** ist — eine Entscheidung, die nur in der
+  Datenform steckt, verschwindet beim nächsten Umbau dieser Datei.
+
+  Ein Trupp, der beim Abflug noch draußen ist, bleibt es: sein Planet wird
+  serialisiert eingelagert, seine Systeme laufen nicht weiter, und bei der
+  Rückkehr geht die Fahrt dort weiter, wo sie stand. Das ist dasselbe
+  Verhalten wie für alles andere auf einem verlassenen Planeten.
 - ~~**Was passiert mit `revealAt`?**~~ **Entschieden in M20, geprüft in M23:**
   wo ein Bauplan gilt, gilt nur er (`isRevealed()` in systems/production.ts).
   Der Grund ist schärfer als „zweimal warten": ein Bauplan liegt in `meta` und

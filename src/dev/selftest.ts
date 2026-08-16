@@ -762,6 +762,20 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       `${vorOffline} → ${planet.oxygen}`,
     )
 
+    /*
+     * Und die andere Seite des Deckels: eine *kurze* Abwesenheit bei niedrig
+     * gestellter Anrechnung darf nicht auf null Schritte abrunden. Bei der
+     * Voreinstellung fällt das nie auf — bei 10 % Anrechnung schon, und
+     * verschenkte Zeit aus einem Rundungsfehler verstößt gegen §1.3.
+     */
+    const kurz = applyOffline(6000, 0.1, 12)
+    check(
+      r,
+      'Auch eine knappe Abwesenheit rechnet einen Schritt',
+      kurz.ticks >= 1,
+      `${kurz.creditedSeconds} s → ${kurz.ticks} Schritte`,
+    )
+
     /* --- Erebos beginnt mit der falschen Atmosphäre (M15) ------------------
        Der ganze Planet steht und fällt mit seinem Startzustand. Wäre er leer,
        wäre es Nimbus mit anderen Zahlen — und die drei Gegenstücke, um die es
@@ -1098,6 +1112,26 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
     planet.oxygenTotal = new Decimal(1e6)
     planet.settlers = new Decimal(2)
     check(r, 'Ohne freie Leute kein Trupp', !sendCrew('lander', 5))
+
+    /*
+     * **Ein Trupp reist nicht** (§20, entschieden in M33).
+     *
+     * Ein Trupp, der von Aurora aus auf Vesta bergen kann, entwertet die
+     * Rakete — sie ist der einzige Weg zwischen den Welten (§16), und ein
+     * zweiter, billigerer Weg für Material nähme ihr den Sinn. Die Regel
+     * steckt heute in den Daten (`targetsHere()` filtert nach dem aktiven
+     * Planeten) und war damit nirgends geprüft; genau so verschwinden
+     * Entscheidungen, wenn jemand die Datei umbaut.
+     */
+    planet.settlers = new Decimal(40)
+    planet.oxygenTotal = new Decimal(1e6)
+    check(
+      r,
+      'Ein Ziel eines anderen Planeten steht hier nicht offen',
+      salvageBlocker(findSalvage('mast')!, 5) === 'nicht auf diesem Planeten',
+      `${salvageBlocker(findSalvage('mast')!, 5)}`,
+    )
+    check(r, 'Und der Trupp geht auch nicht los', !sendCrew('mast', 5))
 
     /*
      * **Was die Anzeige verspricht, muss sich losschicken lassen.**

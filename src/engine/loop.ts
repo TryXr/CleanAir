@@ -216,7 +216,20 @@ export function applyOffline(
   const cappedSeconds = Math.min(elapsedSeconds, maxHours * 3600)
   const creditedSeconds = cappedSeconds * efficiency
 
-  const ticks = Math.min(Math.floor(creditedSeconds / CATCHUP_DT), MAX_CATCHUP_STEPS)
+  /*
+   * **Mindestens ein Schritt, sobald überhaupt Zeit anzurechnen ist.**
+   *
+   * `floor(credited / 1)` allein verschluckt alles unter einer Sekunde. Bei
+   * der Voreinstellung fällt das nie auf — fünf Sekunden Abwesenheit sind
+   * 2,5 angerechnete —, aber wer die Anrechnung in den Einstellungen auf 10 %
+   * stellt, bekäme für kurze Pausen **null** Schritte und damit gar nichts.
+   * Das wäre verschenkte Zeit aus einem Rundungsfehler, und §1.3 verlangt das
+   * Gegenteil.
+   */
+  const ticks =
+    creditedSeconds > 0
+      ? Math.min(Math.max(1, Math.floor(creditedSeconds / CATCHUP_DT)), MAX_CATCHUP_STEPS)
+      : 0
   // Der Schritt trägt die volle angerechnete Zeit — auch wenn die Zahl der
   // Schritte gedeckelt ist, geht dem Spieler keine Sekunde verloren.
   const dt = ticks > 0 ? creditedSeconds / ticks : 0
