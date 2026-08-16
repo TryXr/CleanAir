@@ -102,14 +102,41 @@ import { travelTo } from '../systems/travel'
  * **Was der simulierte Spieler kann — und was nicht.** Gemessen ohne jeden
  * mitgeschleppten Fortschritt:
  *
- * | Planet | gemessen | Ziel §13 | | Bauwerk steht |
- * |---|---|---|---|---|
- * | Aurora | 24,9 min | 15–25 | im Fenster | 65,9 min |
- * | Vesta | 38,5 min | 30–45 | im Fenster | 83,0 min |
- * | Pyra | 61,5 min | 60–120 | im Fenster | 123,8 min |
- * | Kryo | 129,6 min | 120–240 | im Fenster | 128,6 min |
- * | Nimbus | 135,2 min | 120–240 | im Fenster | 183,6 min |
- * | Erebos | 157,4 min | 120–240 | im Fenster | hat keines |
+ * | Planet | gemessen | Ziel §13 | |
+ * |---|---|---|---|
+ * | Aurora | 26,5 min | 15–25 | **1,5 min zu langsam** |
+ * | Vesta | 42,1 min | 30–45 | im Fenster |
+ * | Pyra | 69,7 min | 60–120 | im Fenster |
+ * | Kryo | 133,6 min | 120–240 | im Fenster |
+ * | Nimbus | 159,8 min | 120–240 | im Fenster |
+ * | Erebos | 159,3 min | 120–240 | im Fenster |
+ *
+ * ### Die Fracht hat sich selbst einen Erfolg geschenkt (M28)
+ *
+ * Diese Zahlen sind höher als alles, was vor M28 hier stand, und die alten
+ * waren **falsch gemessen**. Der Grund saß in der Messapparatur:
+ *
+ * `fracht` gibt jedem Lauf 50 000 von *jedem* Material mit. Der Erfolg
+ * „Titanherz" verlangte bis M26 50 000 Titan **im Lager** — also war er in
+ * jedem gemessenen Lauf ab der ersten Sekunde erfüllt, und jeder Lauf lief
+ * mit geschenkten **+8 % globaler Produktion**. Kein Mensch hat das zu
+ * Spielbeginn. Seit M26 zählt der Erfolg die Fördermenge, damit fällt der
+ * Bonus weg, und die Dauern steigen um 4 bis 18 %.
+ *
+ * Aufgefallen ist es erst bei einem Optimierungslauf, weil danach *alle sechs*
+ * Zahlen abwichen — und die Suche zuerst die Optimierung verdächtigte. Der
+ * entscheidende Messwert war `gefoerdert`: **leer**, obwohl die Bedingung über
+ * Material entschied. Ein Erfolg, der ohne eine einzige geförderte Tonne
+ * auslöst, kann nur aus der Fracht kommen.
+ *
+ * **Zwei Aussagen halten damit nicht mehr**, und sie sind die nächste
+ * Balancing-Aufgabe: Aurora steht 1,5 min über seinem Fenster, und Nimbus
+ * (159,8) hat Erebos (159,3) eingeholt — „jeder länger als der vorige" ist
+ * damit auf 0,5 min zusammengeschrumpft.
+ *
+ * **Die Lehre ist allgemeiner als der Fall:** was das Werkzeug *mitgibt*,
+ * kann Bedingungen erfüllen, die das Spiel prüft. Wer eine Startausstattung
+ * großzügig wählt, prüfe, welche Erfolge sie nebenbei vergibt.
  *
  * Die letzte Spalte ist die Antwort auf die offene Frage aus §20 („wie viele
  * Fundstücke kostet ein Bauwerk?"): bei sechs Fundstücken — acht auf Kryo und
@@ -405,6 +432,24 @@ export interface BalanceResult {
   fundstuecke: number
   /** Abgeschlossene Bergungsanläufe, über alle Ziele dieses Planeten. */
   anlaeufe: number
+  /**
+   * Erfolge, die **während dieses Laufs** ausgelöst haben.
+   *
+   * Nötig geworden mit M26: seit Erfolge Summen messen statt Beständen,
+   * lösen sie im Lauf überhaupt erst aus — und jeder trägt einen dauerhaften
+   * Bonus. Damit sind sie Balancing und nicht Statistik, und ein Lauf, der
+   * nicht sagt, welche mitgelaufen sind, ist nicht erklärbar.
+   */
+  erfolge: string[]
+  /**
+   * Jemals gefördertes Material in diesem Lauf.
+   *
+   * Steht hier, weil genau diese Zahl den Fracht-Fehler oben aufgedeckt hat:
+   * sie war **leer**, während eine Bedingung über Material den ganzen Lauf
+   * entschied. Wer einen Material-Erfolg auslösen sieht, ohne dass hier etwas
+   * steht, hat ihn nicht verdient, sondern mitgebracht.
+   */
+  gefoerdert: Record<string, number>
   /**
    * Minuten, bis das Bauwerk stand — oder null.
    *
@@ -1177,6 +1222,23 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
     meta.stats.wavesRepelled = 0
     meta.stats.abilitiesUsed = 0
     meta.stats.settlersLost = 0
+    /*
+     * **Auch die beiden Summenzähler aus M26** — sie sind der Grund, warum
+     * diese Liste keine Formalie ist.
+     *
+     * Sie standen hier zunächst nicht, und der Fehler sah aus wie das
+     * Gegenteil: nach einer reinen Geschwindigkeits-Optimierung wichen *alle
+     * sechs* Planetenzeiten ab (26,5 statt 24,9 und so weiter). Nicht die
+     * Optimierung war schuld, sondern diese zwei Zeilen — `totalResearch`
+     * wuchs über Läufe hinweg weiter, ab 10 000 vergab sich „Gelehrte", und
+     * dessen +15 % Forschung maßen ab da mit. Dasselbe gilt für gefördertes
+     * Material.
+     *
+     * Die Lehre steht seit M14 im Dateikopf und hat sich hier wiederholt: wer
+     * `meta.stats` erweitert, erweitert diese Liste im selben Commit.
+     */
+    meta.stats.materialsMined = {}
+    meta.stats.totalResearch = new Decimal(0)
 
     run.materials = {}
     run.planets = {}
@@ -1281,6 +1343,10 @@ export function runPlanet(planetId: string, options: BalanceOptions = {}): Balan
       guthaben: +planet.oxygen.toNumber().toFixed(0),
       warteschlange: planet.sites.reduce((a, s) => a + s.remaining, 0),
       etappen: stagesDone(),
+      erfolge: [...meta.achievements],
+      gefoerdert: Object.fromEntries(
+        Object.entries(meta.stats.materialsMined).map(([id, m]) => [id, Math.round(m.toNumber())]),
+      ),
       bauwerkMin: bauwerkBei === null ? null : +(bauwerkBei / 60).toFixed(1),
       ereignisse,
       verlauf,

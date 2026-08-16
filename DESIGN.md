@@ -2250,6 +2250,18 @@ beiden anderen Startwerte unverändert.
 Damit stehen alle sechs Planeten wieder im Fenster **und** in der richtigen
 Reihenfolge: 24,9 / 38,5 / 61,5 / 129,6 / 135,2 / 157,4 Minuten.
 
+> **Nachtrag M28: diese sechs Zahlen waren zu niedrig gemessen.** Nicht der
+> Simulant war diesmal schuld, sondern die Startausstattung des Werkzeugs:
+> `fracht` gibt jedem Lauf 50 000 von *jedem* Material mit, und der Erfolg
+> „Titanherz" verlangte bis M26 50 000 Titan **im Lager**. Jeder gemessene
+> Lauf lief also ab der ersten Sekunde mit geschenkten +8 % Produktion, die
+> kein Mensch zu Spielbeginn hat. Seit die Erfolge Summen messen, fällt der
+> Bonus weg. Ehrlich gemessen: **26,5 / 42,1 / 69,7 / 133,6 / 159,8 / 159,3**.
+>
+> Zwei Aussagen halten damit nicht mehr und sind die nächste Balancing-Aufgabe:
+> Aurora steht 1,5 min über seinem Fenster (15–25), und Nimbus hat Erebos bis
+> auf 0,5 min eingeholt.
+
 ### Drei Fallen, die dieser Entwurf ausdrücklich vermeidet
 
 1. **Grind ist keine Wartezeit.** Jeder lange Weg hier kostet **Hände** und

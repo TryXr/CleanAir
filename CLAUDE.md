@@ -191,6 +191,18 @@ jeder Planet ohne Startbevölkerung eine Sackgasse wäre). Dazu ein **endliches
 Lager**: `addMaterial()` ist der rohe Setzer, im Spiel geht Material
 ausschließlich über `storeMaterial()` aus systems/storage.ts.
 
+**Ein Proxy-Zugriff kostet das Vierzigfache eines Feldzugriffs.** `meta`,
+`planet` und `run` sind `$state` und damit Proxies; jeder Lesezugriff läuft
+durch eine Falle. Gemessen: `meta.achievements.includes(...)` braucht 3,3 µs,
+dieselbe Prüfung auf einer rohen Kopie 0,075 µs — eine Decimal-Multiplikation
+liegt bei 0,09 µs. **Rechnen ist billig, Lesen ist teuer.** Wer in einer
+Schleife über Daten dieselbe reaktive Sammlung mehrfach abfragt, liest sie
+einmal in ein `Set` oder eine lokale Variable. `achievementEffects()` fiel so
+von 60 auf 2 µs und ein ganzer Tick von **1693 auf 1024 µs** (dieselbe Lage,
+direkt hintereinander gemessen) — ohne dass sich eine einzige Spielzahl
+geändert hat, geprüft über die Balancing-Läufe, die auf die Nachkommastelle
+gleich blieben.
+
 **Eine Bedingung und ihr Fortschrittsbalken lesen dieselbe Quelle.** Klingt
 selbstverständlich und war es nicht: bis M26 prüfte der Erfolg „Holzweg" den
 Lagerbestand, während sein Text eine Fördermenge versprach — und `progressOf()`
@@ -436,13 +448,24 @@ Selbsttest lieferte ein anderes Ergebnis, weil dessen Forschung noch als
 Multiplikator stand. **Wer eine Balancing-Frage hat, erweitert dieses
 Werkzeug — er tippt keine neue Schleife in die Konsole.**
 
-Was sein simulierter Spieler kann, steht im Kopf der Datei. **Alle sechs
-Planeten stehen im Fenster** — Aurora 24,9 min, Vesta 38,5, Pyra 61,5, Kryo
-129,6, Nimbus 135,2, Erebos 157,4, jeder länger als der vorige. Fünf dieser
-Zahlen sind nie gestellt worden; die sechste (Erebos) ist es seit M22, weil
-erst der Abriss gezeigt hat, wie kurz der Planet wirklich war. Die Tabelle im
-Dateikopf ist der aktuelle Stand; wer sie ändert, ersetzt die Zahlen, statt
-alte danebenzustellen.
+Was sein simulierter Spieler kann, steht im Kopf der Datei. Stand nach M28 —
+Aurora 26,5 min, Vesta 42,1, Pyra 69,7, Kryo 133,6, Nimbus 159,8, Erebos
+159,3: **fünf im Fenster, Aurora 1,5 min darüber**, und Nimbus hat Erebos bis
+auf 0,5 min eingeholt. „Jeder länger als der vorige" gilt damit nur noch
+knapp; beides ist die nächste Balancing-Aufgabe. Die Tabelle im Dateikopf ist
+der aktuelle Stand; wer sie ändert, ersetzt die Zahlen, statt alte
+danebenzustellen.
+
+> **Was das Werkzeug mitgibt, kann Bedingungen erfüllen, die das Spiel
+> prüft.** Alle Zahlen vor M28 waren zu niedrig: `fracht` gibt jedem Lauf
+> 50 000 von *jedem* Material mit, und „Titanherz" verlangte 50 000 Titan im
+> Lager — jeder gemessene Lauf lief also mit geschenkten +8 % Produktion, die
+> kein Mensch zu Spielbeginn hat. Seit M26 zählt der Erfolg die Fördermenge,
+> der Bonus fällt weg, und die Dauern steigen um 4 bis 18 %. Aufgefallen ist
+> es erst, als nach einer reinen Geschwindigkeits-Optimierung *alle sechs*
+> Zahlen abwichen und der Verdacht zuerst auf die Optimierung fiel. Entlarvt
+> hat es die Diagnose `gefoerdert`: **leer**, obwohl eine Material-Bedingung
+> den Lauf entschied.
 
 > **Jede dieser Zahlen ist nur so gut wie der Simulant.** Zweimal in zwei
 > Meilensteinen hat eine neue Fähigkeit die halbe Tabelle verschoben — die
