@@ -231,6 +231,21 @@ export function completedCount(): number {
   return planetSummaries().filter((p) => p.completed).length
 }
 
+/**
+ * Auf wie vielen Planeten dieses Durchlaufs Menschen leben.
+ *
+ * Stand bis M25 als private Funktion in systems/achievements.ts und las die
+ * Momentaufnahmen von Hand nach — mit `typeof s.settlers === 'string'` als
+ * einziger Absicherung. Die Zahl stimmte, aber jede Änderung am Format hätte
+ * still `0` gemeldet statt zu scheitern, und der Erfolg „Diaspora" wäre
+ * lautlos unerreichbar geworden. Eine zweite, private Rechnung über den
+ * Durchlauf neben der öffentlichen hier ist genau die Stelle, an der die
+ * Verwechslung „aktiver Planet statt Durchlauf" viermal gewohnt hat (M24).
+ */
+export function inhabitedPlanets(): number {
+  return planetSummaries().filter((p) => p.settlers.gt(0)).length
+}
+
 /** Der nächste noch nie besuchte Planet, für die Anzeige. */
 export function nextUnvisited(): PlanetDef | undefined {
   return planetSummaries().find((p) => !p.visited)?.def ?? planetForIndex(PLANETS.length)

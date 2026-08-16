@@ -81,7 +81,13 @@ import {
   supplyRate,
 } from '../systems/production'
 import { isStorageFull, materialCapacity, storeMaterial } from '../systems/storage'
-import { buildRocket, showsPlanetMap, totalSettlers, travelTo } from '../systems/travel'
+import {
+  buildRocket,
+  inhabitedPlanets,
+  showsPlanetMap,
+  totalSettlers,
+  travelTo,
+} from '../systems/travel'
 
 /**
  * Selbsttest — die mechanische Klasse von Fehlern, ohne Spieltest.
@@ -233,6 +239,15 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       totalSettlers().eq(340),
       `${totalSettlers()} statt 340`,
     )
+    /*
+     * Dieselbe Lage beantwortet die zweite Frage über den Durchlauf: auf wie
+     * vielen Welten leben Menschen? Der Erfolg „Diaspora" hängt daran, und
+     * die Rechnung dafür lag bis M25 privat in achievements.ts. Gegenprobe
+     * (nur den aktiven Planeten zählen) rot gesehen: 1 statt 2.
+     */
+    check(r, 'Zwei bewohnte Welten werden als zwei gezählt', inhabitedPlanets() === 2, `${inhabitedPlanets()}`)
+    planet.settlers = new Decimal(0)
+    check(r, 'Eine geräumte Welt zählt nicht mehr mit', inhabitedPlanets() === 1, `${inhabitedPlanets()}`)
 
     /* --- Rakete ----------------------------------------------------------
        Sie muss ohne das nötige Material sperren und mit ihm freigeben.

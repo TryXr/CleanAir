@@ -5,8 +5,8 @@ import { addLog } from '../state/log.svelte'
 import { meta } from '../state/meta.svelte'
 import { grantFromAchievement } from './blueprints'
 import { planet } from '../state/planet.svelte'
-import { materialAmount, run } from '../state/run.svelte'
-import { totalSettlers } from './travel'
+import { materialAmount } from '../state/run.svelte'
+import { inhabitedPlanets, totalSettlers } from './travel'
 
 /**
  * Achievements (DESIGN.md §10).
@@ -77,15 +77,6 @@ export function achievementEffects(): AchievementEffects {
  * Der aktive Planet lebt in `planet`, alle anderen als Momentaufnahme in
  * `run.planets` — deshalb muss hier beides gezählt werden (§16).
  */
-function inhabitedPlanets(): number {
-  let count = planet.settlers.gt(0) ? 1 : 0
-  for (const raw of Object.values(run.planets)) {
-    const s = (raw ?? {}) as Record<string, unknown>
-    const settlers = typeof s.settlers === 'string' ? Number(s.settlers) : 0
-    if (Number.isFinite(settlers) && settlers > 0) count++
-  }
-  return count
-}
 
 function isMet(c: Condition): boolean {
   switch (c.kind) {

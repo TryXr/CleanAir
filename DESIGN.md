@@ -694,6 +694,23 @@ Bewusst noch nicht entschieden — sollte während M1/M2 im Spiel getestet werde
   Biomasse sind 1,41-mal so viele Kerne. Genau deshalb misst
   [dev/balance.ts](src/dev/balance.ts) auch die ungerundete Biomasse mit — auf
   einem frühen Planeten verschwindet ein Zugewinn sonst unter der Rundung.
+- **Sollen Erfolge Bestände oder Summen messen?** Neu aus M25, und die Frage
+  gehört hierher, weil sie das Spiel und nicht die Anzeige betrifft. Vier der
+  sechzehn Erfolge prüfen einen **Bestand**, während ihr Text eine **Summe**
+  versprach: „100.000 Holz geschlagen" verlangte 100.000 gleichzeitig im
+  Lager, und das Lager fasst 1000 plus 2500 je Halle — der schwere Teil stand
+  im Text gar nicht. „10.000 Forschungspunkte verdient" verlangt sie
+  **ungenutzt**: jeder Forschungskauf entfernt einen davon, und ausgeben ist
+  das, was das Spiel überall sonst verlangt.
+
+  Die Texte sind in M25 an die Bedingung angeglichen worden — das kostet keine
+  Zahl und nimmt die Unwahrheit heraus. Die eigentliche Frage bleibt offen:
+  **Bestände sind Sammelaufgaben, Summen sind Wegmarken.** Für Summen bräuchte
+  es Zähler in `meta.stats` (dort stehen schon `totalOxygen` und
+  `totalClicks`), also eine Save-Version und eine Migration — und es machte
+  vier Erfolge samt ihrer dauerhaften Boni leichter. Das ist eine
+  Balancing-Entscheidung und keine Aufräumarbeit, deshalb ist sie nicht
+  nebenbei getroffen worden.
 - ~~**Story-Präsentation:** Log-Einträge, Dialogfenster oder ein Codex?~~
   **Entschieden, nachgetragen in M24: der Log — und seit §20.2 die Bergung.**
   Die Vermutung „Log ist am billigsten und stört den Flow am wenigsten" hat

@@ -301,7 +301,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 191 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 193 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -380,7 +380,10 @@ Komponente:** was nur die `.svelte`-Datei kennt, kann keine Prüfung sehen.
 > besiedelten Planeten beendete, verschenkte jede Kolonie davor. Es gibt jetzt
 > `totalSettlers()` in systems/travel.ts, direkt neben `totalBiomass()`, das
 > seit §16 genau dasselbe richtig macht. **Wer eine Zahl über „den Durchlauf"
-> anzeigt, sucht zuerst die Schwester in travel.ts.**
+> anzeigt, sucht zuerst die Schwester in travel.ts** — und schreibt keine
+> zweite, private daneben. `inhabitedPlanets()` war so eine (M25): sie las die
+> Momentaufnahmen von Hand nach und hätte bei jeder Formatänderung still `0`
+> gemeldet, statt zu scheitern.
 
 > **Ein Etikett muss die Frage beantworten, die es stellt.** Dritter Durchgang
 > durch die laufende Oberfläche (M23), dieselbe Klasse noch eine Ebene tiefer:

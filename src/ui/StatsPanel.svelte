@@ -5,7 +5,7 @@
   import { currentN2Rate, currentO2Rate } from '../systems/production'
   import { totalStaff } from '../systems/labor'
   import { pendingCores } from '../systems/prestige'
-  import { totalSettlers } from '../systems/travel'
+  import { completedCount, totalBiomass, totalSettlers } from '../systems/travel'
   import { meta } from '../state/meta.svelte'
   import { planet, usesNitrogen, usesPollution } from '../state/planet.svelte'
 
@@ -49,6 +49,23 @@
     <div><dt>Schadstoffe</dt><dd class="num">{format(planet.pollution)}</dd></div>
   {/if}
   <div><dt>Biomasse</dt><dd class="num">{format(planet.biomass)}</dd></div>
+</dl>
+
+<!--
+  Drei Lebensdauern, drei Abschnitte (CLAUDE.md).
+
+  „Kerne beim Sprung" stand bis M25 unter „Dieser Planet", direkt unter der
+  Biomasse *dieses* Planeten — und wird aus der Biomasse **aller** Planeten
+  des Laufs gerechnet (§16). Gemessen in der laufenden Oberfläche: Biomasse
+  100K, darunter 1 Kern, während der Lauf bei 1.000.000 stand. Wer beide
+  Zeilen übereinander liest, schließt auf einen zehnfach falschen Kurs — und
+  übersieht die Aussage von §16, dass sich die Rückkehr zu einem alten
+  Planeten lohnt, weil seine Biomasse mitzählt.
+-->
+<h3>Dieser Durchlauf</h3>
+<dl>
+  <div><dt>Biomasse aller Planeten</dt><dd class="num">{format(totalBiomass())}</dd></div>
+  <div><dt>Planeten stabil</dt><dd class="num">{completedCount()}</dd></div>
   <div><dt>Kerne beim Sprung</dt><dd class="num warn">{formatInt(pendingCores())}</dd></div>
 </dl>
 

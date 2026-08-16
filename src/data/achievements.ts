@@ -85,7 +85,17 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   {
     id: 'lumberjack',
     name: 'Holzweg',
-    description: '100.000 Holz geschlagen.',
+    /*
+     * **„im Lager" und nicht „geschlagen"** (M25).
+     *
+     * Die Bedingung `material` prüft den Bestand, nicht die Fördermenge. Wer
+     * dreihunderttausend Holz abbaut und verbaut, bekommt diesen Erfolg nie —
+     * der Text versprach etwas anderes als die Prüfung, und der schwierige
+     * Teil (genug Lagerhallen) kam darin gar nicht vor. Ob das Kumulative das
+     * bessere Spiel wäre, steht als offene Frage in DESIGN.md §15; bis dahin
+     * sagt der Text wenigstens die Wahrheit.
+     */
+    description: '100.000 Holz auf einmal im Lager.',
     condition: { kind: 'material', material: 'holz', atLeast: 100000 },
     effect: { kind: 'buildCost', reduction: 0.05 },
     reward: '−5 % Baukosten',
@@ -93,7 +103,7 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   {
     id: 'quarryman',
     name: 'Steinreich',
-    description: '250.000 Stein abgebaut.',
+    description: '250.000 Stein auf einmal im Lager.',
     condition: { kind: 'material', material: 'stein', atLeast: 250000 },
     effect: { kind: 'buildCost', reduction: 0.05 },
     reward: '−5 % Baukosten',
@@ -101,7 +111,7 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   {
     id: 'titanheart',
     name: 'Titanherz',
-    description: '50.000 Titan gefördert.',
+    description: '50.000 Titan auf einmal im Lager.',
     condition: { kind: 'material', material: 'titan', atLeast: 50000 },
     effect: { kind: 'globalProduction', factor: 1.08 },
     reward: '+8 % Produktion',
@@ -128,7 +138,15 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   {
     id: 'scholars',
     name: 'Gelehrte',
-    description: '10.000 Forschungspunkte verdient.',
+    /*
+     * **„ungenutzt" ist hier keine Feinheit, sondern die ganze Bedingung.**
+     * `meta.research` ist das *Guthaben* — jeder Forschungskauf zieht davon
+     * ab. „Verdient" stand da und war das Gegenteil dessen, was zählt: das
+     * Spiel verlangt überall, Forschung auszugeben (ohne sie schließt Vesta
+     * gar nicht ab), und dieser Erfolg belohnt genau das Horten. Der Text
+     * sagt das jetzt; ob es so bleiben soll, ist die offene Frage in §15.
+     */
+    description: '10.000 Forschungspunkte ungenutzt auf der Hand.',
     condition: { kind: 'research', atLeast: 10000 },
     effect: { kind: 'researchYield', factor: 1.15 },
     reward: '+15 % Forschung',
