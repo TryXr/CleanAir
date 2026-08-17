@@ -1,0 +1,504 @@
+import Decimal from 'break_infinity.js'
+import { AURORA, findPlanet, type PlanetDef } from '../data/planets'
+import { ABILITIES } from '../data/abilities'
+import { DEFENSES } from '../data/defenses'
+import { EVENTS } from '../data/events'
+import { GENERATORS } from '../data/generators'
+import { GOODS } from '../data/goods'
+import { LANDMARKS, landmarkFor } from '../data/landmarks'
+import { SALVAGE } from '../data/salvage'
+import { UPGRADES } from '../data/upgrades'
+import { readDecimal, readNumber, readString, writeDecimal } from '../engine/serialize'
+
+/**
+ * Ein laufendes Zufalls-Ereignis. Planetenlokal, also Teil dieses Zustands —
+ * beim Sprung ist der Sturm auf dem alten Planeten kein Thema mehr.
+ */
+export interface ActiveEvent {
+  id: string
+  /** Restlaufzeit in Sekunden. */
+  remaining: number
+  /** Hat der Spieler die Klick-Reaktion genutzt? */
+  reacted: boolean
+}
+
+/** Sekunden bis zum ersten Ereignis auf einem frischen Planeten. */
+export const FIRST_EVENT_DELAY = 150
+
+/**
+ * Eine laufende Baustelle (M11, §17).
+ *
+ * Bezahlen legt seit M11 nur noch eine Bestellung an — Material, O₂ und
+ * verbaute Menschen sind sofort weg, das Gebäude entsteht erst durch Arbeit.
+ * Planetenlokal wie alles andere: eine halb fertige Halle auf Vesta wartet
+ * dort weiter, während man auf Pyra steht.
+ */
+export interface BuildSite {
+  /**
+   * Was hier entsteht (M14, §18).
+   *
+   * Anlagen und Werkstattgüter teilen sich **eine** Reihe und **eine**
+   * Kolonne. Das ist die Entscheidung, um die es geht: dieselben Hände können
+   * in derselben Zeit ein Haus bauen oder Werkzeug machen, nicht beides.
+   * Zwei getrennte Warteschlangen hätten die Wahl wegdefiniert.
+   */
+  art: 'anlage' | 'ware' | 'bauwerk'
+  /** Generator-id, Rezept-id oder Bauwerk-id, je nach `art`. */
+  id: string
+  /** Wie viele Stück aus dieser Bestellung noch entstehen sollen. */
+  remaining: number
+  /**
+   * Geleistete Arbeitersekunden am *aktuellen* Stück.
+   *
+   * Bewusst pro Stück und nicht für die ganze Bestellung: so liefert eine
+   * Zehnerbestellung nach und nach, statt zehnmal so lange gar nichts zu
+   * tun. Fortschritt, den man sieht, ist der halbe Unterschied.
+   */
+  progress: number
+}
+
+/**
+ * Ein Trupp, der gerade draußen ist (M18, §20.2).
+ *
+ * Planetenlokal wie alles andere: wer auf Kryo im Eisfeld gräbt, gräbt dort
+ * weiter, während man auf Aurora steht — und ist beim Rückflug immer noch
+ * unterwegs. Genau das macht das Weggehen zu einer Entscheidung mit Nachhall
+ * statt zu einem Knopf.
+ */
+export interface Expedition {
+  /** Ziel-id aus data/salvage.ts. */
+  target: string
+  /** Wie viele Leute draußen sind. Sie fehlen so lange an jeder Arbeit. */
+  crew: number
+  /** Sekunden bis zur Rückkehr. */
+  remaining: number
+  /** Gesamtdauer dieses Anlaufs — für den Balken, und weil ein Zwischenfall sie verlängert. */
+  total: number
+  /**
+   * Ist unterwegs etwas schiefgegangen?
+   *
+   * Steht schon beim Losschicken fest (der Würfel hängt am Ziel und am
+   * wievielten Anlauf, nicht an der Uhr) und wird erst bei der Rückkehr
+   * erzählt. Ein Zwischenfall tötet niemanden — er hält den Trupp länger
+   * draußen und kostet die Hälfte der Beute (§1.2).
+   */
+  mishap: boolean
+}
+
+/**
+ * PLANET — wird beim Planetenwechsel vollständig zurückgesetzt.
+ *
+ * Alles, was einen Prestige-Sprung überleben soll, gehört nach meta.svelte.ts.
+ * Diese Trennung ab Tag eins zu haben ist der Grund, warum der Wechsel in M2
+ * ein Schritt war und kein Umbau.
+ */
+function initialPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new Decimal(0)) {
+  return {
+    id: def.id,
+    name: def.name,
+
+    /** Vorrat zum Ausgeben — Generatoren und Upgrades zahlen hieraus. */
+    oxygen: startingOxygen,
+    /** Jemals produziert. Rein statistisch, wächst monoton. */
+    oxygenTotal: startingOxygen,
+
+    /**
+     * Was tatsächlich in der Luft steht. Steigt durch Produktion, sinkt
+     * durch Atmung und Brände — Käufe rühren es nicht an. Genau diese
+     * Trennung erzeugt die Spannung aus DESIGN.md §5: mehr Bevölkerung heißt
+     * mehr Produktion *und* fallender Atmosphärenwert.
+     */
+    /*
+     * Ein Planet mit vorhandener Atmosphäre bringt seine eigenen Werte mit
+     * (M15). `startingOxygen` ist der Meta-Bonus auf das *Guthaben* und hat
+     * damit nichts zu tun — auf Erebos steht die Luft schon voll, und das
+     * Konto ist trotzdem leer.
+     */
+    airO2: def.startAirO2 !== undefined ? new Decimal(def.startAirO2) : startingOxygen,
+    /** Der N₂-Puffer. Verdünnt alles andere, sonst nichts (§4). */
+    airN2: new Decimal(def.startAirN2 ?? 0),
+    /** CO₂, CH₄, SO₂ — zusammengefasst zu einem Wert. */
+    pollution: new Decimal(def.startPollution ?? 0),
+
+    /**
+     * Sekunden, die *alle* Werte am Stück im Fenster stehen. Fällt einer
+     * heraus, geht der Wert auf 0 zurück (§4).
+     */
+    stability: 0,
+
+    /**
+     * Stehende Bäume. Planetenlokal — das Holz daraus landet dagegen im
+     * globalen Lager (state/run.svelte.ts, DESIGN.md §16).
+     */
+    trees: new Decimal(0),
+
+    /** Grundlage der Genesis-Kerne beim Abschluss (§6). */
+    biomass: new Decimal(0),
+
+    /** Generator-id -> Anzahl. Nur **fertige** Anlagen (M11). */
+    generators: {} as Record<string, number>,
+    /**
+     * Offene Baustellen in Auftragsreihenfolge (M11, §17). Die Kolonne
+     * arbeitet die vorderste ab und rückt dann nach.
+     */
+    sites: [] as BuildSite[],
+    /**
+     * Bewohner auf der Baustelle. Ein eigener Topf statt eines Eintrags in
+     * `staff`: Bauarbeiter stehen an keiner Anlage, sondern an dem, was noch
+     * keine ist.
+     */
+    builders: 0,
+    /** ids gekaufter Upgrades. */
+    upgrades: [] as string[],
+
+    /** Menschen auf *diesem* Planeten. Beim Wechsel werden sie zur Kolonie. */
+    settlers: new Decimal(def.startSettlers),
+
+    /**
+     * Zugewiesene Bewohner je Anlage (§17). Ohne Besetzung produziert eine
+     * Anlage mit Arbeitsplätzen nichts.
+     */
+    staff: {} as Record<string, number>,
+    /**
+     * 0…1 — wie gut die Leute versorgt sind, und damit ihre Arbeitsleistung.
+     *
+     * Bewusst träge: eine Sekunde ohne Wasser soll nicht sofort die ganze
+     * Kolonie lahmlegen, und ein kurzer Engpass ist eine Warnung statt einer
+     * Katastrophe. Wer gar nichts hat, arbeitet nicht — stirbt aber auch
+     * nicht (§17). Damit verliert man offline nur Produktion, nie Menschen.
+     */
+    satiety: 1,
+
+    /**
+     * Vorräte. Planetenlokal wie die Luft, nicht im globalen Lager — jede
+     * Kolonie muss sich selbst ernähren (DESIGN.md §16).
+     */
+    food: new Decimal(def.startFood),
+    water: new Decimal(def.startWater),
+
+    /**
+     * Menschen, die Gebäude beim Bau verschluckt haben. Sie leben und atmen
+     * weiter, stehen aber nie wieder für Berufe zur Verfügung.
+     */
+    bound: new Decimal(0),
+
+    /** Laufende Ereignisse und die Zeit bis zum nächsten. */
+    events: [] as ActiveEvent[],
+    nextEventIn: FIRST_EVENT_DELAY,
+
+    /* --- Bergung (M18, §20.2) ---------------------------------------------
+       Drei Zahlen je Ziel, und alle drei planetenlokal: wer gerade draußen
+       ist, wie oft ein Ziel schon angelaufen wurde (das steuert, welcher Satz
+       der Vorgeschichte als Nächstes kommt) und wie erschöpft es ist.
+    -------------------------------------------------------------------- */
+    /**
+     * Fertige Etappen des Bauwerks dieses Planeten (M19, §20.3).
+     *
+     * Eine Zahl und kein Objekt: die laufende Etappe steht als Baustelle in
+     * `sites`, wie jeder andere Bau auch. Zwei Orte für denselben Fortschritt
+     * wären die verstreute Rechnung, die CLAUDE.md verbietet.
+     */
+    landmarkStage: 0,
+
+    expeditions: [] as Expedition[],
+    /** Ziel-id -> abgeschlossene Anläufe. */
+    salvageRuns: {} as Record<string, number>,
+    /** Ziel-id -> 0…1 Erschöpfung. Erholt sich von selbst. */
+    salvageDepletion: {} as Record<string, number>,
+
+    /* --- Anoxen (§7) ------------------------------------------------------
+       Planetenlokal, damit eine Belagerung auf Pyra nicht mit nach Kryo
+       fliegt — und damit sie beim Rückflug genau so weiterläuft.
+    -------------------------------------------------------------------- */
+    /** Verteidigungsanlage-id -> Anzahl. */
+    defenses: {} as Record<string, number>,
+    /**
+     * Lahmgelegte Anlagen: Generator-id -> Anzahl außer Betrieb.
+     *
+     * Bewusst *nicht* gelöschte Anlagen. §1.2 nennt Angriffe ausdrücklich als
+     * temporären Rückschlag, und in einem Incremental ist der Verlust
+     * gekaufter Gebäude der zuverlässigste Weg, jemanden zum Aufhören zu
+     * bringen. Sie kommen von selbst zurück, mit Depot schneller.
+     */
+    disabled: {} as Record<string, number>,
+    /**
+     * Aufgestauter Druck. Wächst mit dem Fortschritt — „der Fortschritt
+     * erzeugt die Bedrohung" (§7), keine künstlichen Trigger.
+     */
+    threat: 0,
+    /** Die wievielte Welle dieses Planeten läuft bzw. kam zuletzt. */
+    waveNumber: 0,
+    /** Verbleibende Kampfkraft der laufenden Welle. 0 = keine Welle. */
+    wavePower: 0,
+    /** Restdauer der laufenden Welle in Sekunden. */
+    waveRemaining: 0,
+    /** Abklingzeiten der drei Fähigkeiten in Sekunden. */
+    cooldowns: {} as Record<string, number>,
+    /** Läuft gerade ein Notfall-Schild, und wie lange noch? */
+    shieldRemaining: 0,
+    /** Wurde für diese Welle evakuiert? */
+    evacuated: false,
+
+    /**
+     * Steht die Rakete dieses Planeten? Sie ist der Weg zum *nächsten*
+     * Planeten und völlig unabhängig von `completed` — man darf weiterziehen,
+     * bevor die Atmosphäre steht, und später zurückkommen (§16).
+     */
+    rocketBuilt: false,
+
+    clicks: 0,
+    /** Sekunden auf diesem Planeten. */
+    elapsed: 0,
+    /** Zielfenster gehalten. Rastet ein und fällt nicht zurück. */
+    completed: false,
+  }
+}
+
+export const planet = $state(initialPlanet())
+
+export type PlanetState = typeof planet
+
+/** Planetenwechsel: lokalen Zustand verwerfen, Meta bleibt unberührt. */
+export function resetPlanet(def: PlanetDef = AURORA, startingOxygen: Decimal = new Decimal(0)): void {
+  Object.assign(planet, initialPlanet(def, startingOxygen))
+}
+
+/** Die Definition zum aktuell bespielten Planeten. */
+export function currentPlanetDef(): PlanetDef {
+  return findPlanet(planet.id) ?? AURORA
+}
+
+export function generatorCount(id: string): number {
+  return planet.generators[id] ?? 0
+}
+
+/**
+ * Stück dieses Typs, die bestellt, aber noch nicht fertig sind (M11).
+ *
+ * Steht hier neben `generatorCount` und nicht im Bausystem, weil die
+ * Kostenkurve sie mitzählen muss: sonst kostet zweimal „Max" hintereinander
+ * beide Male den niedrigen Preis, und die Bestellung wäre ein Rabatt auf
+ * sich selbst.
+ */
+export function pendingUnits(id: string): number {
+  let sum = 0
+  for (const site of planet.sites) {
+    if (site.id === id) sum += site.remaining
+  }
+  return sum
+}
+
+export function hasUpgrade(id: string): boolean {
+  return planet.upgrades.includes(id)
+}
+
+/** Führt der aktuelle Planet einen N₂-Puffer? */
+export function usesNitrogen(): boolean {
+  return currentPlanetDef().n2Window !== undefined
+}
+
+/** Kennt der aktuelle Planet Schadstoffe? */
+export function usesPollution(): boolean {
+  return currentPlanetDef().maxPollution !== undefined
+}
+
+export function serializePlanet() {
+  return {
+    id: planet.id,
+    name: planet.name,
+    oxygen: writeDecimal(planet.oxygen),
+    oxygenTotal: writeDecimal(planet.oxygenTotal),
+    airO2: writeDecimal(planet.airO2),
+    airN2: writeDecimal(planet.airN2),
+    pollution: writeDecimal(planet.pollution),
+    trees: writeDecimal(planet.trees),
+    stability: planet.stability,
+    biomass: writeDecimal(planet.biomass),
+    generators: { ...planet.generators },
+    sites: planet.sites.map((s) => ({ ...s })),
+    builders: planet.builders,
+    upgrades: [...planet.upgrades],
+    settlers: writeDecimal(planet.settlers),
+    staff: { ...planet.staff },
+    satiety: planet.satiety,
+    food: writeDecimal(planet.food),
+    water: writeDecimal(planet.water),
+    bound: writeDecimal(planet.bound),
+    events: planet.events.map((e) => ({ ...e })),
+    nextEventIn: planet.nextEventIn,
+    landmarkStage: planet.landmarkStage,
+    expeditions: planet.expeditions.map((e) => ({ ...e })),
+    salvageRuns: { ...planet.salvageRuns },
+    salvageDepletion: { ...planet.salvageDepletion },
+    defenses: { ...planet.defenses },
+    disabled: { ...planet.disabled },
+    threat: planet.threat,
+    waveNumber: planet.waveNumber,
+    wavePower: planet.wavePower,
+    waveRemaining: planet.waveRemaining,
+    cooldowns: { ...planet.cooldowns },
+    shieldRemaining: planet.shieldRemaining,
+    evacuated: planet.evacuated,
+    rocketBuilt: planet.rocketBuilt,
+    clicks: planet.clicks,
+    elapsed: planet.elapsed,
+    completed: planet.completed,
+  }
+}
+
+export function deserializePlanet(raw: unknown): void {
+  const s = (raw ?? {}) as Record<string, unknown>
+
+  planet.id = readString(s.id, AURORA.id)
+  planet.name = findPlanet(planet.id)?.name ?? readString(s.name, AURORA.name)
+  planet.oxygen = readDecimal(s.oxygen, 0)
+  planet.oxygenTotal = readDecimal(s.oxygenTotal, 0)
+  planet.airO2 = readDecimal(s.airO2, 0)
+  planet.airN2 = readDecimal(s.airN2, 0)
+  planet.pollution = readDecimal(s.pollution, 0)
+  planet.trees = readDecimal(s.trees, 0)
+  planet.stability = Math.max(0, readNumber(s.stability, 0))
+  planet.biomass = readDecimal(s.biomass, 0)
+  planet.settlers = readDecimal(s.settlers, 0)
+  planet.satiety = Math.min(1, Math.max(0, readNumber(s.satiety, 1)))
+  planet.food = readDecimal(s.food, 0)
+  planet.water = readDecimal(s.water, 0)
+  planet.bound = readDecimal(s.bound, 0)
+
+  planet.nextEventIn = Math.max(0, readNumber(s.nextEventIn, FIRST_EVENT_DELAY))
+  planet.threat = Math.max(0, readNumber(s.threat, 0))
+  planet.waveNumber = Math.max(0, Math.floor(readNumber(s.waveNumber, 0)))
+  planet.wavePower = Math.max(0, readNumber(s.wavePower, 0))
+  planet.waveRemaining = Math.max(0, readNumber(s.waveRemaining, 0))
+  planet.shieldRemaining = Math.max(0, readNumber(s.shieldRemaining, 0))
+  planet.evacuated = s.evacuated === true
+
+  // Nur bekannte ids übernehmen — dieselbe Vorsicht wie bei Generatoren.
+  const savedDefenses = (s.defenses ?? {}) as Record<string, unknown>
+  const defenses: Record<string, number> = {}
+  for (const def of DEFENSES) {
+    const count = readNumber(savedDefenses[def.id], 0)
+    if (count > 0) defenses[def.id] = Math.floor(count)
+  }
+  planet.defenses = defenses
+
+  const savedDisabled = (s.disabled ?? {}) as Record<string, unknown>
+  const disabled: Record<string, number> = {}
+  for (const def of GENERATORS) {
+    const count = readNumber(savedDisabled[def.id], 0)
+    if (count > 0) disabled[def.id] = Math.floor(count)
+  }
+  planet.disabled = disabled
+
+  const savedCooldowns = (s.cooldowns ?? {}) as Record<string, unknown>
+  const cooldowns: Record<string, number> = {}
+  for (const a of ABILITIES) {
+    const left = readNumber(savedCooldowns[a.id], 0)
+    if (left > 0) cooldowns[a.id] = left
+  }
+  planet.cooldowns = cooldowns
+
+  planet.rocketBuilt = s.rocketBuilt === true
+  planet.clicks = readNumber(s.clicks, 0)
+  planet.elapsed = readNumber(s.elapsed, 0)
+  planet.completed = s.completed === true
+
+  // Nur bekannte ids übernehmen. Ein Save, der aus einer Version mit anderen
+  // Generatoren stammt, soll keine Geister-Einträge einschleppen.
+  // Zuweisungen nur für bekannte Anlagen übernehmen.
+  const savedStaff = (s.staff ?? {}) as Record<string, unknown>
+  const staff: Record<string, number> = {}
+  for (const def of GENERATORS) {
+    const n = Math.floor(readNumber(savedStaff[def.id], 0))
+    if (n > 0) staff[def.id] = n
+  }
+  planet.staff = staff
+
+  const savedGenerators = (s.generators ?? {}) as Record<string, unknown>
+  const generators: Record<string, number> = {}
+  for (const def of GENERATORS) {
+    const count = readNumber(savedGenerators[def.id], 0)
+    if (count > 0) generators[def.id] = Math.floor(count)
+  }
+  planet.generators = generators
+
+  // Baustellen (M11). Dieselbe Vorsicht wie oben: unbekannte ids fliegen raus,
+  // und eine Bestellung ohne Rest ist keine Baustelle mehr.
+  const savedSites = Array.isArray(s.sites) ? s.sites : []
+  planet.sites = savedSites
+    .map((raw) => (raw ?? {}) as Record<string, unknown>)
+    .map((site) => ({
+      // Ohne Angabe eine Anlage: so lasen sich Saves vor M14, und ein
+      // fehlendes Feld darf keine Baustelle verschlucken.
+      art: ((): BuildSite['art'] => {
+        const roh = readString(site.art, 'anlage')
+        // Ohne Angabe eine Anlage: so lasen sich Saves vor M14.
+        if (roh === 'ware') return 'ware'
+        if (roh === 'bauwerk') return 'bauwerk'
+        return 'anlage'
+      })(),
+      id: readString(site.id, ''),
+      remaining: Math.max(0, Math.floor(readNumber(site.remaining, 0))),
+      progress: Math.max(0, readNumber(site.progress, 0)),
+    }))
+    .filter((site) =>
+      site.art === 'ware'
+        ? GOODS.some((g) => g.id === site.id)
+        : site.art === 'bauwerk'
+          ? LANDMARKS.some((l) => l.id === site.id)
+          : GENERATORS.some((def) => def.id === site.id),
+    )
+    .filter((site) => site.remaining > 0)
+
+  planet.builders = Math.max(0, Math.floor(readNumber(s.builders, 0)))
+
+  const savedUpgrades = Array.isArray(s.upgrades) ? s.upgrades : []
+  planet.upgrades = UPGRADES.filter((u) => savedUpgrades.includes(u.id)).map((u) => u.id)
+
+  const savedEvents = Array.isArray(s.events) ? s.events : []
+  planet.events = savedEvents
+    .map((raw) => (raw ?? {}) as Record<string, unknown>)
+    .filter((e) => EVENTS.some((def) => def.id === e.id))
+    .map((e) => ({
+      id: readString(e.id, ''),
+      remaining: Math.max(0, readNumber(e.remaining, 0)),
+      reacted: e.reacted === true,
+    }))
+    .filter((e) => e.remaining > 0)
+
+  // Bauwerk (M19). Auf die Zahl der Etappen begrenzt, damit ein Save aus
+  // einer Version mit mehr Etappen keine unmögliche Stufe einschleppt.
+  const bauwerk = landmarkFor(planet.id)
+  planet.landmarkStage = Math.min(
+    bauwerk?.stages.length ?? 0,
+    Math.max(0, Math.floor(readNumber(s.landmarkStage, 0))),
+  )
+
+  // Trupps (M18). Dieselbe Vorsicht wie bei Baustellen: unbekannte Ziele
+  // fliegen raus, und ein Trupp ohne Leute ist kein Trupp.
+  const savedExpeditions = Array.isArray(s.expeditions) ? s.expeditions : []
+  planet.expeditions = savedExpeditions
+    .map((raw) => (raw ?? {}) as Record<string, unknown>)
+    .filter((e) => SALVAGE.some((t) => t.id === e.target))
+    .map((e) => ({
+      target: readString(e.target, ''),
+      crew: Math.max(0, Math.floor(readNumber(e.crew, 0))),
+      remaining: Math.max(0, readNumber(e.remaining, 0)),
+      total: Math.max(1, readNumber(e.total, 1)),
+      mishap: e.mishap === true,
+    }))
+    .filter((e) => e.crew > 0)
+
+  const savedRuns = (s.salvageRuns ?? {}) as Record<string, unknown>
+  const savedDepletion = (s.salvageDepletion ?? {}) as Record<string, unknown>
+  const runs: Record<string, number> = {}
+  const depletion: Record<string, number> = {}
+  for (const t of SALVAGE) {
+    const n = Math.floor(readNumber(savedRuns[t.id], 0))
+    if (n > 0) runs[t.id] = n
+    const d = Math.min(1, Math.max(0, readNumber(savedDepletion[t.id], 0)))
+    if (d > 0) depletion[t.id] = d
+  }
+  planet.salvageRuns = runs
+  planet.salvageDepletion = depletion
+}

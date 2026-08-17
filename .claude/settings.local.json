@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Daniel/.claude//**)",
+      "Bash(git add:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git commit:*)",
+      "PowerShell(git status:*)",
+      "PowerShell(git log:*)",
+      "PowerShell(git diff:*)",
+      "PowerShell(npm run:*)",
+      "PowerShell(npm install:*)",
+      "PowerShell(npm ls:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "out=$(\"C:/Program Files/nodejs/node.exe\" node_modules/svelte-check/bin/svelte-check --tsconfig ./tsconfig.json --output human 2>&1) || { echo \"$out\" >&2; exit 2; }",
+            "timeout": 90
+          }
+        ]
+      }
+    ]
+  }
+}
