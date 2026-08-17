@@ -57,6 +57,7 @@ import { landmarkFor } from '../data/landmarks'
 import {
   grantBlueprint,
   knowsBlueprint,
+  circularBlueprints,
   unreachableBlueprints,
 } from '../systems/blueprints'
 import { buyResearch } from '../systems/research'
@@ -1280,6 +1281,23 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       'Jeder Bauplan hat eine Quelle',
       unreachableBlueprints().length === 0,
       unreachableBlueprints().join(', '),
+    )
+
+    /*
+     * **Und die Quelle darf sich nicht selbst voraussetzen.**
+     *
+     * Die Prüfung darüber war zufrieden, sobald *irgendeine* Quelle existiert
+     * — die Baumschule hatte eine, den Erfolg „Förster" mit 10.000 stehenden
+     * Bäumen. Bäume gibt es aber nur aus der Baumschule. Ein geschlossener
+     * Ring, den erst das Spielen gefunden hat (M35), obwohl die
+     * Sackgassenprüfung aus M20 genau dafür gedacht war. Gegenprobe gesehen:
+     * mit der alten Zuordnung meldet sie „nursery".
+     */
+    check(
+      r,
+      'Kein Bauplan setzt sich selbst voraus',
+      circularBlueprints().length === 0,
+      circularBlueprints().join(', '),
     )
 
     /*

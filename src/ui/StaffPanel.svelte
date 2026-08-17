@@ -26,6 +26,16 @@
   const frei = $derived(unassigned())
   const satt = $derived(planet.satiety)
 
+  /*
+   * **Warum steht der da herum?** Aus dem Spiel gemeldet (M35): „man hat
+   * manchmal einen Bewohner, den man nicht zuordnen kann." Kein Rechenfehler
+   * — es ist schlicht kein Platz mehr frei, und das Panel sagte es nicht. Wer
+   * eine Zahl „ohne Aufgabe" sieht und jeden Knopf ausgegraut findet, hält es
+   * für kaputt statt für eine Aufgabe.
+   */
+  const platzFrei = $derived(anlagen.some((def) => staffOn(def.id) < totalSlots(def)))
+  const stehenHerum = $derived(frei.gte(1) && !platzFrei)
+
   function einheit(def: (typeof anlagen)[number]): string {
     const out = def.output
     if (out.kind === 'gas') return out.gas === 'n2' ? 'N₂' : 'O₂'
@@ -60,6 +70,13 @@
     brauchen nur Bergbau, Sägewerk, Forst und Landwirtschaft.
   </p>
 {:else}
+  {#if stehenHerum}
+    <p class="empty">
+      <strong>Alle Plätze sind besetzt.</strong> Wer jetzt noch übrig ist, hat hier nichts zu tun:
+      bau eine weitere Anlage mit Arbeitsplätzen, schick die Leute auf die Baustelle — oder auf
+      Bergung.
+    </p>
+  {/if}
   <ul>
     {#each anlagen as def (def.id)}
       {@const belegt = staffOn(def.id)}
@@ -142,10 +159,15 @@
   }
 
   .empty {
-    margin: 0;
+    margin: 0 0 10px;
     font-size: 12px;
     line-height: 1.6;
     color: var(--muted);
+  }
+
+  .empty strong {
+    color: var(--warn);
+    font-weight: 600;
   }
 
   ul {

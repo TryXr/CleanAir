@@ -137,3 +137,53 @@ export function unreachableBlueprints(): string[] {
   for (const a of ACHIEVEMENTS) for (const id of a.blueprints ?? []) erreichbar.add(id)
   return gatedGenerators().filter((id) => !erreichbar.has(id))
 }
+
+/**
+ * Baupläne, deren **einzige** Quelle sich selbst voraussetzt.
+ *
+ * Die Prüfung darüber fragt „gibt es eine Quelle?" und war damit zufrieden —
+ * die Baumschule hatte eine: den Erfolg „Förster". Der verlangt 10.000
+ * stehende Bäume, und Bäume gibt es ausschließlich aus der Baumschule. Ein
+ * geschlossener Ring, gefunden erst beim Spielen (M35), obwohl die
+ * Sackgassenprüfung aus M20 genau dafür gebaut war.
+ *
+ * Geprüft wird der Fall, der ihn erzeugt: ein Erfolg, dessen Bedingung an
+ * einer Menge hängt, die nur die gesperrte Anlage selbst hervorbringt. `trees`
+ * kommt nur aus `plant`, `material` nur aus `material` — mehr Bedingungsarten
+ * hängen heute nicht an Anlagen, und eine neue fällt hier auf, weil sie
+ * eingetragen werden muss.
+ *
+ * **Eine Quelle zählt nur, wenn man sie ohne das Verschlossene erreicht.**
+ */
+export function circularBlueprints(): string[] {
+  const ring: string[] = []
+
+  for (const id of gatedGenerators()) {
+    const def = findGenerator(id)
+    if (!def) continue
+
+    const quellen = [
+      ...RESEARCH.filter((n) => (n.blueprints ?? []).some((b) => b.id === id)),
+      ...SALVAGE.filter((t) => (t.blueprints ?? []).includes(id)),
+    ]
+    // Forschung und Bergung sind nie selbstbezüglich: beide laufen ohne diese
+    // Anlage. Gibt es dort eine Quelle, ist der Bauplan erreichbar.
+    if (quellen.length > 0) continue
+
+    const erfolge = ACHIEVEMENTS.filter((a) => (a.blueprints ?? []).includes(id))
+    const alleSelbstbezüglich =
+      erfolge.length > 0 &&
+      erfolge.every((a) => {
+        const c = a.condition
+        if (c.kind === 'trees') return def.output.kind === 'plant'
+        if (c.kind === 'material') {
+          return def.output.kind === 'material' && def.output.material === c.material
+        }
+        return false
+      })
+
+    if (alleSelbstbezüglich) ring.push(id)
+  }
+
+  return ring
+}

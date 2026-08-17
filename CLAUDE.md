@@ -345,7 +345,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 208 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 209 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -428,6 +428,16 @@ Komponente:** was nur die `.svelte`-Datei kennt, kann keine Prüfung sehen.
 > zweite, private daneben. `inhabitedPlanets()` war so eine (M25): sie las die
 > Momentaufnahmen von Hand nach und hätte bei jeder Formatänderung still `0`
 > gemeldet, statt zu scheitern.
+
+> **Eine Quelle zählt nur, wenn man sie ohne das Verschlossene erreicht.**
+> Die Sackgassenprüfung aus M20 fragte „hat jeder Bauplan eine Quelle?" und
+> war zufrieden — die **Baumschule** hatte eine: den Erfolg „Förster", der
+> 10.000 stehende Bäume verlangt. Bäume gibt es aber ausschließlich aus der
+> Baumschule, und sie beginnen bei null. Ein geschlossener Ring, den erst das
+> Spielen gefunden hat (M35): der Wald war in *jedem* Durchlauf unerreichbar.
+> Der Bauplan hängt jetzt an der Forschung, und `circularBlueprints()` prüft
+> den Fall — ein Erfolg, dessen Bedingung an einer Menge hängt, die nur die
+> gesperrte Anlage hervorbringt.
 
 > **Eine Grenze muss sagen, welche Grenze sie ist.** Aus dem Spiel gemeldet
 > (M34): „wenn ein Planet stabil läuft, werden es nicht mehr Menschen."

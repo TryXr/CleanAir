@@ -153,6 +153,20 @@ export const RESEARCH: readonly ResearchDef[] = [
     costGrowth: 2.8,
     effect: { kind: 'growthRate', factor: 1.3 },
     requires: ['bio-research'],
+    /*
+     * **Die Baumschule hing bis M35 in einem Ring** (aus dem Spiel gemeldet):
+     * ihr Bauplan kam ausschließlich aus dem Erfolg „Förster", und der
+     * verlangt 10.000 stehende Bäume — die es ohne Baumschule nie gibt. Sie
+     * ist die einzige Anlage mit `output.kind === 'plant'`, Bäume beginnen bei
+     * null, und keine andere Quelle setzt sie hoch. Damit war der Wald in
+     * jedem Durchlauf unerreichbar.
+     *
+     * Sie hängt jetzt an der Forschung — „was man versteht, kann man bauen",
+     * dieselbe Quelle wie Presse und Lagerhalle. Hydroponik ist die passende
+     * Stelle: Pflanzenzucht, früh im Bio-Zweig und ohne Umweg zu erreichen.
+     * „Förster" bleibt als Ziel bestehen, ist aber nicht mehr das Tor davor.
+     */
+    blueprints: [{ level: 1, id: 'nursery' }],
   },
   {
     id: 'bio-capacity',
