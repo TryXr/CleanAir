@@ -1,0 +1,62 @@
+# Baut CleanAir bei jedem Push und veröffentlicht es auf GitHub Pages.
+#
+# Voraussetzung, einmalig im Repo: Settings → Pages → Source auf
+# "GitHub Actions" stellen. Ohne das schlägt der Deploy-Schritt fehl.
+#
+# Die Seite liegt danach unter https://<benutzer>.github.io/CleanAir/ — ein
+# Unterpfad. Deshalb steht in vite.config.ts `base: './'`: mit dem
+# voreingestellten `/` suchte der Browser die Dateien in der Domain-Wurzel
+# und bekäme 404.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  # Erlaubt einen Lauf von Hand über den Actions-Reiter.
+  workflow_dispatch:
+
+# Die Rechte, die der Pages-Deploy braucht — mehr nicht.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Ein Deploy zur Zeit. Läuft schon einer, wird der neue angehängt statt den
+# laufenden abzubrechen: ein halb veröffentlichter Stand wäre schlimmer als
+# eine Minute Wartezeit.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Erst prüfen, dann bauen. Ein Typfehler soll nicht als kaputte Seite
+      # bei den Testern ankommen.
+      - run: npm run typecheck
+
+      - run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
