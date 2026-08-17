@@ -117,6 +117,36 @@ export function populationCapacity(): Decimal {
   return Decimal.min(byPlanet, housingCapacity())
 }
 
+/**
+ * **Welche der beiden Grenzen bindet gerade?**
+ *
+ * Die Frage stammt aus dem Spiel und nicht aus dem Code: „wenn ein Planet
+ * stabil läuft, werden es nicht mehr Menschen." Nachgemessen auf Aurora — 20
+ * Wohnmodule und 5 Wohnkuppeln ergeben **1592 Betten**, die Planetengrenze
+ * liegt bei **60**, und genau dort bleibt die Kolonie stehen. Wer daraufhin
+ * weiter Wohnraum baut, baut ins Leere, und das Panel zeigte nur „60 von 60".
+ *
+ * Ein Balken, der wie eine Bettenanzeige aussieht, während in Wahrheit der
+ * Planet die Grenze setzt, beantwortet die falsche Frage (CLAUDE.md). Diese
+ * Funktion steht deshalb in `systems/` und nicht in der Komponente — was nur
+ * die `.svelte`-Datei weiß, kann keine Prüfung sehen.
+ *
+ * `'raum'`: Betten sind knapper — mehr Wohnraum hilft.
+ * `'planet'`: die Welt selbst trägt nicht mehr — nur Forschung, Meta-Baum und
+ * Erfolge heben das, Wohnraum nicht.
+ * `'beides'`: gleichauf, was am Anfang eines Planeten der Normalfall ist.
+ */
+export function capacityLimit(): 'raum' | 'planet' | 'beides' {
+  const def = currentPlanetDef()
+  const factor =
+    metaEffects().popCapacity * researchEffects().popCapacity * achievementEffects().popCapacity
+  const byPlanet = new Decimal(def.popCapacity).mul(factor)
+  const beds = housingCapacity()
+  if (beds.lt(byPlanet)) return 'raum'
+  if (byPlanet.lt(beds)) return 'planet'
+  return 'beides'
+}
+
 /** Nahrung pro Sekunde, die verbraucht wird. */
 export function foodConsumption(): Decimal {
   return planet.settlers.mul(currentPlanetDef().foodPerCapita)

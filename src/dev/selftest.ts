@@ -70,7 +70,12 @@ import {
 } from '../systems/landmarks'
 import { craftBlocker, craftingSystem } from '../systems/crafting'
 import { assign, assignBuilder, crewAway, handFactor, unassign, unassigned } from '../systems/labor'
-import { housingCapacity, o2ConsumptionRate, populationSystem } from '../systems/population'
+import {
+  capacityLimit,
+  housingCapacity,
+  o2ConsumptionRate,
+  populationSystem,
+} from '../systems/population'
 import {
   clickGain,
   currentO2Rate,
@@ -623,6 +628,31 @@ export function selftest(): { bestanden: number; fehlgeschlagen: number; ergebni
       'Gebauter Wohnraum hebt die Kapazität',
       housingCapacity().toNumber() > bettenVorher,
       `${bettenVorher} → ${housingCapacity().toNumber()}`,
+    )
+
+    /*
+     * **Welche Grenze bindet?** Aus dem Spiel gemeldet: „wenn ein Planet
+     * stabil läuft, werden es nicht mehr Menschen." Nachgemessen waren es
+     * 1592 Betten gegen eine Planetengrenze von 60 — wer daraufhin weiter
+     * Wohnraum baut, baut ins Leere. Die Unterscheidung muss also stimmen,
+     * sonst schickt die Oberfläche den Spieler in die falsche Richtung.
+     *
+     * Gegenprobe (`capacityLimit()` immer 'raum') gesehen: die erste Prüfung
+     * wird rot.
+     */
+    planet.generators = { habitat: 20, dome: 5 }
+    check(
+      r,
+      'Viele Betten: der Planet ist die Grenze',
+      capacityLimit() === 'planet',
+      `${capacityLimit()} bei ${housingCapacity()} Betten`,
+    )
+    planet.generators = { habitat: 1 }
+    check(
+      r,
+      'Wenige Betten: der Wohnraum ist die Grenze',
+      capacityLimit() === 'raum',
+      `${capacityLimit()} bei ${housingCapacity()} Betten`,
     )
 
     /* --- Das Ende (M16, §19) ----------------------------------------------

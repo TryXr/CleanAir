@@ -31,8 +31,8 @@
   import { handFactor, unassigned } from '../systems/labor'
   import {
     foodConsumption,
-    housingCapacity,
     netO2Rate,
+    populationCapacity,
     waterConsumption,
   } from '../systems/population'
   import { currentO2Rate, supplyRate } from '../systems/production'
@@ -50,7 +50,17 @@
     { label: 'Wasser', stock: planet.water, net: supplyRate('water').sub(waterConsumption()) },
   ])
 
-  const betten = $derived(housingCapacity())
+  /*
+   * **Die wirksame Grenze, nicht die Betten.**
+   *
+   * Hier stand `housingCapacity()`, und damit meldete die Leiste auf Aurora
+   * „60 / 1.59K" — während die Kolonie bei 60 stehen bleibt, weil die
+   * Planetengrenze bindet. Eine Zahl, die 1500 freie Plätze verspricht, die
+   * es nicht gibt, ist schlimmer als gar keine: sie lässt einen Wohnraum
+   * bauen, der nichts bewirkt. `populationCapacity()` ist das Minimum aus
+   * beidem und damit die Zahl, an der die Kolonie tatsächlich anstößt.
+   */
+  const kapazitaet = $derived(populationCapacity())
   const frei = $derived(unassigned())
   /** Unter 70 % wächst nichts mehr (§17) — diese Schwelle ist die Farbe wert. */
   const knapp = $derived(planet.satiety < 0.7)
@@ -128,7 +138,7 @@
       <dl>
         <div>
           <dt>Bewohner</dt>
-          <dd class="num">{formatInt(planet.settlers)} / {formatInt(betten)}</dd>
+          <dd class="num">{formatInt(planet.settlers)} / {formatInt(kapazitaet)}</dd>
         </div>
         <div>
           <dt>Ohne Aufgabe</dt>

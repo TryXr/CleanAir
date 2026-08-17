@@ -5,6 +5,7 @@
     isSuffocating,
     netO2Rate,
     o2ConsumptionRate,
+    capacityLimit,
     populationCapacity,
   } from '../systems/population'
   import { totalStaff, unassigned } from '../systems/labor'
@@ -18,6 +19,15 @@
   const frei = $derived(unassigned())
   const suffocating = $derived(isSuffocating())
   const fill = $derived(capacity.lte(0) ? 0 : Math.min(1, planet.settlers.div(capacity).toNumber()))
+
+  /*
+   * Der Balken sieht aus wie eine Bettenanzeige, ist aber das Minimum aus
+   * Betten und Planetengrenze. Wer voll ist, muss wissen, *welche* der beiden
+   * bremst — sonst baut er Wohnraum, der nichts bewirkt (auf Aurora gemessen:
+   * 1592 Betten gegen eine Planetengrenze von 60).
+   */
+  const grenze = $derived(capacityLimit())
+  const voll = $derived(capacity.gt(0) && planet.settlers.gte(capacity.sub(0.5)))
 </script>
 
 {#if planet.settlers.lte(0) && habitability() <= 0}
@@ -36,6 +46,17 @@
   <div class="bar">
     <div class="fill" style="width: {(fill * 100).toFixed(2)}%"></div>
   </div>
+
+  {#if voll}
+    <p class="limit">
+      {#if grenze === 'raum'}
+        <strong>Die Betten sind voll.</strong> Mehr Wohnraum lässt die Kolonie weiterwachsen.
+      {:else}
+        <strong>{def.name} trägt nicht mehr.</strong> Wohnraum hilft ab hier nicht — die Grenze
+        des Planeten heben nur Forschung, Meta-Baum und Erfolge.
+      {/if}
+    </p>
+  {/if}
 
   <dl class="stats">
     <!-- Bis M12 stand hier ein globaler Multiplikator. Seit §17 wirkt
@@ -74,6 +95,20 @@
      das ist die Entscheidung, nicht ein Schieber. -->
 
 <style>
+  /* Steht nur da, wenn die Kolonie tatsächlich anstößt — ein dauerhafter
+     Hinweis wäre Rauschen über der Zahl, um die es geht. */
+  .limit {
+    margin: 8px 0 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .limit strong {
+    color: var(--warn);
+    font-weight: 600;
+  }
+
   .waiting {
     margin: 0 0 14px;
     font-size: 12px;

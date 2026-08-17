@@ -345,7 +345,7 @@ immer die Menge ändern und den Anteil ausrechnen lassen.
 ## Selbsttest vor jedem Commit
 
 ```js
-cleanair.selftest()      // 206 Prüfungen, Ausgabe in der Konsole
+cleanair.selftest()      // 208 Prüfungen, Ausgabe in der Konsole
 ```
 
 Deckt die Fehlerklasse ab, die beim Lesen des Codes **nicht** auffällt und in
@@ -428,6 +428,16 @@ Komponente:** was nur die `.svelte`-Datei kennt, kann keine Prüfung sehen.
 > zweite, private daneben. `inhabitedPlanets()` war so eine (M25): sie las die
 > Momentaufnahmen von Hand nach und hätte bei jeder Formatänderung still `0`
 > gemeldet, statt zu scheitern.
+
+> **Eine Grenze muss sagen, welche Grenze sie ist.** Aus dem Spiel gemeldet
+> (M34): „wenn ein Planet stabil läuft, werden es nicht mehr Menschen."
+> `populationCapacity()` ist das Minimum aus **Betten** und **Planetengrenze**
+> — und beide Anzeigen verschwiegen, welche davon gerade bindet. Die
+> Statusleiste zeigte sogar die Betten allein: auf Aurora „60 / 1.59K", während
+> die Kolonie bei 60 stehen bleibt. Wer das liest, baut Wohnraum, der nichts
+> bewirkt. Die Leiste zeigt jetzt die wirksame Grenze, und das Panel benennt
+> sie (`capacityLimit()` in systems/population.ts). **Eine Zahl, die freien
+> Platz verspricht, den es nicht gibt, ist schlimmer als gar keine.**
 
 > **Ein Etikett muss die Frage beantworten, die es stellt.** Dritter Durchgang
 > durch die laufende Oberfläche (M23), dieselbe Klasse noch eine Ebene tiefer:
